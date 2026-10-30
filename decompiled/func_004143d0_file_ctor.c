@@ -1,0 +1,18 @@
+
+/* WARNING: Function: __alloca_probe replaced with injection: alloca_probe */
+
+void FUN_004143d0(undefined4 param_1,undefined4 param_2,undefined4 param_3)
+
+{
+  int iVar1;
+  
+  iVar1 = 399;
+  do {
+    FUN_0040bbf0();
+    iVar1 = iVar1 + -1;
+  } while (-1 < iVar1);
+  FUN_0040ef70(param_1,param_2,param_3,0);
+  return;
+}
+
+

@@ -1,0 +1,16 @@
+# Build output
+*.o
+*.a
+*.exe
+build/
+
+# Commit message template
+.gitmessage
+
+# Temporary files
+data/temporary.txt
+
+# source & reference files 
+.legacy/
+ref/
+PLAN.md
