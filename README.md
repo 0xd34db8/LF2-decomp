@@ -12,7 +12,39 @@ This project is a systems programming and binary reverse engineering exercise de
 
 ---
 
-## Prior Art vs. This Project
+## Table of Contents
+
+- [Prior Art vs. This Project](#prior-art-vs-this-project)
+- [Architecture & Project Layout](#architecture--project-layout)
+- [Core Directives & Verification](#core-directives--verification)
+- [Data Structure Memory Maps](#data-structure-memory-maps)
+- [Building, Setup & Playing the Real Game](#building-setup--playing-the-real-game)
+  - [1. Prerequisites](#1-prerequisites)
+  - [2. Acquiring and Setting Up Authentic Game Assets](#2-acquiring-and-setting-up-authentic-game-assets)
+  - [3. Compiling the Game](#3-compiling-the-game)
+  - [4. Running and Playing](#4-running-and-playing)
+  - [5. Automated Verification Test Suites](#5-automated-verification-test-suites)
+  - [Expected Test Output](#expected-test-output)
+- [Reverse-Engineered Secrets, Ciphers & Easter Eggs](#reverse-engineered-secrets-ciphers--easter-eggs)
+  - [1. The Legendary Resource Decryption Key](#1-the-legendary-resource-decryption-key-siuhungisagoodbearbecauseheisverygood)
+  - [2. The Replay (.lfr) Secondary Obfuscation Cipher](#2-the-replay-lfr-secondary-obfuscation-cipher-0x0043dd60--0x0044d7a0)
+  - [3. Secret Cheat Code State Machines in WindowProc](#3-secret-cheat-code-state-machines-in-windowproc-0x0043b3d0)
+  - [4. Window & Platform Identity Artifacts](#4-window--platform-identity-artifacts)
+  - [5. Deterministic Multiplayer PRNG Table](#5-deterministic-multiplayer-prng-table)
+  - [6. Fixed-Step 30 FPS Timing & Spiral-of-Death Protection](#6-fixed-step-30-fps-timing--spiral-of-death-protection-0x0043cf40)
+- [Engine Quirks, Desyncs & Known Binary Bugs](#engine-quirks-desyncs--known-binary-bugs)
+  - [1. The Anatomy of the Infamous "Synchronisation Error!"](#1-the-anatomy-of-the-infamous-synchronisation-error-0x0041cad9--0x0041ccb5)
+  - [2. The 100-Slot World Object Array & Screen Overflow Crash](#2-the-100-slot-world-object-array--screen-overflow-crash-0x0042e100--0x004061d0)
+  - [3. The Rudolf Stage Boundary Teleportation Glitch](#3-the-rudolf-stage-boundary-teleportation-glitch-0x00403270)
+  - [4. Player Name Grave Accent Substitution in control.txt](#4-player-name-grave-accent-substitution-in-controltxt-0x004233e0--0x0042353a)
+  - [5. Deterministic Battle Replay Recording](#5-deterministic-battle-replay-recording-lfr-at-0x0042d080--0x00402980)
+- [References & Acknowledgments](#references--acknowledgments)
+
+---
+
+<details>
+<summary><h2 style="display:inline;">Prior Art vs. This Project</h2></summary>
+<a id="prior-art-vs-this-project"></a>
 
 Over the last two decades, the Little Fighter 2 community has attempted several ambitious projects to modernize or recreate the game. To understand our mission, it is vital to distinguish between modding, clean-room rewrites, and true binary source lifting:
 
@@ -50,9 +82,13 @@ Over the last two decades, the Little Fighter 2 community has attempted several 
 2. **Byte-Level Mathematical Fidelity:** Collision detection, axis-aligned bounding box projections, directional facing mirrors, velocity integrations, deterministic lookup tables, and frame state machines are mathematically identical to the original assembly.
 3. **Liberation & Modernization:** We strip away deprecated Win32 message pumps and legacy DirectDraw 6 surface management, replacing them with a portable modern C++20 / SDL2 architecture that compiles and runs cleanly across modern 32-bit and 64-bit operating systems.
 
+</details>
+
 ---
 
-## Architecture & Project Layout
+<details>
+<summary><h2 style="display:inline;">Architecture & Project Layout</h2></summary>
+<a id="architecture--project-layout"></a>
 
 ```text
 LF2/
@@ -101,16 +137,25 @@ LF2/
 └── Makefile                    # Automated build script (MSYS2 UCRT64 GCC)
 ```
 
+</details>
+
 ---
 
-## Core Directives & Verification
+<details>
+<summary><h2 style="display:inline;">Core Directives & Verification</h2></summary>
+<a id="core-directives--verification"></a>
+
 1. **Never Guess Offsets:** Every struct size and member variable offset is verified against Ghidra decompiler pseudocode and backed by compile-time `static_assert` statements.
 2. **Strict Adherence to Math:** Floating-point velocity integrations, hitbox coordinates, and frame timers are mathematically identical to the original x86 disassembly.
 3. **Dual-Target Portability:** Pointers and struct layouts are designed to maintain byte-offset parity on 32-bit compilation targets while running without memory truncation or segmentation faults on modern 64-bit systems.
 
+</details>
+
 ---
 
-## Data Structure Memory Maps
+<details>
+<summary><h2 style="display:inline;">Data Structure Memory Maps</h2></summary>
+<a id="data-structure-memory-maps"></a>
 
 | Structure | Size (Hex) | Size (Bytes) | Description |
 | :--- | :--- | :--- | :--- |
@@ -127,9 +172,13 @@ LF2/
 
 *\* Note: On 64-bit targets, pointers expand to 8 bytes, cleanly adjusting pointer table sizes in `global_t` without shifting fixed-offset member fields.*
 
+</details>
+
 ---
 
-## Building, Setup & Playing the Real Game
+<details>
+<summary><h2 style="display:inline;">Building, Setup & Playing the Real Game</h2></summary>
+<a id="building-setup--playing-the-real-game"></a>
 
 ### 1. Prerequisites
 - **Compiler:** Modern C++20 compiler (GCC 13+ / MSYS2 UCRT64 GCC 14.2+ / Clang 15+)
@@ -198,7 +247,10 @@ To verify memory offsets, mathematical collision fidelity, cipher decryption, sp
 make test
 ```
 
-### Expected Test Output
+<details>
+<summary><b>Expected Test Output (Click to expand)</b></summary>
+<a id="expected-test-output"></a>
+
 ```text
 === Little Fighter 2 Memory Map Verification ===
 [+] bdy_t size:    0x28 (40 bytes)
@@ -312,9 +364,15 @@ make test
 [LF2 TEST SUCCESS] Frame pacing and event loop executed 30 frames cleanly.
 ```
 
+</details>
+
+</details>
+
 ---
 
-## Reverse-Engineered Secrets, Ciphers & Easter Eggs
+<details>
+<summary><h2 style="display:inline;">Reverse-Engineered Secrets, Ciphers & Easter Eggs</h2></summary>
+<a id="reverse-engineered-secrets-ciphers--easter-eggs"></a>
 
 Ghidra decompilation and binary disassembly revealed several fascinating, historic internal mechanics and easter eggs embedded directly into the machine code of `lf2.exe`:
 
@@ -331,9 +389,11 @@ Ghidra decompilation and binary disassembly revealed several fascinating, histor
 * **Two-Layer Protection in LF2 v2.0:** While legacy versions saved raw frame records, Little Fighter 2 v2.0 introduced a dual compression and encryption pipeline in `0x0043DD60` to protect replay recordings (`.lfr` files in `recording\`) from tampering and desynchronization.
 * **zlib Deflation:** The memory buffer containing all recorded battle input frames is first compressed using a statically linked build of `zlib 1.1.4` (`compress()` / `deflate()` at `0x0043F4B0`).
 * **The Obfuscation Pass:** Immediately after deflation, the engine loops through the compressed payload byte-by-byte and applies an additive character cipher using a hardcoded 32-byte ASCII key string stored in `.data` at `0x0044D7A0`:
-  $$\text{Key} = \text{"15456611235456134545631153456894"}$$
+  ```text
+  Key = "15456611235456134545631153456894"
+  ```
 * **Transformation Formula:** Each byte of the compressed stream is transformed via modular arithmetic relative to the key digits:
-  $$\text{byte}_i = \text{byte}_i + (\text{key}_{i \pmod{32}} - \text{'0'})$$
+  $$\text{byte}[i] = (\text{byte}[i] + (\text{key}[i \pmod{32}] - \text{'0'})) \pmod{256}$$
 * This custom secondary cipher explains why third-party replay editors from the LF2 1.9c era failed to open or parse replays generated by version 2.0.
 
 ### 3. Secret Cheat Code State Machines in WindowProc (`0x0043b3d0`)
@@ -357,13 +417,17 @@ The original window procedure maintains static state counters that detect sequen
 ### 6. Fixed-Step 30 FPS Timing & Spiral-of-Death Protection (`0x0043cf40`)
 * **Tick Step:** In battle (`DAT_0044d02c != 0`), the step is `33 ms` (`0x21`), yielding ~30.3 FPS. In menus, it steps at `3 ms`.
 * **Spiral of Death Clamp:** If system lag causes the accumulator to fall behind by more than `100 ms`, the game drops excess accumulated time:
-  $$\text{if } (t_{\text{now}} - t_{\text{last}} > 100\text{ ms}) \implies t_{\text{last}} = t_{\text{now}} - 100\text{ ms}$$
+  $$\text{if } (t[\text{now}] - t[\text{last}] > 100\text{ ms}) \implies t[\text{last}] = t[\text{now}] - 100\text{ ms}$$
 * **CPU Yielding:** To prevent 100% CPU core starvation, the timing loop yields via sleep in chunks of at most `5 ms`.
 * **Key State Table:** A raw 256-byte static array at `0x00455378` is initialized to `'u'` (`0x75` = up) in `WinMain` and toggled to `'d'` (`0x64` = down) on `WM_KEYDOWN`.
 
+</details>
+
 ---
 
-## Engine Quirks, Desyncs & Known Binary Bugs
+<details>
+<summary><h2 style="display:inline;">Engine Quirks, Desyncs & Known Binary Bugs</h2></summary>
+<a id="engine-quirks-desyncs--known-binary-bugs"></a>
 
 Through Ghidra decompilation and binary disassembly of `lf2.exe`, we reverse-engineered the exact root causes of legendary Little Fighter 2 engine quirks, multiplayer desync crashes, and long-standing community mysteries:
 
@@ -371,7 +435,7 @@ Through Ghidra decompilation and binary disassembly of `lf2.exe`, we reverse-eng
 For over two decades, Little Fighter 2 players experienced sudden match freezes with a `"Synchronisation Error!"` modal dialog. Disassembly of the lockstep network routine in `0x0041C5F0` revealed the exact mechanism:
 * **The 22-Byte Lockstep Packet:** At `0x0041CB80`, every frame exchange transmits a compact 22-byte packet (`net_packet_t`) containing 8 packed player controller states (Up `0x02`, Right `0x04`, Attack `0x08`, Jump `0x10`, Defend `0x20`, Down `0x40`, Left `0x80`), the circular PRNG table index, and a cumulative 16-bit HP checksum.
 * **The Cumulative HP Checksum:** At `0x0041CAD9`, the host iterates through all active character slots and accumulates their current health points (`object_t` offset `0x2FC`):
-  $$\text{checksum} = \sum_{i=0}^{\text{active}-1} \text{HP}_i$$
+  $$\text{checksum} = \sum_{i=0}^{\text{active}-1} \text{HP}[i]$$
 * **Instant Desync Trigger:** If remote and local HP checksums differ by even 1 HP (due to a dropped frame, projectile spawn timing jitter, or floating-point rounding deviation), `0x0041CCB5` immediately halts execution with `"Synchronisation Error!"` (`0x00449384`). Frame sequence counter deviations trigger `"Connection Lost!"` (`0x004493B4`), while packet header protocol mismatches report `"Version not matched!"` (`0x0044939C`).
 
 ### 2. The 100-Slot World Object Array & Screen Overflow Crash (`0x0042E100` / `0x004061D0`)
@@ -381,7 +445,7 @@ For over two decades, Little Fighter 2 players experienced sudden match freezes 
 
 ### 3. The Rudolf Stage Boundary Teleportation Glitch (`0x00403270`)
 * In `func_00403270`, Rudolf’s catch-and-teleport move calculates destination coordinates behind the victim:
-  $$x_{\text{dest}} = x_{\text{victim}} + (\text{facing} == 0 \ ? \ -40 : +40)$$
+  $$x[\text{dest}] = x[\text{victim}] + (\text{facing} == 0 \ ? \ -40 : +40)$$
 * **Missing Boundary Clamp:** The original assembly directly commits `x_position = x_dest` without clamping against camera boundaries or the stage limits (`z_min = 0, z_max = 400`, `x_min = 0, x_max = stage_width`). If an opponent is grabbed near the far-left or far-right edge of the stage, Rudolf teleports into negative space outside the playable world, causing the character to enter an infinite falling trajectory or become permanently unplayable.
 
 ### 4. Player Name Grave Accent Substitution in `control.txt` (`0x004233E0` / `0x0042353A`)
@@ -399,9 +463,13 @@ For over two decades, Little Fighter 2 players experienced sudden match freezes 
   * **Green (`0x0000FF00`):** `"Recording file '%s' saved!"` upon successful match conclusion.
   * **Red (`0x000000FF`):** `"Recording canceled!"` if the match is aborted prematurely.
 
+</details>
+
 ---
 
-## References & Acknowledgments
+<details>
+<summary><h2 style="display:inline;">References & Acknowledgments</h2></summary>
+<a id="references--acknowledgments"></a>
 
 This source lift builds upon the foundation of knowledge created by decades of dedicated Little Fighter 2 community developers and reverse engineers:
 
@@ -412,3 +480,5 @@ This source lift builds upon the foundation of knowledge created by decades of d
 - **OpenLF2 Team ([`OpenLF2/OpenLF2`](https://github.com/OpenLF2/OpenLF2)):** For exploring cross-platform engine architecture and modern SDL integration.
 - **LF2 Empire & The Modding Community:** For decades of comprehensive documentation regarding character `.dat` scripting, interaction tags (`itr`, `bdy`, `wpoint`), and sprite mechanics.
 - **NSA Ghidra:** For providing modern, high-fidelity headless disassembly, decompilation, and reverse engineering instrumentation.
+
+</details>

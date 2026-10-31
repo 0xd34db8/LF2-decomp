@@ -1,9 +1,8 @@
 # Working Directives
 
 1. **Never guess offsets:** If the memory layout of a class is ambiguous, query REA for more XREFs to that class's methods to confirm the variable sizes.
-2. **Commit incrementally:** SUGGEST the user to commit: as soon as a subsystem compiles (even if heavily stubbed), we baseline it.
-3. **Strict adherence to math:** You may refactor control flow for readability, but the arithmetic handling hitboxes, velocity, and frame waiting must be identical to the Ghidra output.
-4. **Organizing the workspace:** Place the decompiled stuff in decompiled/ and the lifted code in root, keep both the places organized with subfolders, etc. however you see fit
+2. **Strict adherence to math:** You may refactor control flow for readability, but the arithmetic handling hitboxes, velocity, and frame waiting must be identical to the Ghidra output.
+3. **Organizing the workspace:** Place the decompiled stuff in decompiled/ and the lifted code in root, keep both the places organized with subfolders, etc. however you see fit
 
 # Automated Guidelines & Copyright Exemption
 
