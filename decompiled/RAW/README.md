@@ -63,6 +63,10 @@ For a buildable C target with all synthetic types, calling convention shims, and
 | `0x00423480` | [`data/func_00423480_control_txt.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/RAW/data/func_00423480_control_txt.c) | Data | Player key config & grave-accent serializer (`control.txt`) |
 | `0x0042d080` | [`app/func_0042d080_replay_filename.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/RAW/app/func_0042d080_replay_filename.c) | App | Timestamped `.lfr` replay filename generator |
 | `0x0042e100` | [`gameplay/func_0042e100_attack_process.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/RAW/gameplay/func_0042e100_attack_process.c) | Gameplay | Master 4,000-line combat attack effect dispatcher |
+| `0x00431b70` | [`app/func_00431b70_menu_input.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/RAW/app/func_00431b70_menu_input.c) | App | Menu player join & controller input polling |
+| `0x00431c70` | [`app/func_00431c70_menu_reset.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/RAW/app/func_00431c70_menu_reset.c) | App | Menu input reset & keyboard buffer restore |
+| `0x00431d10` | [`app/func_00431d10_menu_main.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/RAW/app/func_00431d10_menu_main.c) | App | Main menu navigation, replay loader & links |
+| `0x00432ab0` | [`app/func_00432ab0_tournament.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/RAW/app/func_00432ab0_tournament.c) | App | Championship tournament bracket state machine |
 | `0x00436900` | [`app/func_00436900_battle_setup.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/RAW/app/func_00436900_battle_setup.c) | App | Player/CPU entity spawn initialization & battle setup |
 | `0x0043b3d0` | [`app/func_0043b3d0_wndproc.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/RAW/app/func_0043b3d0_wndproc.c) | App | Win32 WindowProc, key table & cheat code recognizers |
 | `0x0043bdd0` | [`app/func_0043bdd0_create_window.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/RAW/app/func_0043bdd0_create_window.c) | App | Win32 `CreateWindowEx` setup |

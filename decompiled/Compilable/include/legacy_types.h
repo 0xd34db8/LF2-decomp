@@ -14,6 +14,7 @@
 #include <windows.h>
 #include <mmsystem.h>
 #include <winsock.h>
+#include <commdlg.h>
 #endif
 
 #ifdef __cplusplus
@@ -22,6 +23,8 @@ extern "C" {
 
 // Win32 tagMSG compatibility
 typedef MSG tagMSG;
+typedef struct tagOFNA tagOFNA;
+typedef SYSTEMTIME _SYSTEMTIME;
 
 // Time structure compatibility
 typedef struct tm tm;
@@ -53,6 +56,7 @@ typedef void (*code)();
 
 // Builtin intrinsics
 #define builtin_strncpy strncpy
+#define builtin_memcpy memcpy
 
 // Calling convention bridge
 #if defined(__GNUC__) && defined(__i386__)

@@ -68,6 +68,27 @@ int  FUN_0043e9a0();
 int  FUN_0043ee50();
 int  FUN_0043ef70();
 int  FUN_0043f010();
+void FUN_00401290();
+void FUN_004019b0();
+int  FUN_00402100();
+int  FUN_00402130();
+void FUN_004025b0();
+void FUN_0040c030();
+void FUN_0040c0e0();
+void FUN_00415160();
+void FUN_00422b00();
+void FUN_004236d0();
+void FUN_00423840();
+void FUN_00423910();
+void FUN_00423b00();
+void FUN_00431b70();
+void FUN_00431c70();
+void FUN_00431d10();
+void FUN_00432ab0();
+void FUN_0043d280();
+void FUN_0043d2c0();
+int  FUN_0043e620();
+void FUN_0043dfa0();
 int  FUN_004450d0();
 
 #ifdef __cplusplus

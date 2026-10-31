@@ -50,29 +50,13 @@ Over the last two decades, the Little Fighter 2 community has attempted several 
 
 ### What Other Projects Did
 
-* **External Scripting Rewrites:**
-* *Their Approach:* Building a modern engine from scratch and delegating game logic to an external scripting engine, loosely inspired by the original mechanics.
-* *Why it differs:* It is a from-scratch recreation that abandons the original compiled execution flow, state transitions, and arithmetic quirks.
-
-
-* **Dynamic Memory Patching & DLL Hijacking:**
-* *Their Approach:* Intercepting legacy graphics API calls via proxy wrappers and injecting custom logic hooks directly into the closed-source process at runtime.
-* *Why it differs:* This is dynamic memory modding. It still depends entirely on running the closed-source legacy executable in the background rather than freeing the source code from the binary.
-
-
-* **Clean-Room Interpretation Clones:**
-* *Their Approach:* Building an engine clone from scratch by applying modern object-oriented software engineering principles and design patterns.
-* *Why it differs:* While architecturally elegant, these represent a high-level interpretation of how the game *should* work, rather than extracting how the shipped binary actually operates.
-
-
-* **Open-Source Engine Reimplementations:**
-* *Their Approach:* Modern clean-room clones built with contemporary frameworks and libraries specifically to load legacy asset files.
-* *Why it differs:* These independent reimplementations approximate the game's mechanics but lack the authentic assembly state machines, deterministic random generators, and timing quirks.
-
-
-* **Manual Decompilation Attempts:**
-* *Their Approach:* Translating raw disassembly into intermediate scripting languages or partial C stubs function-by-function.
-* *Why it differs:* Historically, these massive forensic undertakings suffer from burnout and are abandoned before a compilable, fully modernized game engine is completed, leaving behind uncorrected offset errors and partial stubs.
+| Community Approach | Methodology | Why It Differs |
+| :--- | :--- | :--- |
+| **External Scripting Rewrites** | Building a new engine from scratch and delegating gameplay logic to an external scripting engine (e.g. AngelScript), loosely inspired by original mechanics. | From-scratch recreation that abandons the original compiled execution flow, state transitions, and arithmetic quirks. |
+| **Dynamic Memory Patching & DLL Hijacking** | Intercepting legacy graphics API calls via proxy wrappers (`ddraw.dll`) and injecting custom logic hooks directly into the closed-source process at runtime. | Dynamic memory modding. It still depends entirely on running the closed-source legacy executable in the background rather than freeing the source code. |
+| **Clean-Room Interpretation Clones** | Rebuilding the engine from scratch using modern object-oriented software engineering principles and architectural design patterns. | While architecturally sound, it represents an interpretation of how the game *should* work, rather than extracting how the shipped binary actually operates. |
+| **Open-Source Engine Reimplementations** | Modern clean-room clones built with contemporary frameworks and libraries specifically to parse and load legacy `.dat` assets. | Approximates mechanics from the outside, but lacks authentic assembly state machines, deterministic random generators, and timing quirks. |
+| **Manual Disassembly Archives** | Manually translating raw disassembly into intermediate scripting languages (e.g. Ruby) or partial C stubs function-by-function. | Massive forensic undertaking that historically stalled before completing a compilable, fully modernized game engine, leaving uncorrected offset errors. |
 
 
 
@@ -348,6 +332,26 @@ make test
 [+] Testing AI melee range attack synthesis...
     AI successfully triggered melee attack and transitioned to punch frame 60!
 [SUCCESS] All AI Controller tests passed with 100% precision!
+
+=== Little Fighter 2 Tournament & Championship Engine Verification ===
+[+] Testing Tournament Initialization (1:1 with State 0x14)...
+    [PASS] 8-contestant bracket initialized to 500 HP, computer controllers, round 0.
+[+] Testing 50-Swap Bracket Seed Shuffling (1:1 with State 0x17)...
+    [PASS] 50-swap shuffle produced valid complete bracket permutation of 4 matches.
+[+] Testing Random Slot Autofill (1:1 with State 0x18)...
+    [PASS] Slots 2..7 auto-filled from available roster; manual slots preserved.
+[+] Testing HP Degradation Mathematical Formula (1:1 with State 0x1A)...
+    [PASS] Verified 300 trials across Easy (61..99%), Normal (73..99%), and Difficult (85..99%).
+[+] Testing CPU Simulation & Boss Advantage Decision Tree...
+    [PASS] Boss contestant won decisively with authentic progress and degraded HP.
+[+] Testing Full 8-Contestant Knockout Ladder Progression...
+    [PASS] Completed 7 knockout matches (4 Prelim -> 2 Semi -> 1 Final). Champion crowned with progress = 7.
+[+] Testing 2-on-2 Team Tournament Mode (4 teams / 8 contestants)...
+    [PASS] 2on2 mode simulated 3 team matches. Both team members advanced and crowned champions.
+[+] Testing Human Match Setup, Survivor HP & Authentic Replay Filename...
+    [PASS] Human match preserved exact survivor HP (342) and verified authentic replay filenames.
+
+[SUCCESS] All Tournament Subsystem Tests Passed (100% 1:1 Parity With 0x00432AB0)!
 
 ==================================================
  Little Fighter 2 - Modern C++ Source Lift
