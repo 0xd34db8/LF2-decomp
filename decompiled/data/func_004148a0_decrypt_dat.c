@@ -1,4 +1,4 @@
-/* Decompiled from lf2.exe:
+/* Decompiled from
  * - 0x004148a0: FUN_004148a0(param_1) - Decrypts param_1 into "data\\temporary.txt"
  * - 0x00414a30: FUN_00414a30(in_file, out_file) - Decrypts in_file into out_file
  * - 0x004146b0: FUN_004146b0(txt_file) - Encrypts txt_file into .dat file

@@ -1,3 +1,10 @@
+/* 
+ * Function: FUN_0040d0a0
+ * Description: Saves stage data to a DAT file in human-readable format.
+ *              This is the inverse of FUN_0040ef70 (load_dat).
+ * Virtual Address: 0x0040d0a0
+ * Calling Convention: __thiscall (ECX = stage_data_t*)
+ */
 
 void FUN_0040d0a0(char *param_1)
 

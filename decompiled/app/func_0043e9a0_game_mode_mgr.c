@@ -1,3 +1,10 @@
+/* 
+ * Virtual Address: 0x0043e9a0
+ * Description: Game mode initialization and resource loading.
+ *              Detects "d" file extensions in "data\data.txt" to set game mode.
+ *              Initializes character sprites, weapons, and AI.
+ * Calling Convention: __cdecl (parameters on stack)
+ */
 
 void FUN_0043e9a0(void)
 

@@ -1,4 +1,4 @@
-/* Decompiled from lf2.exe (0x0040be70)
+/* Decompiled from (0x0040be70)
  * Function: FUN_0040be70 - Sprite sheet lookup & coordinate calculator
  * 
  * Slices 10 sprite sheets per character based on sheet parameters:

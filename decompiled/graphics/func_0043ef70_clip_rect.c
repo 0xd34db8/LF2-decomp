@@ -1,4 +1,4 @@
-/* Decompiled from lf2.exe (0x0043ef70)
+/* Decompiled from (0x0043ef70)
  * 2D Rectangle clipping routine: clips destination rect against screen boundaries (794 x 550)
  * and adjusts source rect accordingly to avoid blitting out of bounds.
  */

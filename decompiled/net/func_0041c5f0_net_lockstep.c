@@ -1,5 +1,4 @@
 /*
- * Little Fighter 2 - Forensic Decompilation Reference
  * Function: Lockstep Network Packet Processing & Synchronization
  * Original Virtual Address: 0x0041C5F0 / 0x0041CB80
  *

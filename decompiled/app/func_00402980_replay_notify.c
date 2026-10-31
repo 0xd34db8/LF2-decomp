@@ -1,5 +1,4 @@
 /*
- * Little Fighter 2 - Forensic Decompilation Reference
  * Function: Replay Recording Screen Notifications
  * Original Virtual Address: 0x00402980
  *

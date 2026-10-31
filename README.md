@@ -12,7 +12,7 @@ This project is a systems programming and binary reverse engineering exercise de
 
 ---
 
-## Prior Art vs. What We Are Doing
+## Prior Art vs. This Project
 
 Over the last two decades, the Little Fighter 2 community has attempted several ambitious projects to modernize or recreate the game. To understand our mission, it is vital to distinguish between modding, clean-room rewrites, and true binary source lifting:
 
@@ -44,7 +44,7 @@ Over the last two decades, the Little Fighter 2 community has attempted several 
 
 
 
-### What WE Are Doing: True 1:1 Source Lifting
+### This Project
 
 1. **Extracting, Not Guessing:** We do not invent custom OOP hierarchies, we do not guess class offsets, and we do not write high-level approximations. We decompile the compiled x86-32 MSVC++ machine code directly from the original executable and reconstruct the authentic logic in modern C++.
 2. **Byte-Level Mathematical Fidelity:** Collision detection, axis-aligned bounding box projections, directional facing mirrors, velocity integrations, deterministic lookup tables, and frame state machines are mathematically identical to the original assembly.
@@ -56,7 +56,7 @@ Over the last two decades, the Little Fighter 2 community has attempted several 
 
 ```text
 LF2/
-├── assets/                     # Visual media assets (hero banner, artwork)
+├── assets/                     # Media assets for this repo
 ├── decompiled/                 # Ground-truth raw C decompilations from Ghidra
 │   ├── app/                    # WinMain, WindowProc, message pumping, cheat recognizers
 │   ├── core/                   # Fixed PRNG circular table, fast abs, AABB primitives

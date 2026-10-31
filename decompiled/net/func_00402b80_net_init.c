@@ -1,5 +1,4 @@
 /*
- * Little Fighter 2 - Forensic Decompilation Reference
  * Function: InitWinSock & Host Socket Initialization
  * Original Virtual Address: 0x00402B80
  *

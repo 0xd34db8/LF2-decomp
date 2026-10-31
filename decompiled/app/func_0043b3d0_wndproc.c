@@ -1,4 +1,4 @@
-/* Decompiled WindowProc from lf2.exe (0x0043b3d0 - 0x0043bc50)
+/* Decompiled WindowProc from (0x0043b3d0 - 0x0043bc50)
  * Handles window messages, keyboard state array, mouse events, and secret cheat codes.
  */
 

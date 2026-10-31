@@ -2,8 +2,6 @@
  * Virtual Address: 0x004061d0
  * Function: object_init / object_reset
  * Calling Convention: __thiscall (ECX = object_t*)
- * 
- * Reconstructed from x86-32 MSVC++ disassembly of lf2.exe
  */
 
 #include <stdint.h>

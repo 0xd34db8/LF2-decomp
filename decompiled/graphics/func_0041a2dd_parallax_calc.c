@@ -1,6 +1,5 @@
-/* Decompiled from lf2.exe (0x0041a2dd - 0x0041a320)
- * Function: FUN_0041a2dd - Multi-layer Horizontal Parallax Calculation
- * 
+/* Decompiled from (0x0041a2dd - 0x0041a320)
+ * Multi-layer Horizontal Parallax Calculation
  * Formula:
  *   If total_stage_width <= 794:
  *     offset = 0;

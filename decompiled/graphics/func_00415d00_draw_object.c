@@ -1,5 +1,5 @@
-/* Decompiled from lf2.exe (0x00415d00)
- * Function: FUN_00415d00 - Entity Screen Coordinate & Centering Projection
+/* Decompiled from (0x00415d00)
+ * Entity Screen Coordinate & Centering Projection
  * 
  * Screen Position Arithmetic:
  *   Facing Right (0): screen_x = obj->x - camera_x - frame->centerx

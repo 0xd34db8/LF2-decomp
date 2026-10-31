@@ -1,5 +1,4 @@
 /*
- * Little Fighter 2 - Forensic Decompilation Reference
  * Function: Replay Filename Generator & Session Setup
  * Original Virtual Address: 0x0042D080
  *

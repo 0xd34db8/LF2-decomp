@@ -1,4 +1,4 @@
-/* Decompiled from lf2.exe:
+/* Decompiled from
  * - 0x0040be70: FUN_0040be70 - Lookup sprite sheet & calculate frame coordinates
  * - 0x0043f010: FUN_0043f010 - Surface blit manager with alpha blending / color keying
  */

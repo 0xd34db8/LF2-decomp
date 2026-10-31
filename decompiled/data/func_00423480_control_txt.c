@@ -1,5 +1,4 @@
 /*
- * Little Fighter 2 - Forensic Decompilation Reference
  * Function: Player Control Configuration & Name Serializer (control.txt)
  * Original Virtual Address: 0x004233E0 (Save) / 0x00423480 (Load)
  *
