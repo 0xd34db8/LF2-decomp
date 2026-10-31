@@ -81,6 +81,16 @@ int main() {
     assert(davis_file->running_speed == 10.0);
     assert(davis_file->jump_height == -16.299999);
 
+    // Verify Sprite Sheet metadata
+    assert(davis_file->bmp_count == 3);
+    assert(std::string(davis_file->bmp_paths[0]) == "sprite\\sys\\davis_0.bmp");
+    assert(davis_file->sheet_start[0] == 0 && davis_file->sheet_w[0] == 79 && davis_file->sheet_h[0] == 79);
+    assert(davis_file->sheet_row[0] == 10 && davis_file->sheet_col[0] == 7);
+    assert(std::string(davis_file->bmp_paths[1]) == "sprite\\sys\\davis_1.bmp");
+    assert(davis_file->sheet_start[1] == 70);
+    assert(std::string(davis_file->bmp_paths[2]) == "sprite\\sys\\davis_2.bmp");
+    assert(davis_file->sheet_start[2] == 140);
+
     // Verify Frame 0 (Standing)
     const lf2::frame_t& f0 = davis_file->frames[0];
     assert(f0.present == 1);

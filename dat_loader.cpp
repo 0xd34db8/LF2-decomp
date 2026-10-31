@@ -132,9 +132,44 @@ bool dat_loader_t::parse_content(file_t* file, const std::string& content, uint3
                     std::strncpy(file->small, val.c_str(), sizeof(file->small) - 1);
                 } else if (token.rfind("file(", 0) == 0) {
                     // Sprite sheet entry: file(0-69): sprite\sys\davis_0.bmp w: 79 h: 79 row: 10 col: 7
+                    int start = 0;
+                    size_t p1 = token.find('(');
+                    size_t p2 = token.find('-');
+                    if (p1 != std::string::npos && p2 != std::string::npos && p2 > p1) {
+                        try {
+                            start = std::stoi(token.substr(p1 + 1, p2 - p1 - 1));
+                        } catch (...) {}
+                    }
                     std::string path_val;
                     stream >> path_val;
-                    file->bmp_count++;
+
+                    int w = 79, h = 79, row = 10, col = 7;
+                    std::string prop;
+                    while (stream >> prop) {
+                        if (prop == "w:") {
+                            stream >> w;
+                        } else if (prop == "h:") {
+                            stream >> h;
+                        } else if (prop == "row:") {
+                            stream >> row;
+                        } else if (prop == "col:") {
+                            stream >> col;
+                            break;
+                        } else {
+                            break;
+                        }
+                    }
+
+                    int idx = file->bmp_count;
+                    if (idx < 10) {
+                        file->sheet_start[idx] = start;
+                        file->sheet_w[idx] = w;
+                        file->sheet_h[idx] = h;
+                        file->sheet_row[idx] = row;
+                        file->sheet_col[idx] = col;
+                        std::strncpy(file->bmp_paths[idx], path_val.c_str(), sizeof(file->bmp_paths[idx]) - 1);
+                        file->bmp_count++;
+                    }
                 } else if (token == "walking_frame_rate") {
                     stream >> file->walking_frame_rate;
                 } else if (token == "walking_speed") {

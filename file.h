@@ -45,7 +45,12 @@ struct file_t {
     itr_t            attacking_itrs[4];     // 0x0B0 - 0x1F0 (4 * 0x50 = 0x140 bytes)
     uint8_t          _pad3[0x2A8];          // 0x1F0 - 0x498
     int32_t          bmp_count;             // 0x498
-    uint8_t          _pad4[0x258];          // 0x49C - 0x6F4
+    char             bmp_paths[10][40];     // 0x49C - 0x62C (10 sprite sheet filenames)
+    int32_t          sheet_start[10];       // 0x62C - 0x654 (first frame pic id for each sheet)
+    int32_t          sheet_w[10];           // 0x654 - 0x67C (frame width)
+    int32_t          sheet_h[10];           // 0x67C - 0x6A4 (frame height)
+    int32_t          sheet_row[10];         // 0x6A4 - 0x6CC (rows in sheet)
+    int32_t          sheet_col[10];         // 0x6CC - 0x6F4 (cols in sheet)
     uint32_t         id;                    // 0x6F4
     uint32_t         type;                  // 0x6F8
     uint32_t         head_bmp_mgr;          // 0x6FC
@@ -71,6 +76,12 @@ static_assert(offsetof(file_t, weapon_hit_sound_id) == 0x0A4, "file_t::weapon_hi
 static_assert(offsetof(file_t, attacking_itrs) == 0x0B0, "file_t::attacking_itrs offset mismatch");
 static_assert(offsetof(file_t, attacking_itrs) + offsetof(itr_t, dvx) == 0x0C4, "file_t::attacking_itrs[0].dvx offset mismatch");
 static_assert(offsetof(file_t, bmp_count) == 0x498, "file_t::bmp_count offset mismatch");
+static_assert(offsetof(file_t, bmp_paths) == 0x49C, "file_t::bmp_paths offset mismatch");
+static_assert(offsetof(file_t, sheet_start) == 0x62C, "file_t::sheet_start offset mismatch");
+static_assert(offsetof(file_t, sheet_w) == 0x654, "file_t::sheet_w offset mismatch");
+static_assert(offsetof(file_t, sheet_h) == 0x67C, "file_t::sheet_h offset mismatch");
+static_assert(offsetof(file_t, sheet_row) == 0x6A4, "file_t::sheet_row offset mismatch");
+static_assert(offsetof(file_t, sheet_col) == 0x6CC, "file_t::sheet_col offset mismatch");
 static_assert(offsetof(file_t, id) == 0x6F4, "file_t::id offset mismatch");
 static_assert(offsetof(file_t, type) == 0x6F8, "file_t::type offset mismatch");
 static_assert(offsetof(file_t, head_bmp_mgr) == 0x6FC, "file_t::head_bmp_mgr offset mismatch");

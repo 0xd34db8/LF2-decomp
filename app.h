@@ -5,6 +5,8 @@
 #include <SDL.h>
 #include "constants.h"
 #include "global.h"
+#include "renderer.h"
+#include "background.h"
 
 namespace lf2 {
 
@@ -98,6 +100,16 @@ public:
     global_t& get_world() { return m_world; }
     const global_t& get_world() const { return m_world; }
 
+    // Graphics, Camera & Background pipeline access
+    renderer_t& get_graphics() { return m_graphics; }
+    const renderer_t& get_graphics() const { return m_graphics; }
+    camera_t& get_camera() { return m_camera; }
+    const camera_t& get_camera() const { return m_camera; }
+    background_t& get_background() { return m_background; }
+    const background_t& get_background() const { return m_background; }
+    void set_stage_loaded(bool loaded) { m_stage_loaded = loaded; }
+    bool is_stage_loaded() const { return m_stage_loaded; }
+
     // Mouse coordinates and buttons
     int16_t get_mouse_x() const { return m_mouse_x; }
     int16_t get_mouse_y() const { return m_mouse_y; }
@@ -152,6 +164,12 @@ private:
 
     // Game world container
     global_t        m_world;
+
+    // Graphics abstraction, Camera & Parallax Background pipeline
+    renderer_t      m_graphics;
+    camera_t        m_camera;
+    background_t    m_background;
+    bool            m_stage_loaded{false};
 };
 
 } // namespace lf2

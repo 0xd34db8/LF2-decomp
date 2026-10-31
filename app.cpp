@@ -96,12 +96,19 @@ bool app_t::init(int width, int height, bool fullscreen) {
     // Preserve authentic 794x550 logical viewport even when resized or in fullscreen
     SDL_RenderSetLogicalSize(m_renderer, WINDOW_WIDTH, WINDOW_HEIGHT);
 
+    // Initialize graphics and camera pipeline
+    m_graphics.set_sdl_renderer(m_renderer);
+    m_camera.set_stage_width(m_background.width);
+
     reset_input();
     m_running = true;
     return true;
 }
 
 void app_t::shutdown() {
+    m_graphics.clear_textures();
+    m_graphics.set_sdl_renderer(nullptr);
+
     if (m_renderer) {
         SDL_DestroyRenderer(m_renderer);
         m_renderer = nullptr;
@@ -417,6 +424,31 @@ void app_t::render() {
     // Classic LF2 backdrop color (#0A0A10 dark stage ambiance)
     SDL_SetRenderDrawColor(m_renderer, 10, 10, 16, 255);
     SDL_RenderClear(m_renderer);
+
+    // Multi-layer parallax background rendering (0x0041a302 - 0x0041a320)
+    if (m_stage_loaded) {
+        m_graphics.draw_background(&m_background, m_camera.x, m_camera.y);
+    }
+
+    // Render active fighters / objects in the game world
+    for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
+        const object_t* obj = m_world.objects[i];
+        if (!obj) continue;
+
+        // Ground plane shadow blit
+        if (m_stage_loaded && !m_background.shadow_path.empty()) {
+            SDL_Texture* shadow_tex = m_graphics.load_texture(m_background.shadow_path, true);
+            if (shadow_tex) {
+                m_graphics.draw_shadow(shadow_tex, obj->x, obj->z, m_camera.x, m_camera.y,
+                                       m_background.shadow_w, m_background.shadow_h);
+            }
+        }
+
+        // Entity frame blit with authentic centerx/centery offset and horizontal flip
+        if (obj->file) {
+            m_graphics.draw_character(obj->file, obj, m_camera.x, m_camera.y);
+        }
+    }
 
     // Present buffer
     SDL_RenderPresent(m_renderer);

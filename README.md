@@ -54,19 +54,24 @@ LF2/
 │   ├── func_00403270_teleport.c
 │   ├── func_004034e0_abs.c
 │   ├── func_0040bbf0_frame_ctor.c
+│   ├── func_0040be70_calc_frame_coords.c
 │   ├── func_0040d0a0_save_dat.c
 │   ├── func_0040ef70_load_dat.c
 │   ├── func_004143d0_file_ctor.c
 │   ├── func_004148a0_decrypt_dat.c
+│   ├── func_00415d00_draw_object.c
 │   ├── func_00417170_random.c
 │   ├── func_004171c0_overlap.c
 │   ├── func_00417400_does_attack_success.c
+│   ├── func_0041a2dd_parallax_calc.c
 │   ├── func_0042e100_attack_process.c
 │   ├── func_0043b3d0_wndproc.c
 │   ├── func_0043bdd0_create_window.c
 │   ├── func_0043bec0_init_display.c
 │   ├── func_0043cf40_winmain.c
-│   └── func_0043e9a0_game_mode_mgr.c
+│   ├── func_0043e9a0_game_mode_mgr.c
+│   ├── func_0043ef70_clip_rect.c
+│   └── func_0043f010_surface_blit.c
 ├── constants.h                 # File IDs, object types, states, weapon IDs
 ├── types.h                     # Portable native pointer definitions
 ├── bdy.h                       # Bounding box collision struct (0x28 / 40 bytes)
@@ -75,6 +80,8 @@ LF2/
 ├── file.h                      # Character / weapon definition (0x25360 / 152,416 bytes)
 ├── object.h                    # World entity instance (0x370 / 880 bytes)
 ├── global.h                    # World manager state & method interfaces
+├── background.h / background.cpp # Multi-layer parallax background loader & geometry
+├── renderer.h / renderer.cpp   # Modern SDL2 renderer, texture cache, color keying, clipping
 ├── overlap.h                   # 2D axis-aligned bounding box intersection math (0x4171C0)
 ├── random_table.h              # 3,000-byte precomputed PRNG table extracted from .data
 ├── random.h / random.cpp       # Deterministic PRNG implementation (0x417170)
@@ -87,6 +94,7 @@ LF2/
 ├── main.cpp                    # Application entry point & headless test harness
 ├── verify_memory_maps.cpp      # Memory map & collision math verification suite
 ├── test_data_loader.cpp        # Data-driven core & cipher verification suite
+├── test_graphics.cpp           # Graphics, sprite slicing & camera verification suite
 ├── REFERENCE_ERRORS.md         # Documented inaccuracies in prior decompilation attempts
 └── Makefile                    # Automated build script (MSYS2 UCRT64 GCC)
 ```
