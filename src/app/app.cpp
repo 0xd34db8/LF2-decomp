@@ -100,12 +100,54 @@ bool app_t::init(int width, int height, bool fullscreen) {
     m_graphics.set_sdl_renderer(m_renderer);
     m_camera.set_stage_width(m_background.width);
 
+    // Attempt to load default stage background
+    const std::string bg_candidates[] = {
+        "bg/template/1/bg.dat",
+        ".legacy/bg/template/1/bg.dat",
+        "bg/sys/hkc/bg.dat",
+        ".legacy/bg/sys/hkc/bg.dat"
+    };
+    for (const auto& bg_path : bg_candidates) {
+        if (m_background.load_from_file(bg_path)) {
+            m_stage_loaded = true;
+            m_camera.set_stage_width(m_background.width);
+            break;
+        }
+    }
+
+    // Attempt to load player character (Davis)
+    const std::string char_candidates[] = {
+        "data/davis.dat",
+        ".legacy/data/davis.dat"
+    };
+    for (const auto& char_path : char_candidates) {
+        if (dat_loader_t::load_file(&m_davis_file, char_path, DAVIS_DAT, TYPE_CHARACTER)) {
+            object_init(&m_player);
+            m_player.file = &m_davis_file;
+            m_player.x_position = 250.0;
+            m_player.y_position = 0.0;
+            m_player.z_position = m_stage_loaded ? ((m_background.zboundary_min + m_background.zboundary_max) / 2.0) : 250.0;
+            m_player.x = static_cast<int32_t>(m_player.x_position);
+            m_player.y = static_cast<int32_t>(m_player.y_position);
+            m_player.z = static_cast<int32_t>(m_player.z_position);
+            m_player.facing = FACING_RIGHT;
+            m_player.frame_id1 = 0; // Standing stance
+            m_world.objects[0] = &m_player;
+            m_player_loaded = true;
+            break;
+        }
+    }
+
     reset_input();
     m_running = true;
     return true;
 }
 
 void app_t::shutdown() {
+    if (m_player_loaded) {
+        dat_loader_t::free_file_resources(&m_davis_file);
+        m_player_loaded = false;
+    }
     m_graphics.clear_textures();
     m_graphics.set_sdl_renderer(nullptr);
 
@@ -414,8 +456,30 @@ void app_t::process_events() {
 }
 
 void app_t::update() {
-    // Game tick execution
-    // (In later subsystems, this invokes global_t / game mode manager 0x0043e9a0)
+    if (m_player_loaded) {
+        input_state_t input;
+        input.left   = is_key_down(VK_LF2_LEFT) || is_key_down('A');
+        input.right  = is_key_down(VK_LF2_RIGHT) || is_key_down('D');
+        input.up     = is_key_down(VK_LF2_UP) || is_key_down('W');
+        input.down   = is_key_down(VK_LF2_DOWN) || is_key_down('S');
+        input.attack = is_key_down('J') || is_key_down('Z');
+        input.jump   = is_key_down('K') || is_key_down('X') || is_key_down(VK_LF2_SPACE);
+        input.defend = is_key_down('L') || is_key_down('C');
+
+        object_handle_input(&m_player, input);
+        object_update_physics(&m_player);
+
+        int32_t z_min = m_stage_loaded ? m_background.zboundary_min : 0;
+        int32_t z_max = m_stage_loaded ? m_background.zboundary_max : 400;
+        int32_t stage_w = m_stage_loaded ? m_background.width : 2000;
+
+        object_update_motion(&m_player, z_min, z_max, stage_w);
+        object_apply_ground_friction(&m_player, 0.6);
+        object_tick_frame(&m_player);
+
+        // Dynamic camera tracking
+        m_camera.update_target(m_player.x);
+    }
 }
 
 void app_t::render() {

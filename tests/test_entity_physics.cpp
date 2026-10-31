@@ -157,6 +157,73 @@ void test_frame_progression()
     std::cout << "    Frame state progression and particle expiration verified 100%!" << std::endl;
 }
 
+void test_input_state_machine()
+{
+    std::cout << "[+] Testing player input state transitions (Walk, Jump, Attack, Defend)..." << std::endl;
+    file_t file;
+    std::memset(&file, 0, sizeof(file));
+    file.walking_speed = 4.5;
+    file.walking_speedz = 2.0;
+    file.jump_height = 12.0;
+
+    file.frames[0].state = STATE_STANDING;
+    file.frames[5].state = STATE_WALKING;
+    file.frames[60].state = STATE_ATTACKING;
+    file.frames[110].state = STATE_DEFEND;
+    file.frames[210].state = STATE_JUMPING;
+
+    object_t player;
+    object_init(&player);
+    player.file = &file;
+    player.frame_id1 = 0;
+
+    // Test Walking Right
+    input_state_t input;
+    input.right = true;
+    object_handle_input(&player, input);
+    assert(player.frame_id1 == 5);
+    assert(player.facing == FACING_RIGHT);
+
+    // Continue walking
+    object_handle_input(&player, input);
+    assert(player.x_velocity == 4.5);
+
+    // Release keys -> Returns to standing
+    input.right = false;
+    object_handle_input(&player, input);
+    assert(player.frame_id1 == 0);
+    assert(player.x_velocity == 0.0);
+
+    // Test Jump
+    input.jump = true;
+    object_handle_input(&player, input);
+    assert(player.frame_id1 == 210);
+    assert(player.y_velocity == -12.0);
+
+    // Test Attack from standing
+    input.jump = false;
+    player.frame_id1 = 0;
+    player.y = 0;
+    player.y_position = 0.0;
+    input.attack = true;
+    object_handle_input(&player, input);
+    assert(player.frame_id1 == 60);
+
+    // Test Defend from standing
+    input.attack = false;
+    player.frame_id1 = 0;
+    input.defend = true;
+    object_handle_input(&player, input);
+    assert(player.frame_id1 == 110);
+
+    // Release defend -> returns to 0
+    input.defend = false;
+    object_handle_input(&player, input);
+    assert(player.frame_id1 == 0);
+
+    std::cout << "    Input state machine transitions verified 100%!" << std::endl;
+}
+
 int main()
 {
     std::cout << "=== Little Fighter 2 Entity Physics & State Machine Tests ===" << std::endl;
@@ -165,6 +232,7 @@ int main()
     test_jump_gravity_and_landing();
     test_ground_friction();
     test_frame_progression();
+    test_input_state_machine();
     std::cout << "[SUCCESS] All Entity Physics & Lifecycle tests passed with 100% precision!" << std::endl;
     return 0;
 }

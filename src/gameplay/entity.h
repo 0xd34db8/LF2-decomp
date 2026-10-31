@@ -17,6 +17,20 @@ void object_update_physics(object_t* obj);
 // Decays horizontal and depth sliding velocity when grounded
 void object_apply_ground_friction(object_t* obj, double friction = 0.6);
 
+// Player controller input state
+struct input_state_t {
+    bool left = false;
+    bool right = false;
+    bool up = false;
+    bool down = false;
+    bool attack = false;
+    bool jump = false;
+    bool defend = false;
+};
+
+// Processes player inputs and executes character state machine transitions
+void object_handle_input(object_t* obj, const input_state_t& input);
+
 // Advances frame wait counter, updates frame history, and transitions to frame->next
 // Returns false if entity has expired (next == 999 or 1000)
 bool object_tick_frame(object_t* obj);

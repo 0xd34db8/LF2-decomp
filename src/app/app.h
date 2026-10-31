@@ -7,6 +7,8 @@
 #include "global.h"
 #include "renderer.h"
 #include "background.h"
+#include "entity.h"
+#include "dat_loader.h"
 
 namespace lf2 {
 
@@ -170,6 +172,11 @@ private:
     camera_t        m_camera;
     background_t    m_background;
     bool            m_stage_loaded{false};
+
+    // Active player character (Davis)
+    object_t        m_player;
+    file_t          m_davis_file;
+    bool            m_player_loaded{false};
 };
 
 } // namespace lf2

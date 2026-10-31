@@ -197,4 +197,141 @@ bool object_tick_frame(object_t* obj)
     return true;
 }
 
+void object_handle_input(object_t* obj, const input_state_t& input)
+{
+    if (!obj || !obj->file) return;
+
+    if (obj->frame_id1 >= MAX_FRAMES) return;
+
+    const auto& cur_frame = obj->file->frames[obj->frame_id1];
+    uint32_t state = cur_frame.state;
+
+    // Handle jump landing frame transition (State 4 landing on ground)
+    if (state == STATE_JUMPING && obj->y == 0 && obj->y_position == 0.0) {
+        if (obj->frame_id1 >= 210 && obj->frame_id1 <= 214) {
+            obj->frame_id1 = 215; // Landing frame
+            obj->wait_counter = 0;
+            obj->x_velocity = 0.0;
+            obj->z_velocity = 0.0;
+            return;
+        }
+    }
+
+    // State 0: Standing / Idle
+    if (state == STATE_STANDING) {
+        if (input.jump) {
+            double jh = (obj->file->jump_height > 0.0) ? obj->file->jump_height : 11.0;
+            obj->y_velocity = -jh;
+            obj->y_position = -1.0;
+            obj->frame_id1 = 210;
+            obj->wait_counter = 0;
+
+            double jd = (obj->file->jump_distance > 0.0) ? obj->file->jump_distance : 4.0;
+            double jdz = (obj->file->jump_distancez > 0.0) ? obj->file->jump_distancez : 2.0;
+
+            if (input.left) {
+                obj->facing = FACING_LEFT;
+                obj->x_velocity = -jd;
+            } else if (input.right) {
+                obj->facing = FACING_RIGHT;
+                obj->x_velocity = jd;
+            } else {
+                obj->x_velocity = 0.0;
+            }
+
+            if (input.up) {
+                obj->z_velocity = -jdz;
+            } else if (input.down) {
+                obj->z_velocity = jdz;
+            } else {
+                obj->z_velocity = 0.0;
+            }
+            return;
+        }
+
+        if (input.attack) {
+            obj->frame_id1 = 60; // Punch
+            obj->wait_counter = 0;
+            obj->x_velocity = 0.0;
+            obj->z_velocity = 0.0;
+            return;
+        }
+
+        if (input.defend) {
+            obj->frame_id1 = 110; // Guard
+            obj->wait_counter = 0;
+            obj->x_velocity = 0.0;
+            obj->z_velocity = 0.0;
+            return;
+        }
+
+        if (input.left || input.right || input.up || input.down) {
+            obj->frame_id1 = 5; // Walk start
+            obj->wait_counter = 0;
+            if (input.left) obj->facing = FACING_LEFT;
+            else if (input.right) obj->facing = FACING_RIGHT;
+            return;
+        }
+    }
+
+    // State 1: Walking
+    if (state == STATE_WALKING) {
+        if (input.jump) {
+            double jh = (obj->file->jump_height > 0.0) ? obj->file->jump_height : 11.0;
+            obj->y_velocity = -jh;
+            obj->y_position = -1.0;
+            obj->frame_id1 = 210;
+            obj->wait_counter = 0;
+
+            double jd = (obj->file->jump_distance > 0.0) ? obj->file->jump_distance : 4.0;
+            obj->x_velocity = (obj->facing == FACING_LEFT) ? -jd : jd;
+            return;
+        }
+
+        if (input.attack) {
+            obj->frame_id1 = 60;
+            obj->wait_counter = 0;
+            obj->x_velocity = 0.0;
+            return;
+        }
+
+        if (input.defend) {
+            obj->frame_id1 = 110;
+            obj->wait_counter = 0;
+            obj->x_velocity = 0.0;
+            return;
+        }
+
+        if (!input.left && !input.right && !input.up && !input.down) {
+            obj->frame_id1 = 0; // Return to idle
+            obj->wait_counter = 0;
+            obj->x_velocity = 0.0;
+            obj->z_velocity = 0.0;
+            return;
+        }
+
+        if (input.left) obj->facing = FACING_LEFT;
+        else if (input.right) obj->facing = FACING_RIGHT;
+
+        double ws = (obj->file->walking_speed > 0.0) ? obj->file->walking_speed : 4.0;
+        double wsz = (obj->file->walking_speedz > 0.0) ? obj->file->walking_speedz : 2.5;
+
+        if (input.left) obj->x_velocity = -ws;
+        else if (input.right) obj->x_velocity = ws;
+        else obj->x_velocity = 0.0;
+
+        if (input.up) obj->z_velocity = -wsz;
+        else if (input.down) obj->z_velocity = wsz;
+        else obj->z_velocity = 0.0;
+    }
+
+    // State 7: Defending / Guard
+    if (state == STATE_DEFEND) {
+        if (!input.defend) {
+            obj->frame_id1 = 0; // Return to stance
+            obj->wait_counter = 0;
+        }
+    }
+}
+
 } // namespace lf2

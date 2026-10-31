@@ -7,7 +7,7 @@ SDL2_INC = -I$(SDL2_DIR)/include -I$(SDL2_DIR)/include/SDL2
 SDL2_LIB = -L$(SDL2_DIR)/lib -lmingw32 -lSDL2main -lSDL2
 
 INCLUDES = -Isrc -Isrc/core -Isrc/gameplay -Isrc/data -Isrc/graphics -Isrc/app -I. $(SDL2_INC)
-CXXFLAGS ?= -std=c++20 -Wall -Wextra -O2 $(INCLUDES)
+CXXFLAGS ?= -std=c++20 -Wall -Wextra -O2 -MMD -MP $(INCLUDES)
 
 LIB_SRCS = \
 	src/core/random.cpp \
@@ -67,6 +67,8 @@ $(TEST_ENT_EXE): $(TEST_ENT_SRCS) $(TARGET_LIB)
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+-include $(LIB_OBJS:.o=.d) $(APP_OBJS:.o=.d)
+
 test: $(TEST_EXES) $(TARGET_APP)
 	./$(TEST_MAP_EXE)
 	./$(TEST_DAT_EXE)
@@ -75,4 +77,4 @@ test: $(TEST_EXES) $(TARGET_APP)
 	./$(TARGET_APP) --test --frames 30
 
 clean:
-	$(RM) $(LIB_OBJS) $(APP_OBJS) $(TARGET_LIB) $(TARGET_APP) $(TEST_EXES)
+	$(RM) $(LIB_OBJS) $(APP_OBJS) $(LIB_OBJS:.o=.d) $(APP_OBJS:.o=.d) $(TARGET_LIB) $(TARGET_APP) $(TEST_EXES)
