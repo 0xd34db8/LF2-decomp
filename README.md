@@ -57,10 +57,15 @@ LF2/
 │   ├── func_0040d0a0_save_dat.c
 │   ├── func_0040ef70_load_dat.c
 │   ├── func_004143d0_file_ctor.c
+│   ├── func_004148a0_decrypt_dat.c
 │   ├── func_00417170_random.c
 │   ├── func_004171c0_overlap.c
 │   ├── func_00417400_does_attack_success.c
 │   ├── func_0042e100_attack_process.c
+│   ├── func_0043b3d0_wndproc.c
+│   ├── func_0043bdd0_create_window.c
+│   ├── func_0043bec0_init_display.c
+│   ├── func_0043cf40_winmain.c
 │   └── func_0043e9a0_game_mode_mgr.c
 ├── constants.h                 # File IDs, object types, states, weapon IDs
 ├── types.h                     # Portable native pointer definitions
@@ -75,7 +80,13 @@ LF2/
 ├── random.h / random.cpp       # Deterministic PRNG implementation (0x417170)
 ├── teleport.cpp                # 1:1 Rudolf teleportation logic (0x403270)
 ├── attack.cpp                  # 1:1 Hitbox collision & attack queueing (0x417400)
-├── verify_memory_maps.cpp      # Comprehensive memory map & gameplay test suite
+├── cipher.h / cipher.cpp       # Authentic Vigenère .dat cipher & decryptor (0x4148a0)
+├── data_txt.h / data_txt.cpp   # Manifest parser for data/data.txt
+├── dat_loader.h / dat_loader.cpp # Full .dat script tokenizer and loader (0x40ef70)
+├── app.h / app.cpp             # Modern SDL2 lifecycle, fixed 30 FPS pacing, input table
+├── main.cpp                    # Application entry point & headless test harness
+├── verify_memory_maps.cpp      # Memory map & collision math verification suite
+├── test_data_loader.cpp        # Data-driven core & cipher verification suite
 ├── REFERENCE_ERRORS.md         # Documented inaccuracies in prior decompilation attempts
 └── Makefile                    # Automated build script (MSYS2 UCRT64 GCC)
 ```
@@ -145,7 +156,78 @@ mingw32-make test
     Z-out-of-bounds correctly ignored: 0
 
 [SUCCESS] All data structures, binary alignments, and lifted logic verified 100%!
+
+=== Little Fighter 2 Data-Driven Core Verification ===
+[+] Testing Cipher Encryption & Decryption Round-Trip...
+    Round-trip successfully restored exact plaintext!
+[+] Testing Decryption of Authentic .legacy/data/template.dat...
+    template.dat decrypted successfully (53588 bytes)!
+[+] Testing Parser for Authentic .legacy/data/data.txt...
+    data.txt loaded 65 objects and 12 backgrounds.
+[+] Testing Full .dat Parser on .legacy/data/davis.dat...
+    davis.dat parsed successfully:
+      Name: Davis
+      Head: sprite\sys\davis_f.bmp
+      Walking speed: 5
+      Frame 0: pic=0, bdy=(43x62)
+      Frame 5: pic=4, catch itr=(25x65)
+[+] Testing Serialization to String & Re-parsing...
+[SUCCESS] All Data-Driven Core tests passed with 100% precision!
+
+==================================================
+ Little Fighter 2 - Modern C++ Source Lift
+ Authentic 1:1 Logic & SDL2 Modern Execution Core
+==================================================
+[LF2] Initializing Application Core (794x550)...
+[LF2] Window & Renderer initialized successfully.
+[LF2] Fixed frame pacing: 33 ms (~30.3 FPS), 100 ms lag clamp.
+[LF2] Input mapping: 256-byte Win32-compatible key state table.
+[LF2] Running in automated verification test mode for 30 frames...
+[LF2 TEST SUCCESS] 'lf2.net' cheat successfully detected and unlocked!
+[LF2 TEST SUCCESS] 'herofighter.com' cheat successfully detected and unlocked!
+[LF2 TEST SUCCESS] 'ABC' developer mode cheat successfully detected and unlocked!
+[LF2 TEST SUCCESS] Frame pacing and event loop executed 30 frames cleanly.
 ```
+
+---
+
+## Reverse-Engineered Secrets, Ciphers & Easter Eggs
+
+Ghidra decompilation and binary disassembly revealed several fascinating, historic internal mechanics and easter eggs embedded directly into the machine code of `lf2.exe`:
+
+### 1. The Legendary Resource Decryption Key: `"SiuHungIsAGoodBearBecauseHeIsVeryGood"`
+* **Memory Location:** Hardcoded in the `.rdata` section at virtual address `0x0044892c` (file offset `0x4792c`).
+* **Origin & Fun Fact:** "Siu Hung" (小熊) is the Cantonese pseudonym of Marti Wong (黃小熊), co-creator of Little Fighter 2 alongside Starsky Wong. Translated from Cantonese, it means:
+  > *"Little Bear is a good bear because he is very good."*
+* **The Cipher Architecture:** LF2 encodes all game resources (`.dat` files) using a byte-wise additive/subtractive variant of the Vigenère cipher operating modulo 256.
+* **The 123-Byte Header Trick:** Every `.dat` file begins with a 123-byte (`0x7B`) padding header. In `FUN_004148a0`, the decryptor steps through the key `(key_idx + 1) % 37` for each of the 123 dummy bytes before decrypting any payload data. Since `123 % 37 = 12`, payload decryption always begins at key index `12` (the character `'G'` in `"GoodBear..."`):
+  $$\text{plaintext\_byte} = (\text{cipher\_byte} - \text{key}[k] + 256) \pmod{256}$$
+* **Modding Community Nostalgia:** For over two decades, this hardcoded string has been celebrated among LF2 modders who reverse-engineered the binary to create data decrypters (e.g. *LF2 Data Changer*).
+
+### 2. Secret Cheat Code State Machines in WindowProc (`0x0043b3d0`)
+The original window procedure maintains static state counters that detect sequential keystrokes typed anywhere in the application:
+* **`"lf2.net"` (Roster Unlock):** Typing `L` -> `F` -> `2` -> `.` -> `N` -> `E` -> `T` increments state tracker `DAT_0045857c` and sets `DAT_00455471 = 'd'` (ASCII 0x64). This unlocks Julian, Firzen, and LouisEX on the character selection screen along with other enemy characters, which are non playable by default.
+* **`"herofighter.com"` (Sequel Easter Egg):** Typing `H` -> `E` -> `R` -> `O` -> `F` -> `I` -> `G` -> `H` -> `T` -> `E` -> `R` -> `.` -> `C` -> `O` -> `M` advances tracker `DAT_00458578` and sets `DAT_00455470 = 'd'`. Marti Wong embedded this secret domain name in later versions of LF2 as a nod to his next major project, *Hero Fighter*! It enables the user to use function keys in the Stage mode of the game.
+* **`"ABC"` (Internal Data Debugger):** In `FUN_0043e9a0`, pressing `A` -> `B` -> `C` sequentially sets `DAT_00450bec = 1`, unlocking mode switching via keys `'1'`, `'2'`, `'3'` to access the built-in frame/weapon inspector mode.
+
+### 3. Window & Platform Identity Artifacts
+* **Window Class Name:** The Win32 window class is registered as `"Marti"` at `0x00447634`.
+* **Window Title:** Defined as `"Little Fighter 2"` at `0x00447620`.
+* **Authentic Viewport Resolution:** Hardcoded in the `.data` segment at `DAT_0044d78c` (width = `794`) and `DAT_0044d790` (height = `550`).
+
+### 4. Deterministic Multiplayer PRNG Table
+* Standard C library `rand()` implementations vary across compiler runtimes, which would desynchronize peer-to-peer multiplayer.
+* LF2 completely avoids `rand()` during gameplay: at `0x0044FF90` in `.data`, it embeds a static, precomputed 3,000-byte pseudo-random table.
+* The PRNG routine (`0x00417170`) simply advances a circular index:
+  $$\text{index} = (\text{index} + 1) \pmod{3000}$$
+  guaranteeing 100% deterministic lockstep synchronization across network clients.
+
+### 5. Fixed-Step 30 FPS Timing & Spiral-of-Death Protection (`0x0043cf40`)
+* **Tick Step:** In battle (`DAT_0044d02c != 0`), the step is `33 ms` (`0x21`), yielding ~30.3 FPS. In menus, it steps at `3 ms`.
+* **Spiral of Death Clamp:** If system lag causes the accumulator to fall behind by more than `100 ms`, the game drops excess accumulated time:
+  $$\text{if } (\text{now} - \text{last\_time} > 100) \implies \text{last\_time} = \text{now} - 100$$
+* **CPU Yielding:** To prevent 100% CPU core starvation, the timing loop yields via sleep in chunks of at most `5 ms`.
+* **Key State Table:** A raw 256-byte static array at `0x00455378` is initialized to `'u'` (`0x75` = up) in `WinMain` and toggled to `'d'` (`0x64` = down) on `WM_KEYDOWN`.
 
 ---
 
