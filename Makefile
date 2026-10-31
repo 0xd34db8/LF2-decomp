@@ -22,6 +22,10 @@ LIB_SRCS = \
 	src/data/dat_loader.cpp \
 	src/graphics/background.cpp \
 	src/graphics/renderer.cpp \
+	src/audio/audio.cpp \
+	src/net/network.cpp \
+	src/app/menu.cpp \
+	src/app/stage.cpp \
 	src/app/app.cpp
 
 LIB_OBJS = $(LIB_SRCS:.cpp=.o)
@@ -52,7 +56,16 @@ TEST_GRP_EXE = test_grapple_weapon.exe
 TEST_AI_SRCS = tests/test_ai_controller.cpp
 TEST_AI_EXE = test_ai_controller.exe
 
-TEST_EXES = $(TEST_MAP_EXE) $(TEST_DAT_EXE) $(TEST_GFX_EXE) $(TEST_ENT_EXE) $(TEST_CBT_EXE) $(TEST_GRP_EXE) $(TEST_AI_EXE)
+TEST_AUD_SRCS = tests/test_audio_system.cpp
+TEST_AUD_EXE = test_audio_system.exe
+
+TEST_STG_SRCS = tests/test_stage_menu.cpp
+TEST_STG_EXE = test_stage_menu.exe
+
+TEST_NET_SRCS = tests/test_network_sync.cpp
+TEST_NET_EXE = test_network_sync.exe
+
+TEST_EXES = $(TEST_MAP_EXE) $(TEST_DAT_EXE) $(TEST_GFX_EXE) $(TEST_ENT_EXE) $(TEST_CBT_EXE) $(TEST_GRP_EXE) $(TEST_AI_EXE) $(TEST_AUD_EXE) $(TEST_STG_EXE) $(TEST_NET_EXE)
 
 .PHONY: all test clean
 
@@ -62,28 +75,37 @@ $(TARGET_LIB): $(LIB_OBJS)
 	$(AR) rcs $@ $^
 
 $(TARGET_APP): $(APP_OBJS) $(TARGET_LIB)
-	$(CXX) $(CXXFLAGS) $(APP_OBJS) -L. -llf2 $(SDL2_LIB) -o $@
+	$(CXX) $(CXXFLAGS) $(APP_OBJS) -L. -llf2 $(SDL2_LIB) -lws2_32 -o $@
 
 $(TEST_MAP_EXE): $(TEST_MAP_SRCS) $(TARGET_LIB)
-	$(CXX) $(CXXFLAGS) $(TEST_MAP_SRCS) -L. -llf2 -o $@
+	$(CXX) $(CXXFLAGS) $(TEST_MAP_SRCS) -L. -llf2 -lws2_32 -o $@
 
 $(TEST_DAT_EXE): $(TEST_DAT_SRCS) $(TARGET_LIB)
-	$(CXX) $(CXXFLAGS) $(TEST_DAT_SRCS) -L. -llf2 -o $@
+	$(CXX) $(CXXFLAGS) $(TEST_DAT_SRCS) -L. -llf2 -lws2_32 -o $@
 
 $(TEST_GFX_EXE): $(TEST_GFX_SRCS) $(TARGET_LIB)
-	$(CXX) $(CXXFLAGS) $(TEST_GFX_SRCS) -L. -llf2 $(SDL2_LIB) -o $@
+	$(CXX) $(CXXFLAGS) $(TEST_GFX_SRCS) -L. -llf2 $(SDL2_LIB) -lws2_32 -o $@
 
 $(TEST_ENT_EXE): $(TEST_ENT_SRCS) $(TARGET_LIB)
-	$(CXX) $(CXXFLAGS) $(TEST_ENT_SRCS) -L. -llf2 -o $@
+	$(CXX) $(CXXFLAGS) $(TEST_ENT_SRCS) -L. -llf2 -lws2_32 -o $@
 
 $(TEST_CBT_EXE): $(TEST_CBT_SRCS) $(TARGET_LIB)
-	$(CXX) $(CXXFLAGS) $(TEST_CBT_SRCS) -L. -llf2 -o $@
+	$(CXX) $(CXXFLAGS) $(TEST_CBT_SRCS) -L. -llf2 -lws2_32 -o $@
 
 $(TEST_GRP_EXE): $(TEST_GRP_SRCS) $(TARGET_LIB)
-	$(CXX) $(CXXFLAGS) $(TEST_GRP_SRCS) -L. -llf2 -o $@
+	$(CXX) $(CXXFLAGS) $(TEST_GRP_SRCS) -L. -llf2 -lws2_32 -o $@
 
 $(TEST_AI_EXE): $(TEST_AI_SRCS) $(TARGET_LIB)
-	$(CXX) $(CXXFLAGS) $(TEST_AI_SRCS) -L. -llf2 -o $@
+	$(CXX) $(CXXFLAGS) $(TEST_AI_SRCS) -L. -llf2 -lws2_32 -o $@
+
+$(TEST_AUD_EXE): $(TEST_AUD_SRCS) $(TARGET_LIB)
+	$(CXX) $(CXXFLAGS) $(TEST_AUD_SRCS) -L. -llf2 $(SDL2_LIB) -lws2_32 -o $@
+
+$(TEST_STG_EXE): $(TEST_STG_SRCS) $(TARGET_LIB)
+	$(CXX) $(CXXFLAGS) $(TEST_STG_SRCS) -L. -llf2 -lws2_32 -o $@
+
+$(TEST_NET_EXE): $(TEST_NET_SRCS) $(TARGET_LIB)
+	$(CXX) $(CXXFLAGS) $(TEST_NET_SRCS) -L. -llf2 -lws2_32 -o $@
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -98,6 +120,9 @@ test: $(TEST_EXES) $(TARGET_APP)
 	./$(TEST_CBT_EXE)
 	./$(TEST_GRP_EXE)
 	./$(TEST_AI_EXE)
+	./$(TEST_AUD_EXE)
+	./$(TEST_STG_EXE)
+	./$(TEST_NET_EXE)
 	./$(TARGET_APP) --test --frames 30
 
 clean:
