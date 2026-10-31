@@ -13,6 +13,7 @@ LIB_SRCS = \
 	src/core/random.cpp \
 	src/gameplay/teleport.cpp \
 	src/gameplay/attack.cpp \
+	src/gameplay/entity.cpp \
 	src/data/cipher.cpp \
 	src/data/data_txt.cpp \
 	src/data/dat_loader.cpp \
@@ -36,7 +37,10 @@ TEST_DAT_EXE = test_data_loader.exe
 TEST_GFX_SRCS = tests/test_graphics.cpp
 TEST_GFX_EXE = test_graphics.exe
 
-TEST_EXES = $(TEST_MAP_EXE) $(TEST_DAT_EXE) $(TEST_GFX_EXE)
+TEST_ENT_SRCS = tests/test_entity_physics.cpp
+TEST_ENT_EXE = test_entity_physics.exe
+
+TEST_EXES = $(TEST_MAP_EXE) $(TEST_DAT_EXE) $(TEST_GFX_EXE) $(TEST_ENT_EXE)
 
 .PHONY: all test clean
 
@@ -57,6 +61,9 @@ $(TEST_DAT_EXE): $(TEST_DAT_SRCS) $(TARGET_LIB)
 $(TEST_GFX_EXE): $(TEST_GFX_SRCS) $(TARGET_LIB)
 	$(CXX) $(CXXFLAGS) $(TEST_GFX_SRCS) -L. -llf2 $(SDL2_LIB) -o $@
 
+$(TEST_ENT_EXE): $(TEST_ENT_SRCS) $(TARGET_LIB)
+	$(CXX) $(CXXFLAGS) $(TEST_ENT_SRCS) -L. -llf2 -o $@
+
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
@@ -64,6 +71,7 @@ test: $(TEST_EXES) $(TARGET_APP)
 	./$(TEST_MAP_EXE)
 	./$(TEST_DAT_EXE)
 	./$(TEST_GFX_EXE)
+	./$(TEST_ENT_EXE)
 	./$(TARGET_APP) --test --frames 30
 
 clean:

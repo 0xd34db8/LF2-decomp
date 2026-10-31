@@ -58,27 +58,12 @@ Over the last two decades, the Little Fighter 2 community has attempted several 
 LF2/
 ├── assets/                     # Visual media assets (hero banner, artwork)
 ├── decompiled/                 # Ground-truth raw C decompilations from Ghidra
-│   ├── func_00403270_teleport.c
-│   ├── func_004034e0_abs.c
-│   ├── func_0040bbf0_frame_ctor.c
-│   ├── func_0040be70_calc_frame_coords.c
-│   ├── func_0040d0a0_save_dat.c
-│   ├── func_0040ef70_load_dat.c
-│   ├── func_004143d0_file_ctor.c
-│   ├── func_004148a0_decrypt_dat.c
-│   ├── func_00415d00_draw_object.c
-│   ├── func_00417170_random.c
-│   ├── func_004171c0_overlap.c
-│   ├── func_00417400_does_attack_success.c
-│   ├── func_0041a2dd_parallax_calc.c
-│   ├── func_0042e100_attack_process.c
-│   ├── func_0043b3d0_wndproc.c
-│   ├── func_0043bdd0_create_window.c
-│   ├── func_0043bec0_init_display.c
-│   ├── func_0043cf40_winmain.c
-│   ├── func_0043e9a0_game_mode_mgr.c
-│   ├── func_0043ef70_clip_rect.c
-│   └── func_0043f010_surface_blit.c
+│   ├── app/                    # WinMain, WindowProc, message pumping, cheat recognizers
+│   ├── core/                   # Fixed PRNG circular table, fast abs, AABB primitives
+│   ├── data/                   # Vigenère decryption, .dat loading/saving, struct ctors
+│   ├── gameplay/               # Rudolf teleport, attack processing, collision detection, object ctor
+│   ├── graphics/               # DirectDraw display init, blitting, 2D clipping, parallax math
+│   └── README.md               # Memory address cross-reference & function index
 ├── src/                        # Lifted & modernized C++20 source code
 │   ├── core/                   # Memory maps, game data structures & PRNG table
 │   │   ├── constants.h         # File IDs, object types, states, weapon IDs
@@ -94,7 +79,8 @@ LF2/
 │   │   └── random.h / .cpp     # Deterministic PRNG implementation (0x417170)
 │   ├── gameplay/               # Lifted gameplay logic routines
 │   │   ├── teleport.cpp        # 1:1 Rudolf teleportation logic (0x403270)
-│   │   └── attack.cpp          # 1:1 Hitbox collision & attack queueing (0x417400)
+│   │   ├── attack.cpp          # 1:1 Hitbox collision & attack queueing (0x417400)
+│   │   └── entity.h / .cpp     # 1:1 Entity init (0x4061d0), 3D motion, gravity, wait counters
 │   ├── data/                   # Resource loaders & crypto
 │   │   ├── cipher.h / .cpp     # Authentic Vigenère .dat cipher & decryptor (0x4148a0)
 │   │   ├── data_txt.h / .cpp   # Manifest parser for data/data.txt
@@ -108,7 +94,8 @@ LF2/
 ├── tests/                      # Automated verification test suites
 │   ├── verify_memory_maps.cpp  # Memory map & collision math verification suite
 │   ├── test_data_loader.cpp    # Data-driven core & cipher verification suite
-│   └── test_graphics.cpp       # Graphics, sprite slicing & camera verification suite
+│   ├── test_graphics.cpp       # Graphics, sprite slicing & camera verification suite
+│   └── test_entity_physics.cpp # Entity lifecycle, gravity, friction & frame animation suite
 ├── third_party/                # Self-contained vendor dependencies (SDL2 development kit)
 ├── REFERENCE_ERRORS.md         # Documented inaccuracies in prior decompilation attempts
 └── Makefile                    # Automated build script (MSYS2 UCRT64 GCC)
@@ -250,6 +237,34 @@ make test
       Frame 5: pic=4, catch itr=(25x65)
 [+] Testing Serialization to String & Re-parsing...
 [SUCCESS] All Data-Driven Core tests passed with 100% precision!
+
+=== Little Fighter 2 Graphics, Sprite & Camera Pipeline Verification ===
+[+] Testing Software 2D Clipping (0x0043ef70)...
+    2D Software Clipping passed all edge cases.
+[+] Testing Sprite Sheet Slicing with 1-Pixel Separator Gutter...
+    Sprite Sheet Slicing verified with exact 1-pixel separator gutter.
+[+] Testing Entity Centering & Screen Projection Math (0x00415d00)...
+    Centering math correctly offsets both facing directions and ground elevation.
+[+] Testing Authentic Parallax Formula on .legacy/bg/template/1/bg.dat...
+    Parallax horizontal positioning exactly aligns layer edges with screen viewport.
+[+] Testing Decryption of .legacy/bg/sys/hkc/bg.dat...
+    HK_Coliseum stage loaded with 12 layers.
+[+] Testing SDL2 Texture Loading & Black (0,0,0) Color Key...
+    SDL2 Texture Loader and Color Keying executed without error.
+[SUCCESS] All Graphics, Sprite Management & Camera Pipeline tests passed 100%!
+
+=== Little Fighter 2 Entity Physics & State Machine Tests ===
+[+] Testing object_init (0x004061d0 1:1 parity)...
+    object_init passed: all offsets, vitals, and tables verified!
+[+] Testing 3D motion integration and stage boundaries...
+    3D motion and boundary clamping verified!
+[+] Testing jump physics, gravitational acceleration, and landing...
+    Jump arc completed in 20 ticks and landed cleanly at y = 0!
+[+] Testing ground friction deceleration...
+    Ground friction successfully halted sliding velocities!
+[+] Testing frame advancement, wait counters, and history shifting...
+    Frame state progression and particle expiration verified 100%!
+[SUCCESS] All Entity Physics & Lifecycle tests passed with 100% precision!
 
 ==================================================
  Little Fighter 2 - Modern C++ Source Lift
