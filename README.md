@@ -1,6 +1,12 @@
+<div align="center">
+
+![Little Fighter 2 Banner](assets/hero.png)
+
 # Little Fighter 2 | 1:1 C++ Source Lift
 
 A true 1:1 C++20 source decompilation and modernization of the original *Little Fighter 2* (`lf2.exe`, version 1.9c / 2.0a, x86-32 MSVC++).
+
+</div>
 
 This project is a systems programming and binary reverse engineering exercise designed to extract, lift, and preserve the authentic game logic (state machines, frame-accurate timings, hitbox collision mathematics, and data-driven file loading) while shedding legacy DirectDraw 6 and Win32 dependencies in favor of a modern cross-platform architecture.
 
@@ -50,6 +56,7 @@ Over the last two decades, the Little Fighter 2 community has attempted several 
 
 ```text
 LF2/
+├── assets/                     # Visual media assets (hero banner, artwork)
 ├── decompiled/                 # Ground-truth raw C decompilations from Ghidra
 │   ├── func_00403270_teleport.c
 │   ├── func_004034e0_abs.c
@@ -72,29 +79,37 @@ LF2/
 │   ├── func_0043e9a0_game_mode_mgr.c
 │   ├── func_0043ef70_clip_rect.c
 │   └── func_0043f010_surface_blit.c
-├── constants.h                 # File IDs, object types, states, weapon IDs
-├── types.h                     # Portable native pointer definitions
-├── bdy.h                       # Bounding box collision struct (0x28 / 40 bytes)
-├── itr.h                       # Interaction hitbox struct (0x50 / 80 bytes)
-├── frame.h                     # Frame state machine (0x178 / 376 bytes)
-├── file.h                      # Character / weapon definition (0x25360 / 152,416 bytes)
-├── object.h                    # World entity instance (0x370 / 880 bytes)
-├── global.h                    # World manager state & method interfaces
-├── background.h / background.cpp # Multi-layer parallax background loader & geometry
-├── renderer.h / renderer.cpp   # Modern SDL2 renderer, texture cache, color keying, clipping
-├── overlap.h                   # 2D axis-aligned bounding box intersection math (0x4171C0)
-├── random_table.h              # 3,000-byte precomputed PRNG table extracted from .data
-├── random.h / random.cpp       # Deterministic PRNG implementation (0x417170)
-├── teleport.cpp                # 1:1 Rudolf teleportation logic (0x403270)
-├── attack.cpp                  # 1:1 Hitbox collision & attack queueing (0x417400)
-├── cipher.h / cipher.cpp       # Authentic Vigenère .dat cipher & decryptor (0x4148a0)
-├── data_txt.h / data_txt.cpp   # Manifest parser for data/data.txt
-├── dat_loader.h / dat_loader.cpp # Full .dat script tokenizer and loader (0x40ef70)
-├── app.h / app.cpp             # Modern SDL2 lifecycle, fixed 30 FPS pacing, input table
-├── main.cpp                    # Application entry point & headless test harness
-├── verify_memory_maps.cpp      # Memory map & collision math verification suite
-├── test_data_loader.cpp        # Data-driven core & cipher verification suite
-├── test_graphics.cpp           # Graphics, sprite slicing & camera verification suite
+├── src/                        # Lifted & modernized C++20 source code
+│   ├── core/                   # Memory maps, game data structures & PRNG table
+│   │   ├── constants.h         # File IDs, object types, states, weapon IDs
+│   │   ├── types.h             # Portable native pointer definitions
+│   │   ├── bdy.h               # Bounding box collision struct (0x28 / 40 bytes)
+│   │   ├── itr.h               # Interaction hitbox struct (0x50 / 80 bytes)
+│   │   ├── frame.h             # Frame state machine (0x178 / 376 bytes)
+│   │   ├── file.h              # Character / weapon definition (0x25360 / 152,416 bytes)
+│   │   ├── object.h            # World entity instance (0x370 / 880 bytes)
+│   │   ├── global.h            # World manager state & method interfaces
+│   │   ├── overlap.h           # 2D axis-aligned bounding box intersection math (0x4171C0)
+│   │   ├── random_table.h      # 3,000-byte precomputed PRNG table extracted from .data
+│   │   └── random.h / .cpp     # Deterministic PRNG implementation (0x417170)
+│   ├── gameplay/               # Lifted gameplay logic routines
+│   │   ├── teleport.cpp        # 1:1 Rudolf teleportation logic (0x403270)
+│   │   └── attack.cpp          # 1:1 Hitbox collision & attack queueing (0x417400)
+│   ├── data/                   # Resource loaders & crypto
+│   │   ├── cipher.h / .cpp     # Authentic Vigenère .dat cipher & decryptor (0x4148a0)
+│   │   ├── data_txt.h / .cpp   # Manifest parser for data/data.txt
+│   │   └── dat_loader.h / .cpp # Full .dat script tokenizer and loader (0x40ef70)
+│   ├── graphics/               # Visual rendering pipeline & camera
+│   │   ├── background.h / .cpp # Multi-layer parallax background loader & geometry
+│   │   └── renderer.h / .cpp   # Modern SDL2 renderer, texture cache, color keying, clipping
+│   └── app/                    # Platform application & loop timing
+│       ├── app.h / .cpp        # Modern SDL2 lifecycle, fixed 30 FPS pacing, input table
+│       └── main.cpp            # Application entry point & headless test harness
+├── tests/                      # Automated verification test suites
+│   ├── verify_memory_maps.cpp  # Memory map & collision math verification suite
+│   ├── test_data_loader.cpp    # Data-driven core & cipher verification suite
+│   └── test_graphics.cpp       # Graphics, sprite slicing & camera verification suite
+├── third_party/                # Self-contained vendor dependencies (SDL2 development kit)
 ├── REFERENCE_ERRORS.md         # Documented inaccuracies in prior decompilation attempts
 └── Makefile                    # Automated build script (MSYS2 UCRT64 GCC)
 ```
