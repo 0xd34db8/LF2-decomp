@@ -1,6 +1,6 @@
 # Decompiled Archive (Ghidra & x86 Disassembly)
 
-This directory serves contains the decompiled logic and ground-truth pseudocode extracted from `lf2.exe` (v1.9c / v2.0a, 32-bit x86 MSVC++) using Ghidra and REA.
+This directory contains the decompiled logic and ground-truth pseudocode extracted from `lf2.exe` (v1.9c / v2.0a, 32-bit x86 MSVC++) using Ghidra and REA.
 
 The archive is split into two specialized suites:
 
