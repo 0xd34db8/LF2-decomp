@@ -20,6 +20,9 @@ decompiled/
 | `0x00403270` | `gameplay/func_00403270_teleport.c` | `object_t` / Rudolf | Team teleportation coordinate resolution |
 | `0x004034e0` | `core/func_004034e0_abs.c` | Math | Fast absolute value computation |
 | `0x004061d0` | `gameplay/func_004061d0_object_init.c` | `object_t` | Entity constructor & state initialization |
+| `0x004068b0` | `gameplay/func_004068b0_grapple_sync.c`| `object_t` / Grapple | Caught target position anchor & throw release |
+| `0x00406ba0` | `gameplay/func_00406ba0_ai_process.c` | `object_t` / AI | AI combat evaluation & virtual key input synthesis |
+| `0x00408ce0` | `gameplay/func_00408ce0_weapon_sync.c` | `object_t` / Weapon | Weapon hand anchor sync, drop & throw physics |
 | `0x0040bbf0` | `data/func_0040bbf0_frame_ctor.c` | `frame_t` | Frame data structure initialization |
 | `0x0040be70` | `data/func_0040be70_calc_frame_coords.c` | `frame_t` | Sprite sheet UV coordinate calculation |
 | `0x0040d0a0` | `data/func_0040d0a0_save_dat.c` | `file_t` | Character `.dat` serializer |

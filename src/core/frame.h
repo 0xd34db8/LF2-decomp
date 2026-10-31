@@ -41,8 +41,8 @@ struct cpoint_t {
     union {
         // kind == 1: Catcher properties
         struct {
-            uint32_t throwv_x;        // 0x0C
-            uint32_t throwv_y;        // 0x10
+            int32_t  throwv_x;        // 0x0C
+            int32_t  throwv_y;        // 0x10
             uint32_t _unknown1;       // 0x14
             uint32_t _unknown2;       // 0x18
             uint32_t throw_injury;    // 0x1C

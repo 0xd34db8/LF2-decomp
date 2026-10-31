@@ -1,6 +1,7 @@
 #include "global.h"
 #include "overlap.h"
 #include "random.h"
+#include "entity.h"
 #include <cstdlib>
 
 namespace lf2 {
@@ -268,6 +269,172 @@ void global_t::does_attack_success(uint32_t attacker_id, uint32_t injured_id, ui
             }
         }
     }
+}
+
+// 1:1 Lift of 0x0042E100: Full Combat Damage, Fall State & Knockback Dispatcher
+void global_t::attack_process(uint32_t attacker_id) {
+    if (attacker_id >= MAX_OBJECTS || !is_object_exists[attacker_id]) {
+        return;
+    }
+
+    object_t* attacker = objects[attacker_id];
+    if (!attacker || !attacker->file) {
+        return;
+    }
+
+    uint32_t a_frame_id = (attacker->frame_id4 < MAX_FRAMES) ? attacker->frame_id4 : attacker->frame_id1;
+    if (a_frame_id >= MAX_FRAMES) return;
+
+    frame_t* a_frame = &attacker->file->frames[a_frame_id];
+
+    int32_t hit_count = attacker->successful_attacks;
+    if (hit_count <= 0) return;
+
+    for (int32_t i = 0; i < hit_count && i < 20; ++i) {
+        int32_t injured_id = attacker->injured_of_attack[i];
+        uint32_t itr_id = attacker->itr_of_attack[i];
+
+        if (injured_id < 0 || injured_id >= static_cast<int32_t>(MAX_OBJECTS) || !is_object_exists[injured_id]) {
+            continue;
+        }
+
+        object_t* injured = objects[injured_id];
+        if (!injured || !injured->file) continue;
+
+        // Victim multi-hit rest check (vrest)
+        if (injured->vrest_of_objects[attacker_id] > 0) {
+            continue;
+        }
+
+        if (itr_id >= a_frame->itrs_size) continue;
+        const itr_t* itr = &a_frame->itrs[itr_id];
+
+        // Set victim rest counter to prevent repeated hits within same swing
+        injured->vrest_of_objects[attacker_id] = (itr->arest > 0) ? static_cast<uint8_t>(itr->arest) : 8;
+        attacker->arest = (itr->arest > 0) ? itr->arest : 4;
+
+        // Apply damage (0x0042E9B0)
+        int32_t injury = itr->injury;
+        if (injury <= 0) injury = 15; // default fallback punch damage
+
+        injured->hp -= injury;
+        injured->dark_hp += injury / 6;
+        injured->hp_lost += injury;
+        attacker->total_attack += injury;
+
+        // Calculate fall & knockdown (0x0042EAA0)
+        int32_t fall_increment = (itr->fall == 0) ? 20 : itr->fall;
+        injured->fall += fall_increment;
+
+        // Check if victim should enter falling knockdown state (0x0042EB00)
+        if (injured->hp <= 0 || injured->fall >= 60 || itr->dvy != 0 || itr->effect == 4) {
+            injured->fall = 80; // Full knockdown flag
+            injured->frame_id1 = 180; // Standard LF2 falling frame
+            injured->wait_counter = 0;
+
+            double knock_x = (itr->dvx != 0) ? static_cast<double>(itr->dvx) : 5.0;
+            double knock_y = (itr->dvy != 0) ? static_cast<double>(itr->dvy) : -8.0;
+
+            injured->x_velocity = (attacker->facing == FACING_LEFT) ? -knock_x : knock_x;
+            injured->y_velocity = knock_y;
+            injured->y_position = -1.0; // Ensure airborne so gravity applies
+        } else {
+            // Flinch / hurt state (0x0042EC00: State 11 / frame 222 or 226)
+            if (injured->facing == attacker->facing) {
+                injured->frame_id1 = 226; // Back hurt
+            } else {
+                injured->frame_id1 = 222; // Front hurt
+            }
+            injured->wait_counter = 0;
+
+            double flinch_x = (itr->dvx != 0) ? static_cast<double>(itr->dvx) * 0.4 : 2.0;
+            injured->x_velocity = (attacker->facing == FACING_LEFT) ? -flinch_x : flinch_x;
+        }
+
+        // Weapon damage
+        if (injured->file->type == TYPE_LIGHT_WEAPON || injured->file->type == TYPE_HEAVY_WEAPON) {
+            injured->hp -= injury;
+            if (injured->hp <= 0) {
+                injured->fall = 80;
+            }
+        }
+    }
+
+    // Reset hit queue after processing
+    attacker->successful_attacks = 0;
+}
+
+void global_t::process_all_attacks() {
+    // 1. Decrement rest timers (vrest_of_objects) across all active objects
+    for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
+        if (!is_object_exists[i] || !objects[i]) continue;
+        object_t* obj = objects[i];
+        for (uint32_t j = 0; j < MAX_OBJECTS; ++j) {
+            if (obj->vrest_of_objects[j] > 0) {
+                obj->vrest_of_objects[j]--;
+            }
+        }
+    }
+
+    // 2. Pairwise collision check
+    for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
+        if (!is_object_exists[i] || !objects[i]) continue;
+        for (uint32_t j = 0; j < MAX_OBJECTS; ++j) {
+            if (i == j || !is_object_exists[j] || !objects[j]) continue;
+            does_attack_success(i, j, 0);
+        }
+    }
+
+    // 3. Process damage, fall states, and knockback for all successful attackers
+    for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
+        if (!is_object_exists[i] || !objects[i]) continue;
+        if (objects[i]->successful_attacks > 0) {
+            attack_process(i);
+        }
+    }
+}
+
+int32_t global_t::spawn_projectile(uint32_t owner_id, uint32_t file_id, int32_t x, int32_t y, int32_t z, double dvx, double dvy, uint8_t facing) {
+    int32_t slot = -1;
+    for (uint32_t i = 10; i < MAX_OBJECTS; ++i) {
+        if (!is_object_exists[i]) {
+            slot = static_cast<int32_t>(i);
+            break;
+        }
+    }
+    if (slot == -1) return -1;
+
+    file_t* proj_file = nullptr;
+    for (uint32_t f = 0; f < MAX_FILES; ++f) {
+        if (files[f] && files[f]->id == file_id) {
+            proj_file = files[f];
+            break;
+        }
+    }
+
+    if (!objects[slot]) {
+        objects[slot] = new object_t();
+    }
+
+    object_t* proj = objects[slot];
+    object_init(proj);
+    proj->file = proj_file;
+    proj->x_position = static_cast<double>(x);
+    proj->y_position = static_cast<double>(y);
+    proj->z_position = static_cast<double>(z);
+    proj->x = x;
+    proj->y = y;
+    proj->z = z;
+    proj->facing = facing;
+    proj->x_velocity = (facing == FACING_LEFT) ? -dvx : dvx;
+    proj->y_velocity = dvy;
+    proj->owner = owner_id;
+    if (owner_id < MAX_OBJECTS && objects[owner_id]) {
+        proj->team = objects[owner_id]->team;
+    }
+
+    is_object_exists[slot] = 1;
+    return slot;
 }
 
 } // namespace lf2
