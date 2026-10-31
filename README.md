@@ -354,6 +354,44 @@ The original window procedure maintains static state counters that detect sequen
 
 ---
 
+## Engine Quirks, Desyncs & Known Binary Bugs
+
+Through Ghidra decompilation and binary disassembly of `lf2.exe`, we reverse-engineered the exact root causes of legendary Little Fighter 2 engine quirks, multiplayer desync crashes, and long-standing community mysteries:
+
+### 1. The Anatomy of the Infamous "Synchronisation Error!" (`0x0041CAD9` / `0x0041CCB5`)
+For over two decades, Little Fighter 2 players experienced sudden match freezes with a `"Synchronisation Error!"` modal dialog. Disassembly of the lockstep network routine in `0x0041C5F0` revealed the exact mechanism:
+* **The 22-Byte Lockstep Packet:** At `0x0041CB80`, every frame exchange transmits a compact 22-byte packet (`net_packet_t`) containing 8 packed player controller states (Up `0x02`, Right `0x04`, Attack `0x08`, Jump `0x10`, Defend `0x20`, Down `0x40`, Left `0x80`), the circular PRNG table index, and a cumulative 16-bit HP checksum.
+* **The Cumulative HP Checksum:** At `0x0041CAD9`, the host iterates through all active character slots and accumulates their current health points (`object_t` offset `0x2FC`):
+  $$\text{checksum} = \sum_{i=0}^{\text{active}-1} \text{HP}_i$$
+* **Instant Desync Trigger:** If remote and local HP checksums differ by even 1 HP (due to a dropped frame, projectile spawn timing jitter, or floating-point rounding deviation), `0x0041CCB5` immediately halts execution with `"Synchronisation Error!"` (`0x00449384`). Frame sequence counter deviations trigger `"Connection Lost!"` (`0x004493B4`), while packet header protocol mismatches report `"Version not matched!"` (`0x0044939C`).
+
+### 2. The 100-Slot World Object Array & Screen Overflow Crash (`0x0042E100` / `0x004061D0`)
+* **Static Allocation Ceiling:** Little Fighter 2 manages all entities on screen through a fixed static global array capped at exactly **100 object slots** (`object_t* g_objects[100]` at `0x00450BE0`).
+* **Shared Pool Competition:** Characters, enemy minions, dropped weapons (knives, baseball bats, rocks), projectiles (energy balls, ice swords), and transient particle effects (blood splatters, smoke puffs) all compete for these same 100 slots.
+* **The Crash Mechanism:** In heavy Stage Mode battles (e.g. Stage 5 with dozens of bandits or Firzen/LouisEX casting large multi-part special moves), the object spawner at `0x0042E100` scans the 100 slots looking for a free slot (`slot->type == TYPE_NULL`). If all 100 slots are exhausted, newly spawned projectiles or weapon drops fail silently or return a null pointer that subsequent rendering and physics passes attempt to dereference, triggering an instant Crash-to-Desktop (CTD).
+
+### 3. The Rudolf Stage Boundary Teleportation Glitch (`0x00403270`)
+* In `func_00403270`, Rudolf’s catch-and-teleport move calculates destination coordinates behind the victim:
+  $$x_{\text{dest}} = x_{\text{victim}} + (\text{facing} == 0 \ ? \ -40 : +40)$$
+* **Missing Boundary Clamp:** The original assembly directly commits `x_position = x_dest` without clamping against camera boundaries or the stage limits (`z_min = 0, z_max = 400`, `x_min = 0, x_max = stage_width`). If an opponent is grabbed near the far-left or far-right edge of the stage, Rudolf teleports into negative space outside the playable world, causing the character to enter an infinite falling trajectory or become permanently unplayable.
+
+### 4. Player Name Grave Accent Substitution in `control.txt` (`0x004233E0` / `0x0042353A`)
+* **The Parser Whitespace Dilemma:** In `data/control.txt`, player profiles, 11 keyboard mapping scan codes per player, and custom player names are serialized via standard C runtime `fscanf` / `fprintf`. Because `fscanf("%s")` delimits tokens on whitespace, any player name containing spaces (e.g. `"Little Bear"`) would corrupt line parsing.
+* **The Clever Workaround:** At `0x004233E0`, Marti Wong implemented a character substitution loop that replaces every space (`' '`, ASCII `0x20`) with a grave accent character (`` '`' ``, ASCII `0x60`) before writing to disk:
+  ```text
+  Little`Bear Starsky`Wong Davis`Master Freeze`Knight
+  ```
+* At `0x0042353A`, during game boot, the parser reads the string and converts every `` '`' `` back to a space (`' '`). Players who opened `control.txt` in Notepad over the years often wondered why mysterious backticks appeared in their usernames!
+
+### 5. Deterministic Battle Replay Recording (`.lfr` at `0x0042D080` / `0x00402980`)
+* **100% Deterministic Playback:** Rather than saving full video or large coordinate streams, LF2 replays (`.lfr` files) record only the initial 3,000-byte circular PRNG table seed (`0x0044D024`), character choices, and 8 bytes of packed controller input states per frame.
+* **On-Screen HUD Indicators:** At `0x00402980`, the engine uses DirectDraw to render color-coded notification banners at the bottom of the viewport ($y = 531$ / `0x213`):
+  * **Orange (`0x00FF7800`):** `"Start recording '%s'..."` upon match commencement.
+  * **Green (`0x0000FF00`):** `"Recording file '%s' saved!"` upon successful match conclusion.
+  * **Red (`0x000000FF`):** `"Recording canceled!"` if the match is aborted prematurely.
+
+---
+
 ## References & Acknowledgments
 
 This source lift builds upon the foundation of knowledge created by decades of dedicated Little Fighter 2 community developers and reverse engineers:

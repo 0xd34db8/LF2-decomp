@@ -22,6 +22,7 @@ decompiled/
 | `0x004014e0` | `audio/func_004014e0_sound_load_wav.c` | DirectSound | RIFF WAVE parser & secondary buffer allocation |
 | `0x00401970` | `audio/func_00401970_sound_init.c` | DirectSound | DirectSound subsystem initialization |
 | `0x00401a30` | `audio/func_00401a30_sound_play.c` | DirectSound | Sound buffer playback cursor reset & play |
+| `0x00402980` | `app/func_00402980_replay_notify.c` | Replay / HUD | Replay recording screen status notifications |
 | `0x00402b80` | `net/func_00402b80_net_init.c` | WinSock | WinSock init, gethostname, socket & WSAAsyncSelect |
 | `0x00403270` | `gameplay/func_00403270_teleport.c` | `object_t` / Rudolf | Team teleportation coordinate resolution |
 | `0x004034e0` | `core/func_004034e0_abs.c` | Math | Fast absolute value computation |
@@ -41,6 +42,8 @@ decompiled/
 | `0x00417400` | `gameplay/func_00417400_does_attack_success.c`| Combat | 3D AABB hitbox collision check |
 | `0x0041a2dd` | `graphics/func_0041a2dd_parallax_calc.c`| Background | Layer offset & wrapping calculation |
 | `0x0041c5f0` | `net/func_0041c5f0_net_lockstep.c` | Lockstep Net | 22-byte lockstep packet send/recv, non-blocking ioctlsocket & desync checks |
+| `0x00423480` | `data/func_00423480_control_txt.c` | Save / Control | Player key mappings & name serializer (control.txt) |
+| `0x0042d080` | `app/func_0042d080_replay_filename.c`| Replay / Time | Timestamped `.lfr` filename assembly & mode tags |
 | `0x0042e100` | `gameplay/func_0042e100_attack_process.c`| Combat | Full attack damage & effect dispatcher |
 | `0x00436900` | `app/func_00436900_battle_setup.c` | App / Battle | Player/CPU entity spawn initialization & battle setup |
 | `0x0043b3d0` | `app/func_0043b3d0_wndproc.c` | App | Win32 WindowProc & cheat code recognizers |

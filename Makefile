@@ -11,6 +11,7 @@ CXXFLAGS ?= -std=c++20 -Wall -Wextra -O2 -MMD -MP $(INCLUDES)
 
 LIB_SRCS = \
 	src/core/random.cpp \
+	src/core/replay.cpp \
 	src/gameplay/teleport.cpp \
 	src/gameplay/attack.cpp \
 	src/gameplay/entity.cpp \
@@ -65,7 +66,10 @@ TEST_STG_EXE = test_stage_menu.exe
 TEST_NET_SRCS = tests/test_network_sync.cpp
 TEST_NET_EXE = test_network_sync.exe
 
-TEST_EXES = $(TEST_MAP_EXE) $(TEST_DAT_EXE) $(TEST_GFX_EXE) $(TEST_ENT_EXE) $(TEST_CBT_EXE) $(TEST_GRP_EXE) $(TEST_AI_EXE) $(TEST_AUD_EXE) $(TEST_STG_EXE) $(TEST_NET_EXE)
+TEST_RPL_SRCS = tests/test_replay_system.cpp
+TEST_RPL_EXE = test_replay_system.exe
+
+TEST_EXES = $(TEST_MAP_EXE) $(TEST_DAT_EXE) $(TEST_GFX_EXE) $(TEST_ENT_EXE) $(TEST_CBT_EXE) $(TEST_GRP_EXE) $(TEST_AI_EXE) $(TEST_AUD_EXE) $(TEST_STG_EXE) $(TEST_NET_EXE) $(TEST_RPL_EXE)
 
 .PHONY: all test clean
 
@@ -107,6 +111,9 @@ $(TEST_STG_EXE): $(TEST_STG_SRCS) $(TARGET_LIB)
 $(TEST_NET_EXE): $(TEST_NET_SRCS) $(TARGET_LIB)
 	$(CXX) $(CXXFLAGS) $(TEST_NET_SRCS) -L. -llf2 -lws2_32 -o $@
 
+$(TEST_RPL_EXE): $(TEST_RPL_SRCS) $(TARGET_LIB)
+	$(CXX) $(CXXFLAGS) $(TEST_RPL_SRCS) -L. -llf2 -lws2_32 -o $@
+
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
@@ -123,7 +130,9 @@ test: $(TEST_EXES) $(TARGET_APP)
 	./$(TEST_AUD_EXE)
 	./$(TEST_STG_EXE)
 	./$(TEST_NET_EXE)
+	./$(TEST_RPL_EXE)
 	./$(TARGET_APP) --test --frames 30
+	$(RM) $(TEST_EXES) $(TEST_EXES:.exe=.d) *.d test_*_debug.exe liblf2.a
 
 clean:
-	$(RM) $(LIB_OBJS) $(APP_OBJS) $(LIB_OBJS:.o=.d) $(APP_OBJS:.o=.d) $(TARGET_LIB) $(TARGET_APP) $(TEST_EXES)
+	$(RM) $(LIB_OBJS) $(APP_OBJS) $(LIB_OBJS:.o=.d) $(APP_OBJS:.o=.d) $(TARGET_LIB) $(TARGET_APP) $(TEST_EXES) $(TEST_EXES:.exe=.d) *.d test_*_debug.exe
