@@ -1,19 +1,32 @@
-# Decompiled Forensic Archive (Ghidra & x86 Disassembly)
+# Decompiled Archive (Ghidra & x86 Disassembly)
 
 This directory houses raw, ground-truth pseudocode and disassembly extracted from `lf2.exe` (v1.9c / v2.0a, x86-32 MSVC++). These files are strictly observational references used to guide the 1:1 C++ source lift in `src/`.
 
-The files are organized to mirror the modern engine architecture and original class boundaries:
+This directory houses forensic pseudocode and disassembly extracted from `lf2.exe` (v1.9c / v2.0a, x86-32 MSVC++):
 
 ```
 decompiled/
-├── app/          # WinMain, WindowProc, message pumping, cheat state machines
-├── audio/        # DirectSound init, secondary buffer allocation, sound effect playback
-├── core/         # Fixed-table PRNG, abs, 1D/3D AABB overlap primitives
-├── data/         # Vigenère decryption, .dat loading/saving, file_t & frame_t ctors
-├── gameplay/     # Rudolf teleportation, collision check, attack dispatcher
-├── graphics/     # DirectDraw init, blitting, 2D clipping, parallax math, object projection
-└── net/          # WinSock init, non-blocking lockstep packet loop, desync validation
+├── RAW/             # Pristine, untouched Ghidra decompiler exports
+│   ├── app/
+│   ├── audio/
+│   ├── core/
+│   ├── data/
+│   ├── gameplay/
+│   ├── graphics/
+│   └── net/
+└── Compilable/      # Self-contained, compilable C version with legacy types and headers
+    ├── include/     # legacy_types.h, legacy_globals.h, legacy_signatures.h
+    ├── app/
+    ├── audio/
+    ├── core/
+    ├── data/
+    ├── gameplay/
+    ├── graphics/
+    └── net/
 ```
+
+- **`RAW/`**: Contains the raw decompiler output directly as exported from Ghidra without manual edits.
+- **`Compilable/`**: Contains the complete set of decompiled routines refactored with synthetic type definitions, symbol mappings for all 46 global `DAT_` variables, and calling convention shims, compiling cleanly with 0 syntax errors across all 35 routines.
 
 ### Memory Address & Function Index
 
