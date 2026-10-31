@@ -1,6 +1,6 @@
 <div align="center">
 
-![Banner](assets/hero.png)
+<img src="assets/hero.png" alt="Little Fighter 2 Banner" width="600" />
 
 # Little Fighter 2 | 1:1 C++ Source Lift
 
@@ -278,7 +278,7 @@ Ghidra decompilation and binary disassembly revealed several fascinating, histor
   > *"Little Bear is a good bear because he is very good."*
 * **The Cipher Architecture:** LF2 encodes all game resources (`.dat` files) using a byte-wise additive/subtractive variant of the Vigenère cipher operating modulo 256.
 * **The 123-Byte Header Trick:** Every `.dat` file begins with a 123-byte (`0x7B`) padding header. In `FUN_004148a0`, the decryptor steps through the key `(key_idx + 1) % 37` for each of the 123 dummy bytes before decrypting any payload data. Since `123 % 37 = 12`, payload decryption always begins at key index `12` (the character `'G'` in `"GoodBear..."`):
-  $$\text{plaintext\_byte} = (\text{cipher\_byte} - \text{key}[k] + 256) \pmod{256}$$
+  $$\text{plaintext}[i] = (\text{ciphertext}[i] - \text{key}[k] + 256) \pmod{256}$$
 * **Modding Community Nostalgia:** For over two decades, this hardcoded string has been celebrated among LF2 modders who reverse-engineered the binary to create data decrypters (e.g. *LF2 Data Changer*).
 
 ### 2. Secret Cheat Code State Machines in WindowProc (`0x0043b3d0`)
@@ -302,7 +302,7 @@ The original window procedure maintains static state counters that detect sequen
 ### 5. Fixed-Step 30 FPS Timing & Spiral-of-Death Protection (`0x0043cf40`)
 * **Tick Step:** In battle (`DAT_0044d02c != 0`), the step is `33 ms` (`0x21`), yielding ~30.3 FPS. In menus, it steps at `3 ms`.
 * **Spiral of Death Clamp:** If system lag causes the accumulator to fall behind by more than `100 ms`, the game drops excess accumulated time:
-  $$\text{if } (\text{now} - \text{last\_time} > 100) \implies \text{last\_time} = \text{now} - 100$$
+  $$\text{if } (t_{\text{now}} - t_{\text{last}} > 100\text{ ms}) \implies t_{\text{last}} = t_{\text{now}} - 100\text{ ms}$$
 * **CPU Yielding:** To prevent 100% CPU core starvation, the timing loop yields via sleep in chunks of at most `5 ms`.
 * **Key State Table:** A raw 256-byte static array at `0x00455378` is initialized to `'u'` (`0x75` = up) in `WinMain` and toggled to `'d'` (`0x64` = down) on `WM_KEYDOWN`.
 
