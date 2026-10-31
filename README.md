@@ -1,6 +1,6 @@
 <div align="center">
 
-![Little Fighter 2 Banner](assets/hero.png)
+![Banner](assets/hero.png)
 
 # Little Fighter 2 | 1:1 C++ Source Lift
 
@@ -142,22 +142,76 @@ LF2/
 
 ---
 
-## Building and Testing
+## Building, Setup & Playing the Real Game
 
-### Prerequisites
-- MSYS2 UCRT64 GCC 14.2.0 (or any modern C++20 compiler)
-- `make` or `mingw32-make`
+### 1. Prerequisites
+- **Compiler:** Modern C++20 compiler (GCC 13+ / MSYS2 UCRT64 GCC 14.2+ / Clang 15+)
+- **Build Tool:** GNU `make` or `mingw32-make`
+- **SDL2:** The repository includes self-contained MinGW-w64 SDL2 development libraries in `third_party/SDL2/` and runtime `SDL2.dll` in root, enabling immediate compilation with zero external setup.
 
-### Build & Run Tests
+---
+
+### 2. Acquiring and Setting Up Authentic Game Assets
+
+Because *Little Fighter 2* artwork, sprite sheets, sound effects, and stage backgrounds are proprietary freeware created by Marti Wong and Starsky Wong, they are not distributed in this source code repository.
+
+To experience the full game with authentic visuals and music:
+
+1. Download the official game installer or archive from [lf2.net](https://lf2.net) or [LF-Empire](https://lf-empire.de) (LF2 v1.9c, v2.0, or v2.0a).
+2. Copy the authentic game asset directories from your LF2 installation into the project root:
+   ```text
+   LF2/
+   ├── data/           # Game manifest (data.txt) & encrypted character/weapon scripts (.dat)
+   ├── sprite/         # Sprite sheets for all characters, projectiles, and weapons (.bmp)
+   ├── bg/             # Multi-layer stage backgrounds & parallax layers (.dat, .bmp)
+   ├── bgm/            # Background music tracks (.wma)
+   └── sound/          # Audio effect samples (.wav)
+   ```
+   *(Alternatively, simply copy the compiled `lf2.exe` and `SDL2.dll` directly into your existing Little Fighter 2 game installation folder!)*
+
+---
+
+### 3. Compiling the Game
+
+To build the static engine library (`liblf2.a`), the game executable (`lf2.exe`), and all test harnesses:
+
 ```bash
-# Build the static library (liblf2.a) and test suite (verify_memory_maps.exe)
-mingw32-make
-
-# Execute all static and runtime verification tests
-mingw32-make test
+make
 ```
 
-### Expected Output
+To clean intermediate build artifacts:
+```bash
+make clean
+```
+
+---
+
+### 4. Running and Playing
+
+```bash
+# Launch in authentic 794x550 windowed mode
+./lf2.exe
+
+# Launch directly in fullscreen mode
+./lf2.exe --fullscreen
+```
+
+* **Fullscreen Toggle:** Press `Alt + Enter` at any time during gameplay to seamlessly switch between windowed and fullscreen display.
+* **Secret Character Unlock:** Type `lf2.net` on the main menu to unlock Julian, Firzen, LouisEX, and all other enemy characters.
+* **Stage Function Keys:** Type `herofighter.com` to enable stage debug function keys.
+* **Frame Inspector:** Type `ABC` to unlock the internal frame and hitbox inspector.
+
+---
+
+### 5. Automated Verification Test Suites
+
+To verify memory offsets, mathematical collision fidelity, cipher decryption, sprite sheet slicing, and 30-frame simulation:
+
+```bash
+make test
+```
+
+### Expected Test Output
 ```text
 === Little Fighter 2 Memory Map Verification ===
 [+] bdy_t size:    0x28 (40 bytes)

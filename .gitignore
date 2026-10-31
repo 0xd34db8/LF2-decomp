@@ -7,10 +7,10 @@ build/
 # Commit message template
 .gitmessage
 
-# Temporary files
+# Temporary runtime files
 data/temporary.txt
+*.tmp
 
-# source & reference files 
+# source & reference files
 .legacy/
-ref/
-PLAN.md
+internal/
