@@ -1,8 +1,48 @@
-# Little Fighter 2 — 1:1 C++ Source Lift
+# Little Fighter 2 | 1:1 C++ Source Lift
 
-A true 1:1 decompiled C++20 source port and modernization of the original *Little Fighter 2* (`lf2.exe`, version 1.9c / 2.0a, x86-32 MSVC++).
+A true 1:1 C++20 source decompilation and modernization of the original *Little Fighter 2* (`lf2.exe`, version 1.9c / 2.0a, x86-32 MSVC++).
 
 This project is a systems programming and binary reverse engineering exercise designed to extract, lift, and preserve the authentic game logic (state machines, frame-accurate timings, hitbox collision mathematics, and data-driven file loading) while shedding legacy DirectDraw 6 and Win32 dependencies in favor of a modern cross-platform architecture.
+
+---
+
+## Prior Art vs. What We Are Doing
+
+Over the last two decades, the Little Fighter 2 community has attempted several ambitious projects to modernize or recreate the game. To understand our mission, it is vital to distinguish between modding, clean-room rewrites, and true binary source lifting:
+
+### What Other Projects Did
+
+* **External Scripting Rewrites:**
+* *Their Approach:* Building a modern engine from scratch and delegating game logic to an external scripting engine, loosely inspired by the original mechanics.
+* *Why it differs:* It is a from-scratch recreation that abandons the original compiled execution flow, state transitions, and arithmetic quirks.
+
+
+* **Dynamic Memory Patching & DLL Hijacking:**
+* *Their Approach:* Intercepting legacy graphics API calls via proxy wrappers and injecting custom logic hooks directly into the closed-source process at runtime.
+* *Why it differs:* This is dynamic memory modding. It still depends entirely on running the closed-source legacy executable in the background rather than freeing the source code from the binary.
+
+
+* **Clean-Room Interpretation Clones:**
+* *Their Approach:* Building an engine clone from scratch by applying modern object-oriented software engineering principles and design patterns.
+* *Why it differs:* While architecturally elegant, these represent a high-level interpretation of how the game *should* work, rather than extracting how the shipped binary actually operates.
+
+
+* **Open-Source Engine Reimplementations:**
+* *Their Approach:* Modern clean-room clones built with contemporary frameworks and libraries specifically to load legacy asset files.
+* *Why it differs:* These independent reimplementations approximate the game's mechanics but lack the authentic assembly state machines, deterministic random generators, and timing quirks.
+
+
+* **Manual Decompilation Attempts:**
+* *Their Approach:* Translating raw disassembly into intermediate scripting languages or partial C stubs function-by-function.
+* *Why it differs:* Historically, these massive forensic undertakings suffer from burnout and are abandoned before a compilable, fully modernized game engine is completed, leaving behind uncorrected offset errors and partial stubs.
+
+
+
+### What WE Are Doing: True 1:1 Source Lifting
+
+1. **Extracting, Not Guessing:** We do not invent custom OOP hierarchies, we do not guess class offsets, and we do not write high-level approximations. We decompile the compiled x86-32 MSVC++ machine code directly from the original executable and reconstruct the authentic logic in modern C++.
+2. **Byte-Level Mathematical Fidelity:** Collision detection, axis-aligned bounding box projections, directional facing mirrors, velocity integrations, deterministic lookup tables, and frame state machines are mathematically identical to the original assembly.
+3. **Liberation & Modernization:** We strip away deprecated Win32 message pumps and legacy DirectDraw 6 surface management, replacing them with a portable modern C++20 / SDL2 architecture that compiles and runs cleanly across modern 32-bit and 64-bit operating systems.
 
 ---
 
@@ -37,16 +77,12 @@ LF2/
 ├── attack.cpp                  # 1:1 Hitbox collision & attack queueing (0x417400)
 ├── verify_memory_maps.cpp      # Comprehensive memory map & gameplay test suite
 ├── REFERENCE_ERRORS.md         # Documented inaccuracies in prior decompilation attempts
-├── Makefile                    # Automated build script (MSYS2 UCRT64 GCC)
-└── PLAN.md                     # Technical roadmap across phases 1–6
+└── Makefile                    # Automated build script (MSYS2 UCRT64 GCC)
 ```
 
 ---
 
 ## Core Directives & Verification
-
-The operational directives followed:
-
 1. **Never Guess Offsets:** Every struct size and member variable offset is verified against Ghidra decompiler pseudocode and backed by compile-time `static_assert` statements.
 2. **Strict Adherence to Math:** Floating-point velocity integrations, hitbox coordinates, and frame timers are mathematically identical to the original x86 disassembly.
 3. **Dual-Target Portability:** Pointers and struct layouts are designed to maintain byte-offset parity on 32-bit compilation targets while running without memory truncation or segmentation faults on modern 64-bit systems.
