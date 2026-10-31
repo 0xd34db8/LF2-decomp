@@ -90,6 +90,13 @@ void FUN_0043d2c0();
 int  FUN_0043e620();
 void FUN_0043dfa0();
 int  FUN_004450d0();
+void FUN_00434ab0();
+int* FUN_00436fc0();
+void FUN_00437400();
+void FUN_00437860();
+void FUN_004389a0();
+void FUN_00438ad0();
+void FUN_00438b40();
 
 #ifdef __cplusplus
 }

@@ -12,7 +12,7 @@
 #include <winsock.h>
 
 #define LF2_WM_NET_EVENT (WM_USER + 1) // 0x401
-#define LF2_DEFAULT_PORT 12328
+#define LF2_DEFAULT_PORT 12345
 
 extern HWND g_hWnd;
 extern SOCKET g_listen_socket;

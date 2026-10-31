@@ -437,15 +437,20 @@ Through Ghidra decompilation and binary disassembly of `lf2.exe`, we reverse-eng
 
 ### 1. The Anatomy of the Infamous "Synchronisation Error!" (`0x0041CAD9` / `0x0041CCB5`)
 For over two decades, Little Fighter 2 players experienced sudden match freezes with a `"Synchronisation Error!"` modal dialog. Disassembly of the lockstep network routine in `0x0041C5F0` revealed the exact mechanism:
-* **The 22-Byte Lockstep Packet:** At `0x0041CB80`, every frame exchange transmits a compact 22-byte packet (`net_packet_t`) containing 8 packed player controller states (Up `0x02`, Right `0x04`, Attack `0x08`, Jump `0x10`, Defend `0x20`, Down `0x40`, Left `0x80`), the circular PRNG table index, and a cumulative 16-bit HP checksum.
-* **The Cumulative HP Checksum:** At `0x0041CAD9`, the host iterates through all active character slots and accumulates their current health points (`object_t` offset `0x2FC`):
-  $$\text{checksum} = \sum_{i=0}^{\text{active}-1} \text{HP}[i]$$
-* **Instant Desync Trigger:** If remote and local HP checksums differ by even 1 HP (due to a dropped frame, projectile spawn timing jitter, or floating-point rounding deviation), `0x0041CCB5` immediately halts execution with `"Synchronisation Error!"` (`0x00449384`). Frame sequence counter deviations trigger `"Connection Lost!"` (`0x004493B4`), while packet header protocol mismatches report `"Version not matched!"` (`0x0044939C`).
+* **The 22-Byte Lockstep Packet:** At `0x0041CB80`, every frame exchange transmits a compact 22-byte packet (`net_packet_t`) containing 8 packed player controller states (Up `0x02`, Right `0x04`, Attack `0x08`, Jump `0x10`, Defend `0x20`, Down `0x40`, Left `0x80`, with `0x01` idle bit), frame sequence counter, version byte, and active HP checksum.
+* **Three-Tier Desynchronization Checks:** Disassembly at `0x0041CB50`–`0x0041CCD0` reveals the exact single-byte checks:
+  * **Offset `+9` (Sequence Counter):** Frame counter modulo 50 (`idiv $0x32`, `DAT_00450bf0`). Checked at `0x0041CC27`; a mismatch halts with `"Connection Lost!"` (`0x004493B4`).
+  * **Offset `+11` (Version Tag):** Game version byte (`DAT_0044d03c`). Checked at `0x0041CC78`; a mismatch halts with `"Version not matched!"` (`0x0044939C`).
+  * **Offset `+13` (HP Checksum):** Cumulative active player HP checksum (`DAT_00450bf4`). Checked at `0x0041CCB5`; if remote and local checksums differ by even 1 HP, execution halts with `"Synchronisation Error!"` (`0x00449384`).
+* **The 3-Phase Handshake Pipeline:**
+  * **Phase 1 (14 Bytes):** Host transmits `"u can connect\0"` (hardcoded at `0x00448900`).
+  * **Phase 2 (77 Bytes):** Slot negotiation (`"11110000"` host slots 1–4 vs `"00001111"` client slots 5–8) + four 10-byte player name strings delimited with `_`.
+  * **Phase 3 (3,001 Bytes):** 1-byte command tag + 3,000-byte precomputed circular PRNG table (`0x0044FF90`) so both peers share identical pseudo-random sequences.
 
-### 2. The 100-Slot World Object Array & Screen Overflow Crash (`0x0042E100` / `0x004061D0`)
-* **Static Allocation Ceiling:** Little Fighter 2 manages all entities on screen through a fixed static global array capped at exactly **100 object slots** (`object_t* g_objects[100]` at `0x00450BE0`).
-* **Shared Pool Competition:** Characters, enemy minions, dropped weapons (knives, baseball bats, rocks), projectiles (energy balls, ice swords), and transient particle effects (blood splatters, smoke puffs) all compete for these same 100 slots.
-* **The Crash Mechanism:** In heavy Stage Mode battles (e.g. Stage 5 with dozens of bandits or Firzen/LouisEX casting large multi-part special moves), the object spawner at `0x0042E100` scans the 100 slots looking for a free slot (`slot->type == TYPE_NULL`). If all 100 slots are exhausted, newly spawned projectiles or weapon drops fail silently or return a null pointer that subsequent rendering and physics passes attempt to dereference, triggering an instant Crash-to-Desktop (CTD).
+### 2. The 400-Slot World Object Array & Screen Overflow Crash (`0x0042E100` / `0x004061D0`)
+* **Static Allocation Ceiling:** Little Fighter 2 manages all entities on screen through a fixed global array in `global_t` (`0x00458B00`) capped at exactly **400 object slots** (`objects[400]` at offset `0x194`–`0x7D4`, matching `is_object_exists[400]` at `0x004`–`0x194`).
+* **Shared Pool Competition:** Player characters (slots 0–7), enemy minions, dropped weapons (knives, baseball bats, rocks), projectiles (energy balls, ice swords), and transient particle effects (blood splatters, smoke puffs) all compete for these 400 slots. In `object_t`, the victim rest array `vrest_of_objects` is also exactly **400 bytes** (`0x0F0`–`0x280`).
+* **The Crash Mechanism:** In heavy Stage Mode battles (e.g. Stage 5 with dozens of bandits or Firzen/LouisEX casting large multi-part special moves), the object spawner at `0x0042E100` scans the 400 slots looking for a free slot (`is_object_exists[i] == 0`). If all 400 slots are exhausted, newly spawned projectiles or weapon drops fail silently or return a null pointer that subsequent rendering and physics passes attempt to dereference, triggering an instant Crash-to-Desktop (CTD).
 
 ### 3. The Rudolf Stage Boundary Teleportation Glitch (`0x00403270`)
 * In `func_00403270`, Rudolf’s catch-and-teleport move calculates destination coordinates behind the victim:

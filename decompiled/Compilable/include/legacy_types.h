@@ -58,6 +58,12 @@ typedef void (*code)();
 #define builtin_strncpy strncpy
 #define builtin_memcpy memcpy
 
+typedef union {
+    char _0_1_;
+    char str[4];
+    int val;
+} dat_0044d320_t;
+
 // Calling convention bridge
 #if defined(__GNUC__) && defined(__i386__)
 #define THISCALL __attribute__((thiscall))

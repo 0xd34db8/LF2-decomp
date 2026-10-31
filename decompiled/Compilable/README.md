@@ -58,7 +58,7 @@ Any individual file or the entire suite can be compiled into object files using 
 # Compile a single routine
 gcc -c -Iinclude gameplay/func_0042e100_attack_process.c -o attack_process.o
 
-# Verify all 35 C translation units compile cleanly
+# Verify all 41 C translation units compile cleanly
 Get-ChildItem -Recurse -Filter *.c | ForEach-Object {
     gcc -c -Iinclude $_.FullName -o ($_.BaseName + ".o")
 }
@@ -101,7 +101,13 @@ Remove-Item *.o
 | `0x00431c70` | [`app/func_00431c70_menu_reset.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/Compilable/app/func_00431c70_menu_reset.c) | App | Menu input reset & keyboard buffer restore |
 | `0x00431d10` | [`app/func_00431d10_menu_main.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/Compilable/app/func_00431d10_menu_main.c) | App | Main menu navigation, replay loader & links |
 | `0x00432ab0` | [`app/func_00432ab0_tournament.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/Compilable/app/func_00432ab0_tournament.c) | App | Championship tournament bracket state machine |
+| `0x00434ab0` | [`app/func_00434ab0_tournament_2on2.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/Compilable/app/func_00434ab0_tournament_2on2.c) | App | 2-on-2 championship tournament state machine |
 | `0x00436900` | [`app/func_00436900_battle_setup.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/Compilable/app/func_00436900_battle_setup.c) | App | Player/CPU entity spawn initialization & battle setup |
+| `0x00437400` | [`app/func_00437400_spawn_unit.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/Compilable/app/func_00437400_spawn_unit.c) | App | Unit spawn allocation & world object table insert |
+| `0x00437860` | [`app/func_00437860_battle_status.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/Compilable/app/func_00437860_battle_status.c) | App | Battle status HUD, reinforcement waves & survival timer |
+| `0x004389a0` | [`app/func_004389a0_draw_select_rect.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/Compilable/app/func_004389a0_draw_select_rect.c) | Graphics | Selection cursor animated border renderer |
+| `0x00438ad0` | [`app/func_00438ad0_draw_border_rect.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/Compilable/app/func_00438ad0_draw_border_rect.c) | Graphics | Outlined rectangle border renderer |
+| `0x00438b40` | [`app/func_00438b40_battle_mode.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/Compilable/app/func_00438b40_battle_mode.c) | App | Master Battle Mode army & skirmish squad manager |
 | `0x0043b3d0` | [`app/func_0043b3d0_wndproc.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/Compilable/app/func_0043b3d0_wndproc.c) | App | Win32 WindowProc, key table & cheat code recognizers |
 | `0x0043bdd0` | [`app/func_0043bdd0_create_window.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/Compilable/app/func_0043bdd0_create_window.c) | App | Win32 `CreateWindowEx` setup |
 | `0x0043bec0` | [`graphics/func_0043bec0_init_display.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/Compilable/graphics/func_0043bec0_init_display.c) | Graphics | DirectDraw 6 display mode initialization |

@@ -15,12 +15,16 @@
 
 #pragma pack(push, 1)
 typedef struct {
-    unsigned char player_inputs[8]; // +0..+7: Packed player 0..7 inputs
-    unsigned char control_flags;    // +8: F1 pause / F2 frame step
-    unsigned int  frame_index;      // +9..+12: Frame tick counter
-    unsigned char sync_pad[3];      // +13..+15: Sub-frame sync
-    unsigned int  prng_state;       // +16..+19: Circular PRNG table index
-    unsigned short hp_checksum;     // +20..+21: Sum of active objects' HP
+    unsigned char player_inputs[8]; // +0..+7: Packed player 0..7 inputs (1 + 2^(X+1))
+    unsigned char control_flags;    // +8: F1 pause / F2 frame step / function keys
+    unsigned char seq_counter;      // +9: Frame sequence counter modulo 50 (checked -> "Connection Lost!")
+    unsigned char pad_10;           // +10: Sub-sequence padding
+    unsigned char version_tag;      // +11: Version tag (checked against DAT_0044d03c -> "Version not matched!")
+    unsigned char pad_12;           // +12: Sub-frame sync padding
+    unsigned char hp_checksum;      // +13: Active player cumulative HP checksum (checked against DAT_00450bf4 -> "Synchronisation Error!")
+    unsigned char prng_tag;         // +14: PRNG high bits / sub-frame tag
+    unsigned char sub_sync;         // +15: Sub-frame sync tag
+    unsigned char payload[6];       // +16..+21: Trailing PRNG indices and sub-frame synchronization
 } lf2_net_packet_t;
 #pragma pack(pop)
 
@@ -28,7 +32,7 @@ extern SOCKET g_connected_socket;
 extern lf2_net_packet_t g_outgoing_packet; // 0x0044D040
 extern lf2_net_packet_t g_incoming_packet; // 0x0044F198
 extern unsigned int g_current_frame;
-extern void* g_objects[100]; // Active object table
+extern void* g_objects[400]; // Active object table (400 slots in global_t)
 
 int func_0041c5f0_net_lockstep(void) {
     u_long non_blocking = 1;
@@ -39,6 +43,7 @@ int func_0041c5f0_net_lockstep(void) {
     ioctlsocket(g_connected_socket, FIONBIO, &non_blocking);
 
     // 0x0041C6C7 - 0x0041CAAC: Pack local keyboard inputs into packet:
+    // Bit 0 (0x01): Active Idle
     // Bit 1 (0x02): Up
     // Bit 2 (0x04): Right
     // Bit 3 (0x08): Attack
@@ -53,8 +58,8 @@ int func_0041c5f0_net_lockstep(void) {
         // if player slot active:
         // hp_sum += object[i]->hp; (offset 0x2fc)
     }
-    g_outgoing_packet.hp_checksum = (unsigned short)(hp_sum & 0xFFFF);
-    g_outgoing_packet.frame_index = g_current_frame;
+    g_outgoing_packet.hp_checksum = (unsigned char)(hp_sum & 0xFF);
+    g_outgoing_packet.seq_counter = (unsigned char)(g_current_frame % 50);
 
     // 0x0041CBD0: send(socket, buffer=0x0044D040, len=22, flags=0)
     bytes_sent = send(g_connected_socket, (const char*)&g_outgoing_packet, PACKET_SIZE, 0);
@@ -71,19 +76,19 @@ int func_0041c5f0_net_lockstep(void) {
     }
 
     // 0x0041CC27: Desynchronization verification
-    // Check 1: Frame index validation
-    if (g_incoming_packet.frame_index != g_current_frame) {
+    // Check 1 (Offset +9): Sequence counter modulo 50 match
+    if (g_incoming_packet.seq_counter != g_outgoing_packet.seq_counter) {
         MessageBoxA(NULL, "Connection Lost!", "Error", MB_OK); // 0x004493B4
         return -1;
     }
 
-    // Check 2: Version / mode match
-    if (g_incoming_packet.sync_pad[0] != g_outgoing_packet.sync_pad[0]) {
+    // Check 2 (Offset +11): Version / mode match
+    if (g_incoming_packet.version_tag != g_outgoing_packet.version_tag) {
         MessageBoxA(NULL, "Version not matched!", "Error", MB_OK); // 0x0044939C
         return -2;
     }
 
-    // Check 3: Deterministic HP checksum match
+    // Check 3 (Offset +13): Deterministic HP checksum match
     if (g_incoming_packet.hp_checksum != g_outgoing_packet.hp_checksum) {
         MessageBoxA(NULL, "Synchronisation Error!", "Error", MB_OK); // 0x00449384
         return -3;
@@ -91,4 +96,3 @@ int func_0041c5f0_net_lockstep(void) {
 
     return 0;
 }
-

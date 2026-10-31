@@ -147,16 +147,6 @@ void network_manager_t::disconnect() {
     m_mode = NetMode::OFFLINE;
 }
 
-bool network_manager_t::send_packet(const net_packet_t& packet) {
-    if (m_socket == -1) return false;
-
-    int sent = send(static_cast<SOCKET>(m_socket),
-                    reinterpret_cast<const char*>(&packet),
-                    LF2_PACKET_SIZE, 0);
-
-    return (sent == static_cast<int>(LF2_PACKET_SIZE));
-}
-
 bool network_manager_t::accept_connection() {
     if (m_listen_socket == -1) return false;
 
@@ -172,6 +162,75 @@ bool network_manager_t::accept_connection() {
     m_socket = static_cast<intptr_t>(accepted);
     m_connected = true;
     return true;
+}
+
+bool network_manager_t::send_handshake_14() {
+    if (m_socket == -1) return false;
+    char buf[14];
+    std::memcpy(buf, "u can connect\0", 14);
+    int sent = send(static_cast<SOCKET>(m_socket), buf, 14, 0);
+    return (sent == 14);
+}
+
+bool network_manager_t::receive_handshake_14() {
+    if (m_socket == -1) return false;
+    char buf[14];
+    int recvd = recv(static_cast<SOCKET>(m_socket), buf, 14, 0);
+    if (recvd != 14) return false;
+    return (std::memcmp(buf, "u can connect", 13) == 0);
+}
+
+bool network_manager_t::send_slots_77(const net_handshake_77_t& packet) {
+    if (m_socket == -1) return false;
+    int sent = send(static_cast<SOCKET>(m_socket),
+                    reinterpret_cast<const char*>(&packet),
+                    LF2_HANDSHAKE_77_LEN, 0);
+    return (sent == static_cast<int>(LF2_HANDSHAKE_77_LEN));
+}
+
+bool network_manager_t::receive_slots_77(net_handshake_77_t& out_packet) {
+    if (m_socket == -1) return false;
+    int recvd = recv(static_cast<SOCKET>(m_socket),
+                     reinterpret_cast<char*>(&out_packet),
+                     LF2_HANDSHAKE_77_LEN, 0);
+    return (recvd == static_cast<int>(LF2_HANDSHAKE_77_LEN));
+}
+
+bool network_manager_t::send_prng_seed_3001(const uint8_t* table_3000) {
+    if (m_socket == -1 || !table_3000) return false;
+    net_prng_seed_packet_t pkt{};
+    pkt.tag = 0x01;
+    std::memcpy(pkt.seed_table, table_3000, 3000);
+    int sent = send(static_cast<SOCKET>(m_socket),
+                    reinterpret_cast<const char*>(&pkt),
+                    LF2_PRNG_SEED_LEN, 0);
+    return (sent == static_cast<int>(LF2_PRNG_SEED_LEN));
+}
+
+bool network_manager_t::receive_prng_seed_3001(uint8_t* out_table_3000) {
+    if (m_socket == -1 || !out_table_3000) return false;
+    net_prng_seed_packet_t pkt{};
+    int recvd = 0;
+    char* buf = reinterpret_cast<char*>(&pkt);
+    while (recvd < static_cast<int>(LF2_PRNG_SEED_LEN)) {
+        int r = recv(static_cast<SOCKET>(m_socket), buf + recvd,
+                     LF2_PRNG_SEED_LEN - recvd, 0);
+        if (r <= 0) break;
+        recvd += r;
+    }
+    if (recvd != static_cast<int>(LF2_PRNG_SEED_LEN)) return false;
+    std::memcpy(out_table_3000, pkt.seed_table, 3000);
+    return true;
+}
+
+bool network_manager_t::send_packet(const net_packet_t& packet) {
+    if (m_socket == -1) return false;
+
+    int sent = send(static_cast<SOCKET>(m_socket),
+                    reinterpret_cast<const char*>(&packet),
+                    LF2_PACKET_SIZE, 0);
+
+    return (sent == static_cast<int>(LF2_PACKET_SIZE));
 }
 
 bool network_manager_t::receive_packet(net_packet_t& out_packet) {
@@ -204,7 +263,7 @@ bool network_manager_t::receive_packet(net_packet_t& out_packet) {
 }
 
 uint8_t network_manager_t::pack_input(const input_state_t& input) {
-    uint8_t packed = 0;
+    uint8_t packed = NET_KEY_IDLE; // Base idle active bit 0 (1 + 2^(X+1))
     if (input.up)     packed |= NET_KEY_UP;
     if (input.right)  packed |= NET_KEY_RIGHT;
     if (input.attack) packed |= NET_KEY_ATTACK;
@@ -225,7 +284,7 @@ void network_manager_t::unpack_input(uint8_t packed, input_state_t& out_input) {
     out_input.left   = (packed & NET_KEY_LEFT) != 0;
 }
 
-uint16_t network_manager_t::compute_hp_checksum(const object_t* const* objects, int count) {
+uint8_t network_manager_t::compute_hp_checksum(const object_t* const* objects, int count) {
     if (!objects || count <= 0) return 0;
 
     uint32_t hp_sum = 0;
@@ -234,21 +293,21 @@ uint16_t network_manager_t::compute_hp_checksum(const object_t* const* objects, 
             hp_sum += static_cast<uint32_t>(objects[i]->hp);
         }
     }
-    return static_cast<uint16_t>(hp_sum & 0xFFFF);
+    return static_cast<uint8_t>(hp_sum & 0xFF);
 }
 
 SyncResult network_manager_t::verify_sync(const net_packet_t& local_pkt, const net_packet_t& remote_pkt) {
-    // 0x0041CC27: Frame sequence check
-    if (local_pkt.frame_index != remote_pkt.frame_index) {
+    // 0x0041CC27: Frame sequence check modulo 50 (Offset +9)
+    if (local_pkt.seq_counter != remote_pkt.seq_counter) {
         return SyncResult::CONNECTION_LOST;
     }
 
-    // 0x0041CC78: Version / Protocol tag check
-    if (local_pkt.sync_state[0] != remote_pkt.sync_state[0]) {
+    // 0x0041CC78: Version / Protocol tag check (Offset +11)
+    if (local_pkt.version_tag != remote_pkt.version_tag) {
         return SyncResult::VERSION_MISMATCH;
     }
 
-    // 0x0041CCB5: Deterministic HP checksum check
+    // 0x0041CCB5: Deterministic HP cumulative checksum check (Offset +13)
     if (local_pkt.hp_checksum != remote_pkt.hp_checksum) {
         return SyncResult::DESYNCHRONIZATION;
     }
