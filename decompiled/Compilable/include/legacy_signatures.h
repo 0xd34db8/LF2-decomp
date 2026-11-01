@@ -7,6 +7,22 @@
 extern "C" {
 #endif
 
+// Human-readable function signatures
+int  lf2_abs(int val);
+int  lf2_random(unsigned int seed_hint, int range);
+int  lf2_overlap(int bdy_x, int bdy_y, int bdy_w, int bdy_h,
+                 int itr_x, int itr_y, int itr_w, int itr_h);
+void lf2_teleport(global_t *global, int teleported_id, int teleport_to);
+void lf2_object_init(object_t *obj);
+void lf2_grapple_sync(global_t *global, uint32_t catcher_id);
+void lf2_weapon_sync(global_t *global, uint32_t char_id);
+void lf2_does_attack_success(global_t *global, uint32_t attacker_id, uint32_t injured_id, uint32_t mode);
+void lf2_frame_ctor(frame_t *frame);
+int  lf2_file_ctor(file_t *file, undefined4 param_1, undefined4 param_2, const char *dat_path);
+void lf2_menu_check_player_join_input(global_t *global);
+void lf2_menu_reset_input_and_keys(global_t *global);
+int *lf2_stage_advance(global_t *global);
+
 // Comprehensive inventory of all decompiled function signatures
 int  FUN_00401000();
 int  FUN_004011d0();
