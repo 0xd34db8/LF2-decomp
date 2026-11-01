@@ -1,5 +1,6 @@
 #include "renderer.h"
 #include "font8x8.h"
+#include "embedded_ui.h"
 #include <algorithm>
 #include <iostream>
 #include <filesystem>
@@ -92,12 +93,6 @@ std::string renderer_t::normalize_path(const std::string& path) const {
         return ui_direct;
     }
 
-    // Check with .legacy/ prefix
-    std::string legacy_path = ".legacy/" + norm;
-    if (std::filesystem::exists(legacy_path)) {
-        return legacy_path;
-    }
-
     return norm;
 }
 
@@ -110,9 +105,28 @@ SDL_Texture* renderer_t::load_texture(const std::string& path, bool color_key) {
         return it->second;
     }
 
-    SDL_Surface* surface = SDL_LoadBMP(norm.c_str());
+    SDL_Surface* surface = nullptr;
+
+    // 1. Check embedded UI resources (Authentic PE resource parity: baked into exe)
+    const embedded_asset_t* embedded = find_embedded_ui_asset(path);
+    if (!embedded) {
+        embedded = find_embedded_ui_asset(norm);
+    }
+
+    if (embedded && embedded->data && embedded->size > 0) {
+        SDL_RWops* rw = SDL_RWFromConstMem(embedded->data, static_cast<int>(embedded->size));
+        if (rw) {
+            surface = SDL_LoadBMP_RW(rw, 1);
+        }
+    }
+
+    // 2. Fall back to loading from disk file
     if (!surface) {
-        // Return nullptr if asset not on disk
+        surface = SDL_LoadBMP(norm.c_str());
+    }
+
+    if (!surface) {
+        // Return nullptr if asset not found
         return nullptr;
     }
 

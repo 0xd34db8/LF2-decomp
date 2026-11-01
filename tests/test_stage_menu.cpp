@@ -149,7 +149,14 @@ void test_authentic_stage_dat_loading()
 {
     std::cout << "[+] Testing Authentic Little Fighter 2 stage.dat Decryption & Parsing..." << std::endl;
     stage_manager_t stage_mgr;
-    bool ok = stage_mgr.load_stages(".legacy/data/stage.dat");
+    const std::string paths[] = { "data/stage.dat", "build/data/stage.dat", ".legacy/data/stage.dat" };
+    bool ok = false;
+    for (const auto& p : paths) {
+        if (stage_mgr.load_stages(p)) {
+            ok = true;
+            break;
+        }
+    }
     if (ok) {
         assert(stage_mgr.get_stage_count() > 0);
         const stage_definition_t* s50 = stage_mgr.get_stage(50); // Survival Stage

@@ -41,7 +41,13 @@ bool audio_system_t::init()
     };
     desired.userdata = this;
 
-    m_device_id = SDL_OpenAudioDevice(nullptr, 0, &desired, &m_obtained_spec, SDL_AUDIO_ALLOW_ANY_CHANGE);
+    // Try opening audio device with strict desired format so SDL converts automatically.
+    // If that fails, fall back to allowing format change.
+    m_device_id = SDL_OpenAudioDevice(nullptr, 0, &desired, &m_obtained_spec, 0);
+    if (m_device_id == 0) {
+        m_device_id = SDL_OpenAudioDevice(nullptr, 0, &desired, &m_obtained_spec, SDL_AUDIO_ALLOW_ANY_CHANGE);
+    }
+
     if (m_device_id == 0) {
         // Headless audio fallback: software mixing remains fully functional for tests
         m_obtained_spec = desired;
@@ -86,16 +92,26 @@ bool audio_system_t::load_sound(uint32_t sound_id, const std::string& filepath)
     Uint32 wav_length = 0;
 
     if (!SDL_LoadWAV(path.c_str(), &wav_spec, &wav_buffer, &wav_length)) {
-        std::string fallback = ".legacy/" + path;
-        if (!SDL_LoadWAV(fallback.c_str(), &wav_spec, &wav_buffer, &wav_length)) {
+        char* base = SDL_GetBasePath();
+        if (base) {
+            std::string alt_path = std::string(base) + path;
+            SDL_free(base);
+            if (!SDL_LoadWAV(alt_path.c_str(), &wav_spec, &wav_buffer, &wav_length)) {
+                return false;
+            }
+        } else {
             return false;
         }
     }
 
     sound_sample_t sample;
+    sample.buffer = nullptr;
+    sample.length = 0;
+
     SDL_AudioCVT cvt;
-    if (SDL_BuildAudioCVT(&cvt, wav_spec.format, wav_spec.channels, wav_spec.freq,
-                          m_obtained_spec.format, m_obtained_spec.channels, m_obtained_spec.freq) > 0) {
+    int cvt_res = SDL_BuildAudioCVT(&cvt, wav_spec.format, wav_spec.channels, wav_spec.freq,
+                                    m_obtained_spec.format, m_obtained_spec.channels, m_obtained_spec.freq);
+    if (cvt_res > 0) {
         cvt.len = static_cast<int>(wav_length);
         cvt.buf = static_cast<Uint8*>(std::malloc(cvt.len * cvt.len_mult));
         if (cvt.buf) {
@@ -111,6 +127,7 @@ bool audio_system_t::load_sound(uint32_t sound_id, const std::string& filepath)
             return false;
         }
     } else {
+        // Format already matches (cvt_res == 0) or unsupported conversion (cvt_res < 0)
         sample.buffer = new uint8_t[wav_length];
         std::memcpy(sample.buffer, wav_buffer, wav_length);
         sample.length = wav_length;
@@ -275,10 +292,7 @@ void audio_system_t::on_frame_sound(uint32_t sound_tag)
     if (m_samples.find(sound_tag) == m_samples.end()) {
         char buf[64];
         std::snprintf(buf, sizeof(buf), "data/%03u.wav", sound_tag);
-        if (!load_sound(sound_tag, buf)) {
-            std::snprintf(buf, sizeof(buf), ".legacy/data/%03u.wav", sound_tag);
-            load_sound(sound_tag, buf);
-        }
+        load_sound(sound_tag, buf);
     }
 
     play_sound(sound_tag, false);

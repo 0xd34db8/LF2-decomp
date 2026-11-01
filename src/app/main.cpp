@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
     std::cout << "[LF2] Initializing Application Core (" 
               << lf2::WINDOW_WIDTH << "x" << lf2::WINDOW_HEIGHT << ")..." << std::endl;
 
-    if (!app->init(lf2::WINDOW_WIDTH, lf2::WINDOW_HEIGHT, fullscreen)) {
+    if (!app->init(lf2::WINDOW_WIDTH, lf2::WINDOW_HEIGHT, fullscreen, test_mode)) {
         std::cerr << "[LF2] Failed to initialize application!" << std::endl;
         return 1;
     }

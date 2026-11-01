@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cstring>
 #include <algorithm>
+#include <filesystem>
 
 namespace lf2 {
 
@@ -64,9 +65,7 @@ void control_config_t::init_defaults() {
 bool control_config_t::load_from_file(const std::string& path) {
     FILE* fp = std::fopen(path.c_str(), "r");
     if (!fp) {
-        std::string fallback = ".legacy/" + path;
-        fp = std::fopen(fallback.c_str(), "r");
-        if (!fp) return false;
+        return false;
     }
 
     for (int p = 0; p < 4; ++p) {
@@ -160,10 +159,23 @@ void app_t::reset_input() {
     m_mouse_rbutton = 0;
 }
 
-bool app_t::init(int width, int height, bool fullscreen) {
+bool app_t::init(int width, int height, bool fullscreen, bool test_mode) {
     m_width = width;
     m_height = height;
     m_fullscreen = fullscreen;
+
+    // Check if running from outside build/ directory but data is next to executable
+    char* base_path = SDL_GetBasePath();
+    if (base_path) {
+        std::filesystem::path exe_dir(base_path);
+        SDL_free(base_path);
+        if (!std::filesystem::exists("data/data.txt") && !std::filesystem::exists("data/control.txt")) {
+            if (std::filesystem::exists(exe_dir / "data/data.txt") || std::filesystem::exists(exe_dir / "data/control.txt")) {
+                std::error_code ec;
+                std::filesystem::current_path(exe_dir, ec);
+            }
+        }
+    }
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER | SDL_INIT_EVENTS) != 0) {
         std::cerr << "[LF2] SDL_Init Error: " << SDL_GetError() << std::endl;
@@ -210,6 +222,44 @@ bool app_t::init(int width, int height, bool fullscreen) {
     SDL_RenderSetLogicalSize(m_renderer, WINDOW_WIDTH, WINDOW_HEIGHT);
     m_graphics.set_sdl_renderer(m_renderer);
 
+    // Verify presence of authentic game data folders ('data', 'bg', 'sprite')
+    bool has_game_data = std::filesystem::exists("data/data.txt") ||
+                         std::filesystem::exists("data/control.txt");
+
+    if (!has_game_data) {
+        char* base = SDL_GetBasePath();
+        std::string exe_folder = base ? base : "./";
+        if (base) SDL_free(base);
+
+        std::string prompt_msg =
+            "Little Fighter 2 game data was not found!\n\n"
+            "Please copy or place the original LF2 game data folders into this build directory:\n"
+            "  - " + exe_folder + "data\\\n"
+            "  - " + exe_folder + "bg\\\n"
+            "  - " + exe_folder + "sprite\\\n\n"
+            "Then restart the game.";
+
+        std::cerr << "======================================================================\n"
+                  << "[LF2 NOTICE] Authentic game data missing!\n"
+                  << prompt_msg << "\n"
+                  << "======================================================================\n" << std::endl;
+
+        if (!test_mode) {
+            SDL_ShowSimpleMessageBox(
+                SDL_MESSAGEBOX_WARNING,
+                "Little Fighter 2 - Game Data Required",
+                prompt_msg.c_str(),
+                m_window
+            );
+            SDL_DestroyRenderer(m_renderer);
+            m_renderer = nullptr;
+            SDL_DestroyWindow(m_window);
+            m_window = nullptr;
+            SDL_Quit();
+            return false;
+        }
+    }
+
     // Initialize Audio System and preload authentic UI sounds matching 0x0043cf40 (WinMain)
     if (get_audio_system().init()) {
         get_audio_system().load_sound(SOUND_JOIN, "data/m_join.wav");
@@ -220,9 +270,7 @@ bool app_t::init(int width, int height, bool fullscreen) {
     }
 
     // Load authentic Player Controls from control.txt (0x00423480)
-    if (!m_control_cfg.load_from_file("data/control.txt")) {
-        m_control_cfg.load_from_file(".legacy/data/control.txt");
-    }
+    m_control_cfg.load_from_file("data/control.txt");
 
     change_scene(scene_t::TITLE);
     reset_input();
@@ -482,16 +530,7 @@ bool app_t::is_any_player_key_just_pressed(ctrl_action_t action) const {
     for (int p = 0; p < 4; ++p) {
         if (is_player_key_just_pressed(p, action)) return true;
     }
-    // General fallback for menu navigation
-    switch (action) {
-    case ctrl_action_t::UP:     return is_key_just_pressed(VK_LF2_UP);
-    case ctrl_action_t::DOWN:   return is_key_just_pressed(VK_LF2_DOWN);
-    case ctrl_action_t::LEFT:   return is_key_just_pressed(VK_LF2_LEFT);
-    case ctrl_action_t::RIGHT:  return is_key_just_pressed(VK_LF2_RIGHT);
-    case ctrl_action_t::ATTACK: return is_key_just_pressed(VK_LF2_RETURN);
-    case ctrl_action_t::DEFEND: return is_key_just_pressed(VK_LF2_ESCAPE);
-    default: return false;
-    }
+    return false;
 }
 
 void app_t::play_ui_sound(uint32_t sound_id) {
@@ -581,14 +620,26 @@ void app_t::render_title() {
         "official website (官方網頁)"
     };
 
+    SDL_Texture* words0_tex = m_graphics.load_texture("data/ui/WORDS0.bmp", true);
+    SDL_Texture* words1_tex = m_graphics.load_texture("data/ui/WORDS1.bmp", true);
+
     for (int i = 0; i < 5; ++i) {
         int y = 220 + i * 32;
+        SDL_Rect src_slice = { 0, i * 28, 251, 28 };
         if (i == m_title_cursor) {
-            m_graphics.draw_rect(265, y - 4, 310, 26, 45, 75, 165, 180, true);
-            m_graphics.draw_rect(265, y - 4, 310, 26, 150, 190, 255, 255, false);
-            m_graphics.draw_text(title_items[i], 285, y, 255, 255, 255, 1, false);
+            m_graphics.draw_rect(275, y - 4, 270, 26, 45, 75, 165, 180, true);
+            m_graphics.draw_rect(275, y - 4, 270, 26, 150, 190, 255, 255, false);
+            if (words0_tex) {
+                m_graphics.draw_sprite(words0_tex, &src_slice, 285, y - 2);
+            } else {
+                m_graphics.draw_text(title_items[i], 285, y, 255, 255, 255, 1, false);
+            }
         } else {
-            m_graphics.draw_text(title_items[i], 285, y, 140, 165, 220, 1);
+            if (words1_tex) {
+                m_graphics.draw_sprite(words1_tex, &src_slice, 285, y - 2);
+            } else {
+                m_graphics.draw_text(title_items[i], 285, y, 140, 165, 220, 1);
+            }
         }
     }
 
@@ -792,7 +843,7 @@ void app_t::update_char_select() {
                 } else {
                     if (m_slots[p].countdown > 0) {
                         m_slots[p].countdown_timer++;
-                        if (m_slots[p].countdown_timer >= 25) {
+                        if (m_slots[p].countdown_timer >= 30) {
                             m_slots[p].countdown_timer = 0;
                             m_slots[p].countdown--;
                         }
@@ -955,9 +1006,7 @@ void app_t::start_battle() {
     // Load Stage
     const std::string bg_candidates[] = {
         "bg/sys/hkc/bg.dat",
-        ".legacy/bg/sys/hkc/bg.dat",
-        "bg/template/1/bg.dat",
-        ".legacy/bg/template/1/bg.dat"
+        "bg/template/1/bg.dat"
     };
     m_stage_loaded = false;
     for (const auto& bg_path : bg_candidates) {
@@ -981,19 +1030,8 @@ void app_t::start_battle() {
         }
 
         const auto& entry = roster[r_idx];
-        const std::string char_candidates[] = {
-            entry.dat_file,
-            ".legacy/" + entry.dat_file
-        };
-
         file_t* loaded_file = new file_t();
-        bool file_ok = false;
-        for (const auto& cp : char_candidates) {
-            if (dat_loader_t::load_file(loaded_file, cp, entry.id, TYPE_CHARACTER)) {
-                file_ok = true;
-                break;
-            }
-        }
+        bool file_ok = dat_loader_t::load_file(loaded_file, entry.dat_file, entry.id, TYPE_CHARACTER);
         if (!file_ok) {
             delete loaded_file;
             continue;
@@ -1224,7 +1262,7 @@ void app_t::run() {
         process_events();
         if (!m_running) break;
 
-        const uint32_t step = m_in_battle ? TICK_STEP_BATTLE_MS : TICK_STEP_MENU_MS;
+        const uint32_t step = TICK_STEP_BATTLE_MS; // Authentic 30.3 FPS across all scenes (33 ms)
 
         uint32_t now = SDL_GetTicks();
         if (now - last_time > step) {

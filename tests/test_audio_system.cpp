@@ -87,11 +87,19 @@ void test_audio_init_and_wav_loading()
 
 void test_authentic_asset_loading()
 {
-    std::cout << "[+] Testing Authentic Little Fighter 2 WAV Loading (.legacy/data/001.wav)..." << std::endl;
+    std::cout << "[+] Testing Authentic Little Fighter 2 WAV Loading (data/001.wav)..." << std::endl;
     audio_system_t audio;
     audio.init();
 
-    bool loaded = audio.load_sound(1, ".legacy/data/001.wav");
+    const std::string paths[] = { "data/001.wav", "build/data/001.wav", ".legacy/data/001.wav" };
+    bool loaded = false;
+    for (const auto& p : paths) {
+        if (audio.load_sound(1, p)) {
+            loaded = true;
+            break;
+        }
+    }
+
     if (loaded) {
         assert(audio.get_loaded_count() == 1);
         int32_t ch = audio.play_sound(1);
@@ -99,7 +107,7 @@ void test_authentic_asset_loading()
         assert(audio.get_active_channel_count() == 1);
         std::cout << "    Authentic LF2 001.wav loaded and mixed into channel " << ch << "!" << std::endl;
     } else {
-        std::cout << "    (Authentic .legacy/data/001.wav skipped: not in test path)" << std::endl;
+        std::cout << "    (Authentic data/001.wav skipped: not in test path)" << std::endl;
     }
 }
 

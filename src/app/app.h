@@ -144,7 +144,7 @@ public:
     ~app_t();
 
     // Application Lifecycle
-    bool init(int width = WINDOW_WIDTH, int height = WINDOW_HEIGHT, bool fullscreen = false);
+    bool init(int width = WINDOW_WIDTH, int height = WINDOW_HEIGHT, bool fullscreen = false, bool test_mode = false);
     void run();
     void shutdown();
 
