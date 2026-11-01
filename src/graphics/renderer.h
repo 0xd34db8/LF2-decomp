@@ -81,6 +81,12 @@ public:
     // Multi-layer parallax background rendering (0x0041a302 - 0x0041a320)
     void draw_background(const background_t* bg, int32_t camera_x, int32_t camera_y);
 
+    // Primitives: solid/bordered rectangles & bitmap text
+    void draw_rect(int32_t x, int32_t y, int32_t w, int32_t h,
+                   uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255, bool filled = true);
+    void draw_text(const std::string& text, int32_t x, int32_t y,
+                   uint8_t r = 255, uint8_t g = 255, uint8_t b = 255, int32_t scale = 1, bool shadow = true);
+
     // Authentic HUD status bars (HP / MP / Portrait)
     void draw_hud(int32_t player_idx, int32_t hp, int32_t max_hp, int32_t mp, int32_t max_mp,
                   SDL_Texture* face_texture = nullptr);

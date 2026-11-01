@@ -92,6 +92,7 @@ void FUN_0043dfa0();
 int  FUN_004450d0();
 void FUN_00434ab0();
 int* FUN_00436fc0();
+void FUN_00437220(undefined4 param_1, undefined4 *param_2);
 void FUN_00437400();
 void FUN_00437860();
 void FUN_004389a0();

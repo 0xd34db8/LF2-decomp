@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 #include <SDL.h>
 #include "constants.h"
 #include "global.h"
@@ -9,6 +10,7 @@
 #include "background.h"
 #include "entity.h"
 #include "dat_loader.h"
+#include "menu.h"
 
 namespace lf2 {
 
@@ -65,6 +67,24 @@ enum VirtualKey : uint8_t {
     VK_LF2_OEM_PERIOD  = 0xBE  // '.' key used for "lf2.net" and "herofighter.com"
 };
 
+enum class scene_t : uint32_t {
+    TITLE        = 0,
+    MODE_SELECT  = 1,
+    CHAR_SELECT  = 2,
+    LOADING      = 3,
+    BATTLE       = 4
+};
+
+struct char_slot_ui_t {
+    bool     joined = false;
+    bool     is_ready = false;
+    bool     is_human = true;
+    int      roster_idx = 1; // Default Davis
+    uint32_t team = 1;       // Team 1..4
+    int      countdown = 5;  // 5..1 countdown when ready
+    uint32_t countdown_timer = 0; // timer ticks for countdown
+};
+
 // Application lifecycle and window/platform wrapper
 class app_t {
 public:
@@ -83,10 +103,17 @@ public:
     void update();
     void render();
 
+    // Scene management
+    void change_scene(scene_t next_scene);
+    scene_t get_scene() const { return m_scene; }
+
     // Keyboard & Input Queries
     bool is_key_down(uint8_t vk) const { return m_key_states[vk] == 'd'; }
     bool is_key_up(uint8_t vk) const { return m_key_states[vk] == 'u'; }
     uint8_t get_key_state(uint8_t vk) const { return m_key_states[vk]; }
+    bool is_key_just_pressed(uint8_t vk) const {
+        return m_key_states[vk] == 'd' && m_prev_key_states[vk] == 'u';
+    }
 
     // Cheat Code State Queries
     bool is_lf2net_unlocked() const { return m_cheat_lf2net == 'd'; }
@@ -129,6 +156,25 @@ private:
     void on_key_up(uint8_t vk);
     uint8_t sdl_key_to_vk(SDL_Keycode key, SDL_Scancode scancode);
 
+    // Scene lifecycle updates and renders
+    void update_title();
+    void render_title();
+
+    void update_mode_select();
+    void render_mode_select();
+
+    void update_char_select();
+    void render_char_select();
+
+    void update_loading();
+    void render_loading();
+
+    void update_battle();
+    void render_battle();
+
+    void start_battle();
+    void return_to_menu();
+
 private:
     // SDL2 Windowing & Rendering handles
     SDL_Window*     m_window;
@@ -143,8 +189,8 @@ private:
     int32_t         m_active_state;     // 0x00451dac in binary (1 = active window, 0 = inactive)
 
     // Authentic LF2 256-byte keyboard state array (0x00455378 in binary)
-    // Initialized to 'u' (0x75); set to 'd' (0x64) when pressed
     uint8_t         m_key_states[256];
+    uint8_t         m_prev_key_states[256];
 
     // Mouse states (0x004546f0, 0x00453cdc, 0x00457580, 0x004527e4)
     int16_t         m_mouse_x;
@@ -164,6 +210,22 @@ private:
     uint32_t        m_frame_counter;
     uint64_t        m_total_ticks;
 
+    // Scene State Machine
+    scene_t         m_scene{scene_t::TITLE};
+    int             m_menu_bg_idx{1};
+    int             m_title_cursor{0};
+    int             m_mode_cursor{0};
+    game_mode_t     m_selected_mode{MODE_VS};
+
+    char_slot_ui_t  m_slots[8];
+    bool            m_modal_cpu_open{false};
+    int             m_cpu_count{1};
+
+    uint32_t        m_loading_timer{0};
+    std::string     m_loading_filename{""};
+
+    bool            m_battle_paused{false};
+
     // Game world container
     global_t        m_world;
 
@@ -173,11 +235,10 @@ private:
     background_t    m_background;
     bool            m_stage_loaded{false};
 
-    // Active player character (Davis)
-    object_t        m_player;
-    file_t          m_davis_file;
-    bool            m_player_loaded{false};
+    // Battle objects and loaded character files
+    object_t        m_fighters[MAX_OBJECTS];
+    file_t*         m_loaded_files[MAX_FILES];
+    uint32_t        m_num_fighters{0};
 };
 
 } // namespace lf2
-

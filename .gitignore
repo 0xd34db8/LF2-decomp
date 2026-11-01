@@ -15,3 +15,5 @@ data/temporary.txt
 # source & reference files
 .legacy/
 internal/
+scratch/
+scratch/

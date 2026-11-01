@@ -8,39 +8,12 @@ A true 1:1 C++20 source decompilation and modernization of the original *Little 
 
 </div>
 
+<div align="center">
 This project is a systems programming and binary reverse engineering exercise designed to extract, lift, and preserve the authentic game logic (state machines, frame-accurate timings, hitbox collision mathematics, and data-driven file loading) while shedding legacy DirectDraw 6 and Win32 dependencies in favor of a modern cross-platform architecture.
+</div>
 
 ---
 
-## Table of Contents
-
-- [Prior Art vs. This Project](#prior-art-vs-this-project)
-- [Architecture & Project Layout](#architecture--project-layout)
-- [Core Directives & Verification](#core-directives--verification)
-- [Data Structure Memory Maps](#data-structure-memory-maps)
-- [Building, Setup & Playing the Real Game](#building-setup--playing-the-real-game)
-  - [1. Prerequisites](#1-prerequisites)
-  - [2. Acquiring and Setting Up Authentic Game Assets](#2-acquiring-and-setting-up-authentic-game-assets)
-  - [3. Compiling the Game](#3-compiling-the-game)
-  - [4. Running and Playing](#4-running-and-playing)
-  - [5. Automated Verification Test Suites](#5-automated-verification-test-suites)
-  - [Expected Test Output](#expected-test-output)
-- [Reverse-Engineered Secrets, Ciphers & Easter Eggs](#reverse-engineered-secrets-ciphers--easter-eggs)
-  - [1. The Legendary Resource Decryption Key](#1-the-legendary-resource-decryption-key-siuhungisagoodbearbecauseheisverygood)
-  - [2. The Replay (.lfr) Secondary Obfuscation Cipher](#2-the-replay-lfr-secondary-obfuscation-cipher-0x0043dd60--0x0044d7a0)
-  - [3. Secret Cheat Code State Machines in WindowProc](#3-secret-cheat-code-state-machines-in-windowproc-0x0043b3d0)
-  - [4. Window & Platform Identity Artifacts](#4-window--platform-identity-artifacts)
-  - [5. Deterministic Multiplayer PRNG Table](#5-deterministic-multiplayer-prng-table)
-  - [6. Fixed-Step 30 FPS Timing & Spiral-of-Death Protection](#6-fixed-step-30-fps-timing--spiral-of-death-protection-0x0043cf40)
-- [Engine Quirks, Desyncs & Known Binary Bugs](#engine-quirks-desyncs--known-binary-bugs)
-  - [1. The Anatomy of the Infamous "Synchronisation Error!"](#1-the-anatomy-of-the-infamous-synchronisation-error-0x0041cad9--0x0041ccb5)
-  - [2. The 100-Slot World Object Array & Screen Overflow Crash](#2-the-100-slot-world-object-array--screen-overflow-crash-0x0042e100--0x004061d0)
-  - [3. The Rudolf Stage Boundary Teleportation Glitch](#3-the-rudolf-stage-boundary-teleportation-glitch-0x00403270)
-  - [4. Player Name Grave Accent Substitution in control.txt](#4-player-name-grave-accent-substitution-in-controltxt-0x004233e0--0x0042353a)
-  - [5. Deterministic Battle Replay Recording](#5-deterministic-battle-replay-recording-lfr-at-0x0042d080--0x00402980)
-- [References & Acknowledgments](#references--acknowledgments)
-
----
 
 <details>
 <summary><h2 style="display:inline;">Prior Art vs. This Project</h2></summary>

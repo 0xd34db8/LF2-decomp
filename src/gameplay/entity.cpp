@@ -178,7 +178,12 @@ bool object_tick_frame(object_t* obj)
     obj->wait_counter++;
 
     // When wait counter expires, advance frame
-    if (obj->wait_counter >= std::max<uint32_t>(1u, cur_frame.wait)) {
+    uint32_t wait_threshold = std::max<uint32_t>(1u, cur_frame.wait);
+    if (cur_frame.state == STATE_WALKING) {
+        wait_threshold = std::max<uint32_t>(1u, obj->file->walking_frame_rate + 1);
+    }
+
+    if (obj->wait_counter >= wait_threshold) {
         obj->wait_counter = 0;
 
         // Shift frame history
@@ -186,9 +191,23 @@ bool object_tick_frame(object_t* obj)
         obj->frame_id3 = obj->frame_id2;
         obj->frame_id2 = obj->frame_id1;
 
-        // Check for entity expiration (standard LF2 particle / effect disposal tags)
-        if (cur_frame.next == 999 || cur_frame.next == 1000) {
+        // Authentic LF2 walking frame cycling (State 1: 5 -> 6 -> 7 -> 8 -> 7 -> 6 -> 5...)
+        if (cur_frame.state == STATE_WALKING) {
+            static const uint32_t walk_sequence[6] = {5, 6, 7, 8, 7, 6};
+            obj->move_counter = (obj->move_counter + 1) % 6;
+            obj->frame_id1 = walk_sequence[obj->move_counter];
+            return true;
+        }
+
+        // Particle / effect disposal
+        if (cur_frame.next == 1000) {
             return false;
+        }
+
+        // Authentic LF2 behavior: next == 999 loops back to frame 0 (standing stance)
+        if (cur_frame.next == 999) {
+            obj->frame_id1 = 0;
+            return true;
         }
 
         obj->frame_id1 = static_cast<uint32_t>(cur_frame.next);
@@ -220,7 +239,7 @@ void object_handle_input(object_t* obj, const input_state_t& input)
     // State 0: Standing / Idle
     if (state == STATE_STANDING) {
         if (input.jump) {
-            double jh = (obj->file->jump_height > 0.0) ? obj->file->jump_height : 11.0;
+            double jh = (std::abs(obj->file->jump_height) > 0.0) ? std::abs(obj->file->jump_height) : 11.0;
             obj->y_velocity = -jh;
             obj->y_position = -1.0;
             obj->frame_id1 = 210;
@@ -250,7 +269,7 @@ void object_handle_input(object_t* obj, const input_state_t& input)
         }
 
         if (input.attack) {
-            obj->frame_id1 = 60; // Punch
+            obj->frame_id1 = 60; // Punch 1
             obj->wait_counter = 0;
             obj->x_velocity = 0.0;
             obj->z_velocity = 0.0;
@@ -266,6 +285,7 @@ void object_handle_input(object_t* obj, const input_state_t& input)
         }
 
         if (input.left || input.right || input.up || input.down) {
+            obj->move_counter = 0;
             obj->frame_id1 = 5; // Walk start
             obj->wait_counter = 0;
             if (input.left) obj->facing = FACING_LEFT;
@@ -277,7 +297,7 @@ void object_handle_input(object_t* obj, const input_state_t& input)
     // State 1: Walking
     if (state == STATE_WALKING) {
         if (input.jump) {
-            double jh = (obj->file->jump_height > 0.0) ? obj->file->jump_height : 11.0;
+            double jh = (std::abs(obj->file->jump_height) > 0.0) ? std::abs(obj->file->jump_height) : 11.0;
             obj->y_velocity = -jh;
             obj->y_position = -1.0;
             obj->frame_id1 = 210;
@@ -289,7 +309,7 @@ void object_handle_input(object_t* obj, const input_state_t& input)
         }
 
         if (input.attack) {
-            obj->frame_id1 = 60;
+            obj->frame_id1 = 60; // Punch 1
             obj->wait_counter = 0;
             obj->x_velocity = 0.0;
             return;
@@ -303,6 +323,7 @@ void object_handle_input(object_t* obj, const input_state_t& input)
         }
 
         if (!input.left && !input.right && !input.up && !input.down) {
+            obj->move_counter = 0;
             obj->frame_id1 = 0; // Return to idle
             obj->wait_counter = 0;
             obj->x_velocity = 0.0;
@@ -324,6 +345,20 @@ void object_handle_input(object_t* obj, const input_state_t& input)
         else if (input.down) obj->z_velocity = wsz;
         else obj->z_velocity = 0.0;
     }
+
+    // State 3: Attack / Punch combos
+    if (state == STATE_ATTACKING) {
+        if (input.attack && !obj->holding_attack) {
+            if (obj->frame_id1 >= 60 && obj->frame_id1 <= 63) {
+                obj->frame_id1 = 65; // Punch 2 combo
+                obj->wait_counter = 0;
+            } else if (obj->frame_id1 >= 65 && obj->frame_id1 <= 68) {
+                obj->frame_id1 = 70; // Punch 3 / Finisher
+                obj->wait_counter = 0;
+            }
+        }
+    }
+    obj->holding_attack = input.attack ? 1 : 0;
 
     // State 7: Defending / Guard
     if (state == STATE_DEFEND) {

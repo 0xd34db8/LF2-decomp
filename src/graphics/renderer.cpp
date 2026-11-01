@@ -1,4 +1,5 @@
 #include "renderer.h"
+#include "font8x8.h"
 #include <algorithm>
 #include <iostream>
 #include <filesystem>
@@ -79,6 +80,16 @@ std::string renderer_t::normalize_path(const std::string& path) const {
     // Check if directly exists
     if (std::filesystem::exists(norm)) {
         return norm;
+    }
+
+    // Check in data/ui/
+    std::string ui_bmp = "data/ui/" + norm + ".bmp";
+    if (std::filesystem::exists(ui_bmp)) {
+        return ui_bmp;
+    }
+    std::string ui_direct = "data/ui/" + norm;
+    if (std::filesystem::exists(ui_direct)) {
+        return ui_direct;
     }
 
     // Check with .legacy/ prefix
@@ -282,6 +293,60 @@ void renderer_t::draw_background(const background_t* bg, int32_t camera_x, int32
         }
 
         draw_sprite(tex, p_src, draw_x, draw_y, false);
+    }
+}
+
+void renderer_t::draw_rect(int32_t x, int32_t y, int32_t w, int32_t h,
+                           uint8_t r, uint8_t g, uint8_t b, uint8_t a, bool filled) {
+    if (!m_renderer || w <= 0 || h <= 0) return;
+    SDL_Rect rect = { x, y, w, h };
+    SDL_SetRenderDrawBlendMode(m_renderer, a < 255 ? SDL_BLENDMODE_BLEND : SDL_BLENDMODE_NONE);
+    SDL_SetRenderDrawColor(m_renderer, r, g, b, a);
+    if (filled) {
+        SDL_RenderFillRect(m_renderer, &rect);
+    } else {
+        SDL_RenderDrawRect(m_renderer, &rect);
+    }
+}
+
+void renderer_t::draw_text(const std::string& text, int32_t x, int32_t y,
+                           uint8_t r, uint8_t g, uint8_t b, int32_t scale, bool shadow) {
+    if (!m_renderer || text.empty()) return;
+    if (scale < 1) scale = 1;
+
+    if (shadow) {
+        draw_text(text, x + scale, y + scale, 10, 10, 20, scale, false);
+    }
+
+    int32_t cur_x = x;
+    int32_t cur_y = y;
+    SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(m_renderer, r, g, b, 255);
+
+    for (char ch : text) {
+        if (ch == '\n') {
+            cur_x = x;
+            cur_y += 10 * scale;
+            continue;
+        }
+        if (ch < 32 || ch > 126) ch = '?';
+        uint32_t idx = static_cast<uint32_t>(ch - 32);
+        const uint8_t* glyph = FONT_8X8[idx];
+
+        for (int row = 0; row < 8; ++row) {
+            uint8_t bits = glyph[row];
+            for (int col = 0; col < 8; ++col) {
+                if (bits & (0x80 >> col)) {
+                    if (scale == 1) {
+                        SDL_RenderDrawPoint(m_renderer, cur_x + col, cur_y + row);
+                    } else {
+                        SDL_Rect pixel = { cur_x + col * scale, cur_y + row * scale, scale, scale };
+                        SDL_RenderFillRect(m_renderer, &pixel);
+                    }
+                }
+            }
+        }
+        cur_x += 8 * scale;
     }
 }
 

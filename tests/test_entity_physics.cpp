@@ -123,9 +123,13 @@ void test_frame_progression()
     file.frames[1].wait = 2;
     file.frames[1].next = 2;
 
-    // Frame 2: wait 1, next 999 (expiration)
+    // Frame 2: wait 1, next 999 (loops to frame 0 in authentic LF2)
     file.frames[2].wait = 1;
     file.frames[2].next = 999;
+
+    // Frame 3: wait 1, next 1000 (particle expiration)
+    file.frames[3].wait = 1;
+    file.frames[3].next = 1000;
 
     object_t obj;
     object_init(&obj);
@@ -150,7 +154,13 @@ void test_frame_progression()
     assert(obj.frame_id1 == 2 && obj.wait_counter == 0);
     assert(obj.frame_id2 == 1 && obj.frame_id3 == 0);
 
-    // Tick Frame 2 (wait 1, next 999 -> returns false)
+    // Tick Frame 2 (wait 1, next 999 -> loops back to frame 0)
+    assert(object_tick_frame(&obj) == true);
+    assert(obj.frame_id1 == 0);
+
+    // Set to Frame 3 and tick (wait 1, next 1000 -> expires and returns false)
+    obj.frame_id1 = 3;
+    obj.wait_counter = 0;
     bool alive = object_tick_frame(&obj);
     assert(alive == false);
 

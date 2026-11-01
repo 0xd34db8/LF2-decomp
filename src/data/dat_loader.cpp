@@ -276,7 +276,17 @@ bool dat_loader_t::parse_content(file_t* file, const std::string& content, uint3
                     } else if (token == "mp:") {
                         stream >> frame.mp;
                     } else if (token == "sound:") {
-                        stream >> frame.sound;
+                        std::string snd_str;
+                        if (stream >> snd_str) {
+                            int snd_id = 0;
+                            size_t d_pos = snd_str.find_first_of("0123456789");
+                            if (d_pos != std::string::npos) {
+                                try {
+                                    snd_id = std::stoi(snd_str.substr(d_pos));
+                                } catch (...) {}
+                            }
+                            frame.sound = static_cast<uint32_t>(snd_id);
+                        }
                     } else if (token == "bpoint:") {
                         while (stream >> token && token != "bpoint_end:") {
                             if (token == "x:") stream >> frame.bpoint.x;

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <memory>
 
 int main(int argc, char* argv[]) {
     std::cout << "==================================================" << std::endl;
@@ -25,12 +26,12 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    lf2::app_t app;
+    auto app = std::make_unique<lf2::app_t>();
 
     std::cout << "[LF2] Initializing Application Core (" 
               << lf2::WINDOW_WIDTH << "x" << lf2::WINDOW_HEIGHT << ")..." << std::endl;
 
-    if (!app.init(lf2::WINDOW_WIDTH, lf2::WINDOW_HEIGHT, fullscreen)) {
+    if (!app->init(lf2::WINDOW_WIDTH, lf2::WINDOW_HEIGHT, fullscreen)) {
         std::cerr << "[LF2] Failed to initialize application!" << std::endl;
         return 1;
     }
@@ -45,7 +46,7 @@ int main(int argc, char* argv[]) {
 
         // Verify initial input states
         for (int k = 0; k < 256; ++k) {
-            if (app.get_key_state(static_cast<uint8_t>(k)) != 'u') {
+            if (app->get_key_state(static_cast<uint8_t>(k)) != 'u') {
                 std::cerr << "[LF2 TEST ERROR] Key " << k << " state is not 'u'!" << std::endl;
                 return 2;
             }
@@ -117,29 +118,29 @@ int main(int argc, char* argv[]) {
         uint32_t ticks_run = 0;
         uint32_t last_time = SDL_GetTicks();
         while (ticks_run < static_cast<uint32_t>(test_frames)) {
-            app.process_events();
+            app->process_events();
 
             uint32_t now = SDL_GetTicks();
             if (now - last_time >= lf2::TICK_STEP_BATTLE_MS) {
                 last_time += lf2::TICK_STEP_BATTLE_MS;
-                app.update();
-                app.render();
+                app->update();
+                app->render();
                 ticks_run++;
             }
             SDL_Delay(1);
         }
 
-        if (!app.is_lf2net_unlocked()) {
+        if (!app->is_lf2net_unlocked()) {
             std::cerr << "[LF2 TEST ERROR] 'lf2.net' cheat was not triggered correctly!" << std::endl;
             return 3;
         }
 
-        if (!app.is_herofighter_unlocked()) {
+        if (!app->is_herofighter_unlocked()) {
             std::cerr << "[LF2 TEST ERROR] 'herofighter.com' cheat was not triggered correctly!" << std::endl;
             return 4;
         }
 
-        if (!app.is_dev_mode_enabled()) {
+        if (!app->is_dev_mode_enabled()) {
             std::cerr << "[LF2 TEST ERROR] 'ABC' developer mode cheat was not triggered correctly!" << std::endl;
             return 5;
         }
@@ -150,14 +151,14 @@ int main(int argc, char* argv[]) {
         std::cout << "[LF2 TEST SUCCESS] Frame pacing and event loop executed " 
                   << ticks_run << " frames cleanly." << std::endl;
 
-        app.shutdown();
+        app->shutdown();
         return 0;
     }
 
     std::cout << "[LF2] Starting game loop (Press Alt+Enter for Fullscreen, Close window to exit)..." << std::endl;
-    app.run();
+    app->run();
 
     std::cout << "[LF2] Shutting down application cleanly." << std::endl;
-    app.shutdown();
+    app->shutdown();
     return 0;
 }

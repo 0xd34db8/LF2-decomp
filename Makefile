@@ -29,6 +29,7 @@ LIB_SRCS = \
 	src/app/stage.cpp \
 	src/app/tournament.cpp \
 	src/app/battle.cpp \
+	src/app/survival.cpp \
 	src/app/app.cpp
 
 LIB_OBJS = $(LIB_SRCS:.cpp=.o)
@@ -77,7 +78,10 @@ TEST_TRN_EXE = test_tournament.exe
 TEST_BTL_SRCS = tests/test_battle_mode.cpp
 TEST_BTL_EXE = test_battle_mode.exe
 
-TEST_EXES = $(TEST_MAP_EXE) $(TEST_DAT_EXE) $(TEST_GFX_EXE) $(TEST_ENT_EXE) $(TEST_CBT_EXE) $(TEST_GRP_EXE) $(TEST_AI_EXE) $(TEST_AUD_EXE) $(TEST_STG_EXE) $(TEST_NET_EXE) $(TEST_RPL_EXE) $(TEST_TRN_EXE) $(TEST_BTL_EXE)
+TEST_SRV_SRCS = tests/test_survival_mode.cpp
+TEST_SRV_EXE = test_survival_mode.exe
+
+TEST_EXES = $(TEST_MAP_EXE) $(TEST_DAT_EXE) $(TEST_GFX_EXE) $(TEST_ENT_EXE) $(TEST_CBT_EXE) $(TEST_GRP_EXE) $(TEST_AI_EXE) $(TEST_AUD_EXE) $(TEST_STG_EXE) $(TEST_NET_EXE) $(TEST_RPL_EXE) $(TEST_TRN_EXE) $(TEST_BTL_EXE) $(TEST_SRV_EXE)
 
 .PHONY: all test clean
 
@@ -128,6 +132,9 @@ $(TEST_TRN_EXE): $(TEST_TRN_SRCS) $(TARGET_LIB)
 $(TEST_BTL_EXE): $(TEST_BTL_SRCS) $(TARGET_LIB)
 	$(CXX) $(CXXFLAGS) $(TEST_BTL_SRCS) -L. -llf2 -lws2_32 -o $@
 
+$(TEST_SRV_EXE): $(TEST_SRV_SRCS) $(TARGET_LIB)
+	$(CXX) $(CXXFLAGS) $(TEST_SRV_SRCS) -L. -llf2 -lws2_32 -o $@
+
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
@@ -147,6 +154,7 @@ test: $(TEST_EXES) $(TARGET_APP)
 	./$(TEST_RPL_EXE)
 	./$(TEST_TRN_EXE)
 	./$(TEST_BTL_EXE)
+	./$(TEST_SRV_EXE)
 	./$(TARGET_APP) --test --frames 30
 	$(RM) $(TEST_EXES) $(TEST_EXES:.exe=.d) *.d test_*_debug.exe liblf2.a
 

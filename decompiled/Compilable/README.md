@@ -58,7 +58,7 @@ Any individual file or the entire suite can be compiled into object files using 
 # Compile a single routine
 gcc -c -Iinclude gameplay/func_0042e100_attack_process.c -o attack_process.o
 
-# Verify all 41 C translation units compile cleanly
+# Verify all 43 C translation units compile cleanly
 Get-ChildItem -Recurse -Filter *.c | ForEach-Object {
     gcc -c -Iinclude $_.FullName -o ($_.BaseName + ".o")
 }
@@ -103,6 +103,8 @@ Remove-Item *.o
 | `0x00432ab0` | [`app/func_00432ab0_tournament.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/Compilable/app/func_00432ab0_tournament.c) | App | Championship tournament bracket state machine |
 | `0x00434ab0` | [`app/func_00434ab0_tournament_2on2.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/Compilable/app/func_00434ab0_tournament_2on2.c) | App | 2-on-2 championship tournament state machine |
 | `0x00436900` | [`app/func_00436900_battle_setup.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/Compilable/app/func_00436900_battle_setup.c) | App | Player/CPU entity spawn initialization & battle setup |
+| `0x00436fc0` | [`app/func_00436fc0_stage_advance.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/Compilable/app/func_00436fc0_stage_advance.c) | App | Stage/survival wave advance & player vitals recovery |
+| `0x00437220` | [`app/func_00437220_survival_curtain.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/Compilable/app/func_00437220_survival_curtain.c) | App | Stage clear / survival game-over transition curtain |
 | `0x00437400` | [`app/func_00437400_spawn_unit.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/Compilable/app/func_00437400_spawn_unit.c) | App | Unit spawn allocation & world object table insert |
 | `0x00437860` | [`app/func_00437860_battle_status.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/Compilable/app/func_00437860_battle_status.c) | App | Battle status HUD, reinforcement waves & survival timer |
 | `0x004389a0` | [`app/func_004389a0_draw_select_rect.c`](file:///a:/Work/Visual Studio Projects/LF2/decompiled/Compilable/app/func_004389a0_draw_select_rect.c) | Graphics | Selection cursor animated border renderer |
