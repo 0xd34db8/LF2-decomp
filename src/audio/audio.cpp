@@ -41,7 +41,7 @@ bool audio_system_t::init()
     };
     desired.userdata = this;
 
-    m_device_id = SDL_OpenAudioDevice(nullptr, 0, &desired, &m_obtained_spec, 0);
+    m_device_id = SDL_OpenAudioDevice(nullptr, 0, &desired, &m_obtained_spec, SDL_AUDIO_ALLOW_ANY_CHANGE);
     if (m_device_id == 0) {
         // Headless audio fallback: software mixing remains fully functional for tests
         m_obtained_spec = desired;
@@ -76,12 +76,20 @@ bool audio_system_t::load_sound(uint32_t sound_id, const std::string& filepath)
         if (!init()) return false;
     }
 
+    std::string path = filepath;
+    for (char& c : path) {
+        if (c == '\\') c = '/';
+    }
+
     SDL_AudioSpec wav_spec;
     Uint8* wav_buffer = nullptr;
     Uint32 wav_length = 0;
 
-    if (!SDL_LoadWAV(filepath.c_str(), &wav_spec, &wav_buffer, &wav_length)) {
-        return false;
+    if (!SDL_LoadWAV(path.c_str(), &wav_spec, &wav_buffer, &wav_length)) {
+        std::string fallback = ".legacy/" + path;
+        if (!SDL_LoadWAV(fallback.c_str(), &wav_spec, &wav_buffer, &wav_length)) {
+            return false;
+        }
     }
 
     sound_sample_t sample;

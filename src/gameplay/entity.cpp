@@ -1,4 +1,5 @@
 #include "entity.h"
+#include "audio/audio.h"
 #include <cmath>
 #include <cstring>
 #include <algorithm>
@@ -191,26 +192,31 @@ bool object_tick_frame(object_t* obj)
         obj->frame_id3 = obj->frame_id2;
         obj->frame_id2 = obj->frame_id1;
 
+        uint32_t prev_frame = obj->frame_id1;
+
         // Authentic LF2 walking frame cycling (State 1: 5 -> 6 -> 7 -> 8 -> 7 -> 6 -> 5...)
         if (cur_frame.state == STATE_WALKING) {
             static const uint32_t walk_sequence[6] = {5, 6, 7, 8, 7, 6};
             obj->move_counter = (obj->move_counter + 1) % 6;
             obj->frame_id1 = walk_sequence[obj->move_counter];
-            return true;
-        }
-
-        // Particle / effect disposal
-        if (cur_frame.next == 1000) {
+        } else if (cur_frame.next == 1000) {
+            // Particle / effect disposal
             return false;
-        }
-
-        // Authentic LF2 behavior: next == 999 loops back to frame 0 (standing stance)
-        if (cur_frame.next == 999) {
+        } else if (cur_frame.next == 999) {
+            // Authentic LF2 behavior: next == 999 loops back to frame 0 (standing stance)
             obj->frame_id1 = 0;
-            return true;
+        } else {
+            obj->frame_id1 = static_cast<uint32_t>(cur_frame.next);
         }
 
-        obj->frame_id1 = static_cast<uint32_t>(cur_frame.next);
+        // Trigger authentic audio when entering new frame with non-zero sound tag
+        if (obj->frame_id1 != prev_frame && obj->frame_id1 < MAX_FRAMES) {
+            uint32_t snd = obj->file->frames[obj->frame_id1].sound;
+            if (snd != 0) {
+                get_audio_system().on_frame_sound(snd);
+            }
+        }
+        return true;
     }
 
     return true;
@@ -222,6 +228,7 @@ void object_handle_input(object_t* obj, const input_state_t& input)
 
     if (obj->frame_id1 >= MAX_FRAMES) return;
 
+    uint32_t prev_frame = obj->frame_id1;
     const auto& cur_frame = obj->file->frames[obj->frame_id1];
     uint32_t state = cur_frame.state;
 
@@ -365,6 +372,14 @@ void object_handle_input(object_t* obj, const input_state_t& input)
         if (!input.defend) {
             obj->frame_id1 = 0; // Return to stance
             obj->wait_counter = 0;
+        }
+    }
+
+    // Trigger authentic audio when input causes frame transition
+    if (obj->frame_id1 != prev_frame && obj->frame_id1 < MAX_FRAMES) {
+        uint32_t snd = obj->file->frames[obj->frame_id1].sound;
+        if (snd != 0) {
+            get_audio_system().on_frame_sound(snd);
         }
     }
 }

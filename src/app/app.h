@@ -11,6 +11,7 @@
 #include "entity.h"
 #include "dat_loader.h"
 #include "menu.h"
+#include "audio/audio.h"
 
 namespace lf2 {
 
@@ -52,6 +53,12 @@ enum VirtualKey : uint8_t {
     VK_LF2_NUMPAD7     = 0x67,
     VK_LF2_NUMPAD8     = 0x68,
     VK_LF2_NUMPAD9     = 0x69,
+    VK_LF2_MULTIPLY    = 0x6A,
+    VK_LF2_ADD         = 0x6B, // Numpad + (Player 1 Defend)
+    VK_LF2_SEPARATOR   = 0x6C,
+    VK_LF2_SUBTRACT    = 0x6D,
+    VK_LF2_DECIMAL     = 0x6E,
+    VK_LF2_DIVIDE      = 0x6F,
     VK_LF2_F1          = 0x70,
     VK_LF2_F2          = 0x71,
     VK_LF2_F3          = 0x72,
@@ -64,7 +71,52 @@ enum VirtualKey : uint8_t {
     VK_LF2_F10         = 0x79,
     VK_LF2_F11         = 0x7A,
     VK_LF2_F12         = 0x7B,
-    VK_LF2_OEM_PERIOD  = 0xBE  // '.' key used for "lf2.net" and "herofighter.com"
+    VK_LF2_OEM_1       = 0xBA, // ;:
+    VK_LF2_OEM_PLUS    = 0xBB, // =+
+    VK_LF2_OEM_COMMA   = 0xBC, // ,< (Player 4 Down)
+    VK_LF2_OEM_MINUS   = 0xBD, // -_
+    VK_LF2_OEM_PERIOD  = 0xBE, // .> (Player 4 Defend / '.' cheat key)
+    VK_LF2_OEM_2       = 0xBF, // /?
+    VK_LF2_OEM_3       = 0xC0, // `~ (Player 2 Defend)
+    VK_LF2_OEM_4       = 0xDB, // [{
+    VK_LF2_OEM_5       = 0xDC, // \|
+    VK_LF2_OEM_6       = 0xDD, // ]}
+    VK_LF2_OEM_7       = 0xDE  // '"
+};
+
+// Player action keys mapping indices inside control.txt (0x00419a60 & 0x00423480)
+enum class ctrl_action_t : int {
+    UP      = 1,
+    DOWN    = 2,
+    LEFT    = 3,
+    RIGHT   = 4,
+    ATTACK  = 5,
+    JUMP    = 6,
+    DEFEND  = 7
+};
+
+// Authentic UI sound buffer indices (offset to 200+ to avoid collision with frame sounds 001..102)
+enum ui_sound_id_t : uint32_t {
+    SOUND_JOIN   = 200, // data\m_join.wav
+    SOUND_OK     = 201, // data\m_ok.wav
+    SOUND_CANCEL = 202, // data\m_cancel.wav
+    SOUND_PASS   = 203, // data\m_pass.wav
+    SOUND_END    = 204  // data\m_end.wav
+};
+
+struct player_control_t {
+    int device = 0; // 0 = Keyboard, >0 = Joystick
+    int keys[11] = {0};
+    char name[16] = {0};
+};
+
+struct control_config_t {
+    player_control_t players[4];
+    int demo_mode = 0;
+    int replay_mode = 0;
+
+    void init_defaults();
+    bool load_from_file(const std::string& path);
 };
 
 enum class scene_t : uint32_t {
@@ -114,6 +166,17 @@ public:
     bool is_key_just_pressed(uint8_t vk) const {
         return m_key_states[vk] == 'd' && m_prev_key_states[vk] == 'u';
     }
+
+    // Player-Specific Input Queries matching control.txt (0x00419a60 & 0x00423480)
+    bool is_player_key_down(int player_idx, ctrl_action_t action) const;
+    bool is_player_key_just_pressed(int player_idx, ctrl_action_t action) const;
+    bool is_any_player_key_just_pressed(ctrl_action_t action) const;
+
+    // UI Sound Trigger Hook matching 0x0043cf40 & 0x00401a30
+    void play_ui_sound(uint32_t sound_id);
+
+    // Control Configuration Access
+    const control_config_t& get_control_config() const { return m_control_cfg; }
 
     // Cheat Code State Queries
     bool is_lf2net_unlocked() const { return m_cheat_lf2net == 'd'; }
@@ -220,6 +283,8 @@ private:
     char_slot_ui_t  m_slots[8];
     bool            m_modal_cpu_open{false};
     int             m_cpu_count{1};
+
+    control_config_t m_control_cfg;
 
     uint32_t        m_loading_timer{0};
     std::string     m_loading_filename{""};

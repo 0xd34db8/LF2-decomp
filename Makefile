@@ -94,46 +94,46 @@ $(TARGET_APP): $(APP_OBJS) $(TARGET_LIB)
 	$(CXX) $(CXXFLAGS) $(APP_OBJS) -L. -llf2 $(SDL2_LIB) -lws2_32 -o $@
 
 $(TEST_MAP_EXE): $(TEST_MAP_SRCS) $(TARGET_LIB)
-	$(CXX) $(CXXFLAGS) $(TEST_MAP_SRCS) -L. -llf2 -lws2_32 -o $@
+	$(CXX) $(CXXFLAGS) $(TEST_MAP_SRCS) -L. -llf2 $(SDL2_LIB) -lws2_32 -o $@
 
 $(TEST_DAT_EXE): $(TEST_DAT_SRCS) $(TARGET_LIB)
-	$(CXX) $(CXXFLAGS) $(TEST_DAT_SRCS) -L. -llf2 -lws2_32 -o $@
+	$(CXX) $(CXXFLAGS) $(TEST_DAT_SRCS) -L. -llf2 $(SDL2_LIB) -lws2_32 -o $@
 
 $(TEST_GFX_EXE): $(TEST_GFX_SRCS) $(TARGET_LIB)
 	$(CXX) $(CXXFLAGS) $(TEST_GFX_SRCS) -L. -llf2 $(SDL2_LIB) -lws2_32 -o $@
 
 $(TEST_ENT_EXE): $(TEST_ENT_SRCS) $(TARGET_LIB)
-	$(CXX) $(CXXFLAGS) $(TEST_ENT_SRCS) -L. -llf2 -lws2_32 -o $@
+	$(CXX) $(CXXFLAGS) $(TEST_ENT_SRCS) -L. -llf2 $(SDL2_LIB) -lws2_32 -o $@
 
 $(TEST_CBT_EXE): $(TEST_CBT_SRCS) $(TARGET_LIB)
-	$(CXX) $(CXXFLAGS) $(TEST_CBT_SRCS) -L. -llf2 -lws2_32 -o $@
+	$(CXX) $(CXXFLAGS) $(TEST_CBT_SRCS) -L. -llf2 $(SDL2_LIB) -lws2_32 -o $@
 
 $(TEST_GRP_EXE): $(TEST_GRP_SRCS) $(TARGET_LIB)
-	$(CXX) $(CXXFLAGS) $(TEST_GRP_SRCS) -L. -llf2 -lws2_32 -o $@
+	$(CXX) $(CXXFLAGS) $(TEST_GRP_SRCS) -L. -llf2 $(SDL2_LIB) -lws2_32 -o $@
 
 $(TEST_AI_EXE): $(TEST_AI_SRCS) $(TARGET_LIB)
-	$(CXX) $(CXXFLAGS) $(TEST_AI_SRCS) -L. -llf2 -lws2_32 -o $@
+	$(CXX) $(CXXFLAGS) $(TEST_AI_SRCS) -L. -llf2 $(SDL2_LIB) -lws2_32 -o $@
 
 $(TEST_AUD_EXE): $(TEST_AUD_SRCS) $(TARGET_LIB)
 	$(CXX) $(CXXFLAGS) $(TEST_AUD_SRCS) -L. -llf2 $(SDL2_LIB) -lws2_32 -o $@
 
 $(TEST_STG_EXE): $(TEST_STG_SRCS) $(TARGET_LIB)
-	$(CXX) $(CXXFLAGS) $(TEST_STG_SRCS) -L. -llf2 -lws2_32 -o $@
+	$(CXX) $(CXXFLAGS) $(TEST_STG_SRCS) -L. -llf2 $(SDL2_LIB) -lws2_32 -o $@
 
 $(TEST_NET_EXE): $(TEST_NET_SRCS) $(TARGET_LIB)
-	$(CXX) $(CXXFLAGS) $(TEST_NET_SRCS) -L. -llf2 -lws2_32 -o $@
+	$(CXX) $(CXXFLAGS) $(TEST_NET_SRCS) -L. -llf2 $(SDL2_LIB) -lws2_32 -o $@
 
 $(TEST_RPL_EXE): $(TEST_RPL_SRCS) $(TARGET_LIB)
-	$(CXX) $(CXXFLAGS) $(TEST_RPL_SRCS) -L. -llf2 -lws2_32 -o $@
+	$(CXX) $(CXXFLAGS) $(TEST_RPL_SRCS) -L. -llf2 $(SDL2_LIB) -lws2_32 -o $@
 
 $(TEST_TRN_EXE): $(TEST_TRN_SRCS) $(TARGET_LIB)
-	$(CXX) $(CXXFLAGS) $(TEST_TRN_SRCS) -L. -llf2 -lws2_32 -o $@
+	$(CXX) $(CXXFLAGS) $(TEST_TRN_SRCS) -L. -llf2 $(SDL2_LIB) -lws2_32 -o $@
 
 $(TEST_BTL_EXE): $(TEST_BTL_SRCS) $(TARGET_LIB)
-	$(CXX) $(CXXFLAGS) $(TEST_BTL_SRCS) -L. -llf2 -lws2_32 -o $@
+	$(CXX) $(CXXFLAGS) $(TEST_BTL_SRCS) -L. -llf2 $(SDL2_LIB) -lws2_32 -o $@
 
 $(TEST_SRV_EXE): $(TEST_SRV_SRCS) $(TARGET_LIB)
-	$(CXX) $(CXXFLAGS) $(TEST_SRV_SRCS) -L. -llf2 -lws2_32 -o $@
+	$(CXX) $(CXXFLAGS) $(TEST_SRV_SRCS) -L. -llf2 $(SDL2_LIB) -lws2_32 -o $@
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@

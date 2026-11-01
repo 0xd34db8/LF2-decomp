@@ -7,6 +7,97 @@
 
 namespace lf2 {
 
+void control_config_t::init_defaults() {
+    // Authentic default controls from LF2 control.txt (0x00419a60 & 0x00423480)
+    // Player 1 (Slot 0): Numpad 8, 2, 4, 6, 5, 0, +
+    players[0].device = 0;
+    players[0].keys[0] = 0;   // keyboard
+    players[0].keys[1] = 104; // VK_NUMPAD8 (Up)
+    players[0].keys[2] = 98;  // VK_NUMPAD2 (Down)
+    players[0].keys[3] = 100; // VK_NUMPAD4 (Left)
+    players[0].keys[4] = 102; // VK_NUMPAD6 (Right)
+    players[0].keys[5] = 101; // VK_NUMPAD5 (Attack)
+    players[0].keys[6] = 96;  // VK_NUMPAD0 (Jump)
+    players[0].keys[7] = 107; // VK_ADD '+' (Defend)
+
+    // Player 2 (Slot 1): W, X, A, D, S, Tab, `
+    players[1].device = 0;
+    players[1].keys[0] = 0;
+    players[1].keys[1] = 87;  // 'W' (Up)
+    players[1].keys[2] = 88;  // 'X' (Down)
+    players[1].keys[3] = 65;  // 'A' (Left)
+    players[1].keys[4] = 68;  // 'D' (Right)
+    players[1].keys[5] = 83;  // 'S' (Attack)
+    players[1].keys[6] = 9;   // VK_TAB (Jump)
+    players[1].keys[7] = 192; // VK_OEM_3 '`' (Defend)
+
+    // Player 3 (Slot 2): Up, Down, Left, Right, Enter, RShift, RCtrl
+    players[2].device = 0;
+    players[2].keys[0] = 0;
+    players[2].keys[1] = 38;  // VK_UP (Up)
+    players[2].keys[2] = 40;  // VK_DOWN (Down)
+    players[2].keys[3] = 37;  // VK_LEFT (Left)
+    players[2].keys[4] = 39;  // VK_RIGHT (Right)
+    players[2].keys[5] = 13;  // VK_RETURN (Attack)
+    players[2].keys[6] = 16;  // VK_SHIFT (Jump)
+    players[2].keys[7] = 17;  // VK_CONTROL (Defend)
+
+    // Player 4 (Slot 3): I, ,, J, L, K, Space, .
+    players[3].device = 0;
+    players[3].keys[0] = 0;
+    players[3].keys[1] = 73;  // 'I' (Up)
+    players[3].keys[2] = 188; // VK_OEM_COMMA ',' (Down)
+    players[3].keys[3] = 74;  // 'J' (Left)
+    players[3].keys[4] = 76;  // 'L' (Right)
+    players[3].keys[5] = 75;  // 'K' (Attack)
+    players[3].keys[6] = 32;  // VK_SPACE (Jump)
+    players[3].keys[7] = 190; // VK_OEM_PERIOD '.' (Defend)
+
+    std::strcpy(players[0].name, "1");
+    std::strcpy(players[1].name, "2");
+    std::strcpy(players[2].name, "3");
+    std::strcpy(players[3].name, "4");
+    demo_mode = 1;
+    replay_mode = 0;
+}
+
+bool control_config_t::load_from_file(const std::string& path) {
+    FILE* fp = std::fopen(path.c_str(), "r");
+    if (!fp) {
+        std::string fallback = ".legacy/" + path;
+        fp = std::fopen(fallback.c_str(), "r");
+        if (!fp) return false;
+    }
+
+    for (int p = 0; p < 4; ++p) {
+        for (int k = 0; k < 11; ++k) {
+            if (std::fscanf(fp, "%d", &players[p].keys[k]) != 1) {
+                std::fclose(fp);
+                return false;
+            }
+        }
+        players[p].device = players[p].keys[0];
+    }
+
+    if (std::fscanf(fp, "%15s %15s %15s %15s",
+                    players[0].name, players[1].name,
+                    players[2].name, players[3].name) == 4) {
+        for (int p = 0; p < 4; ++p) {
+            for (int i = 0; players[p].name[i]; ++i) {
+                if (players[p].name[i] == '`') {
+                    players[p].name[i] = ' ';
+                }
+            }
+        }
+    }
+
+    std::fscanf(fp, "%d", &demo_mode);
+    std::fscanf(fp, "%d", &replay_mode);
+
+    std::fclose(fp);
+    return true;
+}
+
 app_t::app_t()
     : m_window(nullptr)
     , m_renderer(nullptr)
@@ -41,6 +132,7 @@ app_t::app_t()
     , m_stage_loaded(false)
     , m_num_fighters(0)
 {
+    m_control_cfg.init_defaults();
     reset_input();
     std::memset(m_prev_key_states, 0x75, sizeof(m_prev_key_states));
     std::memset(&m_world, 0, sizeof(m_world));
@@ -118,6 +210,20 @@ bool app_t::init(int width, int height, bool fullscreen) {
     SDL_RenderSetLogicalSize(m_renderer, WINDOW_WIDTH, WINDOW_HEIGHT);
     m_graphics.set_sdl_renderer(m_renderer);
 
+    // Initialize Audio System and preload authentic UI sounds matching 0x0043cf40 (WinMain)
+    if (get_audio_system().init()) {
+        get_audio_system().load_sound(SOUND_JOIN, "data/m_join.wav");
+        get_audio_system().load_sound(SOUND_OK, "data/m_ok.wav");
+        get_audio_system().load_sound(SOUND_CANCEL, "data/m_cancel.wav");
+        get_audio_system().load_sound(SOUND_PASS, "data/m_pass.wav");
+        get_audio_system().load_sound(SOUND_END, "data/m_end.wav");
+    }
+
+    // Load authentic Player Controls from control.txt (0x00423480)
+    if (!m_control_cfg.load_from_file("data/control.txt")) {
+        m_control_cfg.load_from_file(".legacy/data/control.txt");
+    }
+
     change_scene(scene_t::TITLE);
     reset_input();
     m_running = true;
@@ -134,6 +240,7 @@ void app_t::shutdown() {
     }
     m_graphics.clear_textures();
     m_graphics.set_sdl_renderer(nullptr);
+    get_audio_system().cleanup();
 
     if (m_renderer) {
         SDL_DestroyRenderer(m_renderer);
@@ -174,8 +281,6 @@ uint8_t app_t::sdl_key_to_vk(SDL_Keycode key, SDL_Scancode scancode) {
     case SDLK_UP:          return VK_LF2_UP;
     case SDLK_RIGHT:       return VK_LF2_RIGHT;
     case SDLK_DOWN:        return VK_LF2_DOWN;
-    case SDLK_PERIOD:
-    case SDLK_KP_PERIOD:   return VK_LF2_OEM_PERIOD;
 
     case SDLK_LSHIFT:
     case SDLK_RSHIFT:      return VK_LF2_SHIFT;
@@ -184,16 +289,21 @@ uint8_t app_t::sdl_key_to_vk(SDL_Keycode key, SDL_Scancode scancode) {
     case SDLK_LALT:
     case SDLK_RALT:        return VK_LF2_MENU;
 
-    case SDLK_KP_0:        return VK_LF2_NUMPAD0;
-    case SDLK_KP_1:        return VK_LF2_NUMPAD1;
-    case SDLK_KP_2:        return VK_LF2_NUMPAD2;
-    case SDLK_KP_3:        return VK_LF2_NUMPAD3;
-    case SDLK_KP_4:        return VK_LF2_NUMPAD4;
-    case SDLK_KP_5:        return VK_LF2_NUMPAD5;
-    case SDLK_KP_6:        return VK_LF2_NUMPAD6;
-    case SDLK_KP_7:        return VK_LF2_NUMPAD7;
-    case SDLK_KP_8:        return VK_LF2_NUMPAD8;
-    case SDLK_KP_9:        return VK_LF2_NUMPAD9;
+    case SDLK_KP_0:        return VK_LF2_NUMPAD0;   // 0x60 (96) (P1 Jump)
+    case SDLK_KP_1:        return VK_LF2_NUMPAD1;   // 0x61 (97)
+    case SDLK_KP_2:        return VK_LF2_NUMPAD2;   // 0x62 (98) (P1 Down)
+    case SDLK_KP_3:        return VK_LF2_NUMPAD3;   // 0x63 (99)
+    case SDLK_KP_4:        return VK_LF2_NUMPAD4;   // 0x64 (100) (P1 Left)
+    case SDLK_KP_5:        return VK_LF2_NUMPAD5;   // 0x65 (101) (P1 Attack)
+    case SDLK_KP_6:        return VK_LF2_NUMPAD6;   // 0x66 (102) (P1 Right)
+    case SDLK_KP_7:        return VK_LF2_NUMPAD7;   // 0x67 (103)
+    case SDLK_KP_8:        return VK_LF2_NUMPAD8;   // 0x68 (104) (P1 Up)
+    case SDLK_KP_9:        return VK_LF2_NUMPAD9;   // 0x69 (105)
+    case SDLK_KP_MULTIPLY: return VK_LF2_MULTIPLY;  // 0x6A (106)
+    case SDLK_KP_PLUS:     return VK_LF2_ADD;       // 0x6B (107) (P1 Defend)
+    case SDLK_KP_MINUS:    return VK_LF2_SUBTRACT;  // 0x6D (109)
+    case SDLK_KP_PERIOD:   return VK_LF2_DECIMAL;   // 0x6E (110)
+    case SDLK_KP_DIVIDE:   return VK_LF2_DIVIDE;    // 0x6F (111)
 
     case SDLK_F1:          return VK_LF2_F1;
     case SDLK_F2:          return VK_LF2_F2;
@@ -207,6 +317,18 @@ uint8_t app_t::sdl_key_to_vk(SDL_Keycode key, SDL_Scancode scancode) {
     case SDLK_F10:         return VK_LF2_F10;
     case SDLK_F11:         return VK_LF2_F11;
     case SDLK_F12:         return VK_LF2_F12;
+
+    case SDLK_SEMICOLON:   return VK_LF2_OEM_1;     // 0xBA (186)
+    case SDLK_EQUALS:      return VK_LF2_OEM_PLUS;  // 0xBB (187)
+    case SDLK_COMMA:       return VK_LF2_OEM_COMMA; // 0xBC (188) (P4 Down)
+    case SDLK_MINUS:       return VK_LF2_OEM_MINUS; // 0xBD (189)
+    case SDLK_PERIOD:      return VK_LF2_OEM_PERIOD;// 0xBE (190) (P4 Defend)
+    case SDLK_SLASH:       return VK_LF2_OEM_2;     // 0xBF (191)
+    case SDLK_BACKQUOTE:   return VK_LF2_OEM_3;     // 0xC0 (192) (P2 Defend)
+    case SDLK_LEFTBRACKET: return VK_LF2_OEM_4;     // 0xDB (219)
+    case SDLK_BACKSLASH:   return VK_LF2_OEM_5;     // 0xDC (220)
+    case SDLK_RIGHTBRACKET:return VK_LF2_OEM_6;     // 0xDD (221)
+    case SDLK_QUOTE:       return VK_LF2_OEM_7;     // 0xDE (222)
 
     default:
         if (key < 256) {
@@ -340,6 +462,42 @@ void app_t::process_events() {
     }
 }
 
+bool app_t::is_player_key_down(int player_idx, ctrl_action_t action) const {
+    if (player_idx < 0 || player_idx >= 4) return false;
+    int key_idx = static_cast<int>(action);
+    if (key_idx < 1 || key_idx > 7) return false;
+    uint8_t vk = static_cast<uint8_t>(m_control_cfg.players[player_idx].keys[key_idx]);
+    return is_key_down(vk);
+}
+
+bool app_t::is_player_key_just_pressed(int player_idx, ctrl_action_t action) const {
+    if (player_idx < 0 || player_idx >= 4) return false;
+    int key_idx = static_cast<int>(action);
+    if (key_idx < 1 || key_idx > 7) return false;
+    uint8_t vk = static_cast<uint8_t>(m_control_cfg.players[player_idx].keys[key_idx]);
+    return is_key_just_pressed(vk);
+}
+
+bool app_t::is_any_player_key_just_pressed(ctrl_action_t action) const {
+    for (int p = 0; p < 4; ++p) {
+        if (is_player_key_just_pressed(p, action)) return true;
+    }
+    // General fallback for menu navigation
+    switch (action) {
+    case ctrl_action_t::UP:     return is_key_just_pressed(VK_LF2_UP);
+    case ctrl_action_t::DOWN:   return is_key_just_pressed(VK_LF2_DOWN);
+    case ctrl_action_t::LEFT:   return is_key_just_pressed(VK_LF2_LEFT);
+    case ctrl_action_t::RIGHT:  return is_key_just_pressed(VK_LF2_RIGHT);
+    case ctrl_action_t::ATTACK: return is_key_just_pressed(VK_LF2_RETURN);
+    case ctrl_action_t::DEFEND: return is_key_just_pressed(VK_LF2_ESCAPE);
+    default: return false;
+    }
+}
+
+void app_t::play_ui_sound(uint32_t sound_id) {
+    get_audio_system().play_sound(sound_id, false);
+}
+
 void app_t::change_scene(scene_t next_scene) {
     m_scene = next_scene;
     m_in_battle = (m_scene == scene_t::BATTLE);
@@ -348,11 +506,11 @@ void app_t::change_scene(scene_t next_scene) {
         m_menu_bg_idx = 1 + (std::rand() % 13);
     } else if (m_scene == scene_t::CHAR_SELECT) {
         for (int i = 0; i < 8; ++i) {
-            m_slots[i].joined = (i == 0);
+            m_slots[i].joined = false;
             m_slots[i].is_ready = false;
-            m_slots[i].is_human = (i == 0);
+            m_slots[i].is_human = (i < 4);
             m_slots[i].roster_idx = (i == 0) ? 1 : 0; // P1 default Davis, others Random
-            m_slots[i].team = (i == 0) ? 1 : 2;
+            m_slots[i].team = (i % 2 == 0) ? 1 : 2;
             m_slots[i].countdown = 5;
             m_slots[i].countdown_timer = 0;
         }
@@ -371,20 +529,23 @@ void app_t::change_scene(scene_t next_scene) {
 }
 
 void app_t::update_title() {
-    if (is_key_just_pressed(VK_LF2_UP) || is_key_just_pressed('W')) {
+    if (is_any_player_key_just_pressed(ctrl_action_t::UP)) {
         m_title_cursor = (m_title_cursor + 4) % 5;
-    } else if (is_key_just_pressed(VK_LF2_DOWN) || is_key_just_pressed('S')) {
+        play_ui_sound(SOUND_OK);
+    } else if (is_any_player_key_just_pressed(ctrl_action_t::DOWN)) {
         m_title_cursor = (m_title_cursor + 1) % 5;
+        play_ui_sound(SOUND_OK);
     }
 
-    if (is_key_just_pressed(VK_LF2_RETURN) || is_key_just_pressed(VK_LF2_SPACE) ||
-        is_key_just_pressed('J') || is_key_just_pressed('Z')) {
+    if (is_any_player_key_just_pressed(ctrl_action_t::ATTACK)) {
+        play_ui_sound(SOUND_OK);
         if (m_title_cursor == 0) {
             change_scene(scene_t::MODE_SELECT);
         }
     }
 
-    if (is_key_just_pressed(VK_LF2_ESCAPE)) {
+    if (is_any_player_key_just_pressed(ctrl_action_t::DEFEND) || is_key_just_pressed(VK_LF2_ESCAPE)) {
+        play_ui_sound(SOUND_CANCEL);
         m_running = false;
     }
 }
@@ -437,14 +598,16 @@ void app_t::render_title() {
 }
 
 void app_t::update_mode_select() {
-    if (is_key_just_pressed(VK_LF2_UP) || is_key_just_pressed('W')) {
+    if (is_any_player_key_just_pressed(ctrl_action_t::UP)) {
         m_mode_cursor = (m_mode_cursor + 7) % 8;
-    } else if (is_key_just_pressed(VK_LF2_DOWN) || is_key_just_pressed('S')) {
+        play_ui_sound(SOUND_OK);
+    } else if (is_any_player_key_just_pressed(ctrl_action_t::DOWN)) {
         m_mode_cursor = (m_mode_cursor + 1) % 8;
+        play_ui_sound(SOUND_OK);
     }
 
-    if (is_key_just_pressed(VK_LF2_RETURN) || is_key_just_pressed(VK_LF2_SPACE) ||
-        is_key_just_pressed('J') || is_key_just_pressed('Z')) {
+    if (is_any_player_key_just_pressed(ctrl_action_t::ATTACK)) {
+        play_ui_sound(SOUND_OK);
         if (m_mode_cursor == 7) {
             change_scene(scene_t::TITLE);
         } else {
@@ -453,7 +616,8 @@ void app_t::update_mode_select() {
         }
     }
 
-    if (is_key_just_pressed(VK_LF2_ESCAPE) || is_key_just_pressed(VK_LF2_BACKSPACE)) {
+    if (is_any_player_key_just_pressed(ctrl_action_t::DEFEND) || is_key_just_pressed(VK_LF2_ESCAPE)) {
+        play_ui_sound(SOUND_CANCEL);
         change_scene(scene_t::TITLE);
     }
 }
@@ -528,102 +692,136 @@ void app_t::update_char_select() {
     const auto& roster = get_game_roster();
     int roster_count = static_cast<int>(roster.size());
 
+    // 1. CPU Modal Dialog
     if (m_modal_cpu_open) {
-        if (is_key_just_pressed(VK_LF2_LEFT) || is_key_just_pressed('A')) {
+        if (is_any_player_key_just_pressed(ctrl_action_t::LEFT)) {
             m_cpu_count = (m_cpu_count > 0) ? (m_cpu_count - 1) : 0;
-        } else if (is_key_just_pressed(VK_LF2_RIGHT) || is_key_just_pressed('D')) {
+            play_ui_sound(SOUND_OK);
+        } else if (is_any_player_key_just_pressed(ctrl_action_t::RIGHT)) {
             m_cpu_count = (m_cpu_count < 7) ? (m_cpu_count + 1) : 7;
+            play_ui_sound(SOUND_OK);
         }
 
-        if (is_key_just_pressed(VK_LF2_RETURN) || is_key_just_pressed(VK_LF2_SPACE) ||
-            is_key_just_pressed('J') || is_key_just_pressed('Z')) {
-            for (int i = 1; i <= m_cpu_count && i < 8; ++i) {
-                m_slots[i].joined = true;
-                m_slots[i].is_human = false;
-                m_slots[i].is_ready = true;
-                m_slots[i].roster_idx = (i % (roster_count - 1)) + 1;
-                m_slots[i].team = (i % 2 == 1) ? 2 : 1;
+        if (is_any_player_key_just_pressed(ctrl_action_t::ATTACK)) {
+            // Fill CPU slots for remaining unjoined slots
+            int cpus_needed = m_cpu_count;
+            for (int i = 0; i < 8 && cpus_needed > 0; ++i) {
+                if (!m_slots[i].joined) {
+                    m_slots[i].joined = true;
+                    m_slots[i].is_human = false;
+                    m_slots[i].is_ready = true;
+                    m_slots[i].roster_idx = ((i + 1) % (roster_count - 1)) + 1;
+                    m_slots[i].team = (i % 2 == 1) ? 2 : 1;
+                    cpus_needed--;
+                }
             }
+            play_ui_sound(SOUND_PASS);
             change_scene(scene_t::LOADING);
-        }
-
-        if (is_key_just_pressed(VK_LF2_ESCAPE) || is_key_just_pressed('K') || is_key_just_pressed('X') ||
-            is_key_just_pressed('L') || is_key_just_pressed('C') || is_key_just_pressed(VK_LF2_BACKSPACE)) {
-            m_modal_cpu_open = false;
-            m_slots[0].is_ready = false;
-            m_slots[0].countdown = 5;
-            m_slots[0].countdown_timer = 0;
-        }
-        return;
-    }
-
-    // P1 Slot 0 Navigation
-    if (!m_slots[0].joined) {
-        if (is_key_just_pressed('J') || is_key_just_pressed('Z') || is_key_just_pressed(VK_LF2_RETURN)) {
-            m_slots[0].joined = true;
-            m_slots[0].is_ready = false;
-            m_slots[0].countdown = 5;
-            m_slots[0].countdown_timer = 0;
-        }
-        if (is_key_just_pressed(VK_LF2_ESCAPE)) {
-            change_scene(scene_t::MODE_SELECT);
-        }
-        return;
-    }
-
-    if (!m_slots[0].is_ready) {
-        if (is_key_just_pressed(VK_LF2_LEFT) || is_key_just_pressed('A')) {
-            m_slots[0].roster_idx = (m_slots[0].roster_idx + roster_count - 1) % roster_count;
-        } else if (is_key_just_pressed(VK_LF2_RIGHT) || is_key_just_pressed('D')) {
-            m_slots[0].roster_idx = (m_slots[0].roster_idx + 1) % roster_count;
-        }
-
-        if (is_key_just_pressed(VK_LF2_UP) || is_key_just_pressed('W')) {
-            m_slots[0].team = (m_slots[0].team % 4) + 1;
-        } else if (is_key_just_pressed(VK_LF2_DOWN) || is_key_just_pressed('S')) {
-            m_slots[0].team = (m_slots[0].team == 1) ? 4 : (m_slots[0].team - 1);
-        }
-
-        // Lock in selection (Attack button) -> start 5-second countdown
-        if (is_key_just_pressed('J') || is_key_just_pressed('Z') || is_key_just_pressed(VK_LF2_RETURN)) {
-            m_slots[0].is_ready = true;
-            m_slots[0].countdown = 5;
-            m_slots[0].countdown_timer = 0;
-        }
-
-        // Cancel / Unjoin (Defend or Esc)
-        if (is_key_just_pressed('L') || is_key_just_pressed('C') || is_key_just_pressed(VK_LF2_BACKSPACE) ||
-            is_key_just_pressed(VK_LF2_ESCAPE)) {
-            m_slots[0].joined = false;
-        }
-    } else {
-        // Player is ready and locked in!
-        // Authentic Mechanic from docs: pressing Jump speeds up countdown!
-        if (is_key_just_pressed('K') || is_key_just_pressed('X') || is_key_just_pressed(VK_LF2_SPACE)) {
-            m_slots[0].countdown = 0;
-        }
-
-        // Cancel ready state (Defend / Backspace / Esc)
-        if (is_key_just_pressed('L') || is_key_just_pressed('C') || is_key_just_pressed(VK_LF2_BACKSPACE) ||
-            is_key_just_pressed(VK_LF2_ESCAPE)) {
-            m_slots[0].is_ready = false;
-            m_slots[0].countdown = 5;
-            m_slots[0].countdown_timer = 0;
             return;
         }
 
-        // Countdown progression (~25 frames = 1 second)
-        m_slots[0].countdown_timer++;
-        if (m_slots[0].countdown_timer >= 25) {
-            m_slots[0].countdown_timer = 0;
-            if (m_slots[0].countdown > 0) {
-                m_slots[0].countdown--;
+        if (is_any_player_key_just_pressed(ctrl_action_t::DEFEND)) {
+            m_modal_cpu_open = false;
+            for (int p = 0; p < 4; ++p) {
+                if (m_slots[p].joined && m_slots[p].is_human) {
+                    m_slots[p].is_ready = false;
+                    m_slots[p].countdown = 5;
+                    m_slots[p].countdown_timer = 0;
+                }
+            }
+            play_ui_sound(SOUND_CANCEL);
+            return;
+        }
+        return;
+    }
+
+    // 2. Poll player slots 0..3 for human input using configured player keys
+    int num_joined = 0;
+    int num_ready_done = 0;
+
+    for (int p = 0; p < 4; ++p) {
+        if (!m_slots[p].joined) {
+            // Authentic Join check: player p presses their own Attack key
+            if (is_player_key_just_pressed(p, ctrl_action_t::ATTACK)) {
+                m_slots[p].joined = true;
+                m_slots[p].is_human = true;
+                m_slots[p].is_ready = false;
+                m_slots[p].countdown = 5;
+                m_slots[p].countdown_timer = 0;
+                play_ui_sound(SOUND_JOIN);
+            }
+        } else {
+            num_joined++;
+            if (!m_slots[p].is_ready) {
+                if (is_player_key_just_pressed(p, ctrl_action_t::LEFT)) {
+                    m_slots[p].roster_idx = (m_slots[p].roster_idx + roster_count - 1) % roster_count;
+                    play_ui_sound(SOUND_OK);
+                } else if (is_player_key_just_pressed(p, ctrl_action_t::RIGHT)) {
+                    m_slots[p].roster_idx = (m_slots[p].roster_idx + 1) % roster_count;
+                    play_ui_sound(SOUND_OK);
+                }
+
+                if (is_player_key_just_pressed(p, ctrl_action_t::UP)) {
+                    m_slots[p].team = (m_slots[p].team % 4) + 1;
+                    play_ui_sound(SOUND_OK);
+                } else if (is_player_key_just_pressed(p, ctrl_action_t::DOWN)) {
+                    m_slots[p].team = (m_slots[p].team == 1) ? 4 : (m_slots[p].team - 1);
+                    play_ui_sound(SOUND_OK);
+                }
+
+                if (is_player_key_just_pressed(p, ctrl_action_t::ATTACK)) {
+                    m_slots[p].is_ready = true;
+                    m_slots[p].countdown = 5;
+                    m_slots[p].countdown_timer = 0;
+                    play_ui_sound(SOUND_OK);
+                } else if (is_player_key_just_pressed(p, ctrl_action_t::DEFEND)) {
+                    m_slots[p].joined = false;
+                    play_ui_sound(SOUND_CANCEL);
+                }
+            } else {
+                // Player is locked in! Authentic mechanic: Jump button skips countdown
+                if (is_player_key_just_pressed(p, ctrl_action_t::JUMP)) {
+                    m_slots[p].countdown = 0;
+                }
+
+                if (is_player_key_just_pressed(p, ctrl_action_t::DEFEND)) {
+                    m_slots[p].is_ready = false;
+                    m_slots[p].countdown = 5;
+                    m_slots[p].countdown_timer = 0;
+                    play_ui_sound(SOUND_CANCEL);
+                } else {
+                    if (m_slots[p].countdown > 0) {
+                        m_slots[p].countdown_timer++;
+                        if (m_slots[p].countdown_timer >= 25) {
+                            m_slots[p].countdown_timer = 0;
+                            m_slots[p].countdown--;
+                        }
+                    } else {
+                        num_ready_done++;
+                    }
+                }
             }
         }
+    }
 
-        // When countdown finishes, open CPU selection prompt
-        if (m_slots[0].countdown <= 0) {
+    // 3. If no players are joined, Defend or Escape returns to mode selection
+    if (num_joined == 0) {
+        if (is_any_player_key_just_pressed(ctrl_action_t::DEFEND) || is_key_just_pressed(VK_LF2_ESCAPE)) {
+            play_ui_sound(SOUND_CANCEL);
+            change_scene(scene_t::MODE_SELECT);
+            return;
+        }
+    }
+
+    // 4. If all joined players are ready and finished countdown
+    if (num_joined > 0 && num_ready_done == num_joined) {
+        if (m_selected_mode == MODE_VS) {
             m_modal_cpu_open = true;
+            m_cpu_count = 1;
+            play_ui_sound(SOUND_PASS);
+        } else {
+            play_ui_sound(SOUND_PASS);
+            change_scene(scene_t::LOADING);
         }
     }
 }
@@ -778,7 +976,8 @@ void app_t::start_battle() {
 
         int r_idx = m_slots[i].roster_idx;
         if (r_idx <= 0 || r_idx >= static_cast<int>(roster.size())) {
-            r_idx = 1; // Default Davis if random
+            // Authentic random pick: select among available characters
+            r_idx = 1 + (std::rand() % (roster.size() - 1));
         }
 
         const auto& entry = roster[r_idx];
@@ -831,6 +1030,7 @@ void app_t::start_battle() {
 }
 
 void app_t::return_to_menu() {
+    play_ui_sound(SOUND_CANCEL);
     for (uint32_t i = 0; i < MAX_FILES; ++i) {
         if (m_loaded_files[i]) {
             dat_loader_t::free_file_resources(m_loaded_files[i]);
@@ -854,6 +1054,7 @@ void app_t::update_battle() {
 
     if (is_key_just_pressed(VK_LF2_F1)) {
         m_battle_paused = !m_battle_paused;
+        play_ui_sound(SOUND_OK);
     }
 
     if (m_battle_paused) {
@@ -862,23 +1063,24 @@ void app_t::update_battle() {
         }
     }
 
-    // Player 1 human controls (Slot 0)
-    if (m_num_fighters > 0 && m_fighters[0].file) {
-        input_state_t input;
-        input.left   = is_key_down(VK_LF2_LEFT) || is_key_down('A');
-        input.right  = is_key_down(VK_LF2_RIGHT) || is_key_down('D');
-        input.up     = is_key_down(VK_LF2_UP) || is_key_down('W');
-        input.down   = is_key_down(VK_LF2_DOWN) || is_key_down('S');
-        input.attack = is_key_down('J') || is_key_down('Z');
-        input.jump   = is_key_down('K') || is_key_down('X') || is_key_down(VK_LF2_SPACE);
-        input.defend = is_key_down('L') || is_key_down('C');
+    // Process inputs for all active fighters (Players 0..3 read their control.txt mappings)
+    for (uint32_t i = 0; i < m_num_fighters; ++i) {
+        object_t* fighter = &m_fighters[i];
+        if (!fighter->file) continue;
 
-        object_handle_input(&m_fighters[0], input);
-    }
+        uint32_t slot = fighter->owner;
+        if (slot < 4 && m_slots[slot].is_human) {
+            input_state_t input;
+            input.left   = is_player_key_down(slot, ctrl_action_t::LEFT);
+            input.right  = is_player_key_down(slot, ctrl_action_t::RIGHT);
+            input.up     = is_player_key_down(slot, ctrl_action_t::UP);
+            input.down   = is_player_key_down(slot, ctrl_action_t::DOWN);
+            input.attack = is_player_key_down(slot, ctrl_action_t::ATTACK);
+            input.jump   = is_player_key_down(slot, ctrl_action_t::JUMP);
+            input.defend = is_player_key_down(slot, ctrl_action_t::DEFEND);
 
-    // Computer AI (Slots 1..N)
-    for (uint32_t i = 1; i < m_num_fighters; ++i) {
-        if (m_world.objects[i] && m_fighters[i].file) {
+            object_handle_input(fighter, input);
+        } else {
             ai_tick(&m_world, i, AI_NORMAL);
         }
     }
