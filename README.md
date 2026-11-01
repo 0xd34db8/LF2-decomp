@@ -65,9 +65,9 @@ LF2/
 │   ├── data/                   # UI source bitmaps & default control.txt configurations
 │   ├── tests/                  # 14 comprehensive unit test suites
 │   ├── tools/                  # Embedded UI generation pipeline (generate_embedded_ui.py)
+│   ├── third_party/            # Self-contained MinGW-w64 SDL2 development headers & libraries
 │   ├── Makefile                # Independent build system for the lifted engine
 │   └── README.md               # Documentation for the modern source lift
-├── third_party/                # Self-contained MinGW-w64 SDL2 development headers & libraries
 ├── AGENTS.md                   # Pair programming directives & architectural rules
 ├── REFERENCE_ERRORS.md         # Reference error catalog of past community decompilations
 ├── .gitignore                  # Git ignore rules
@@ -150,7 +150,7 @@ All memory structures match the exact byte layouts of the original MSVC++ 32-bit
 ### Prerequisites
 - **Compiler:** Modern C/C++ toolchain (GCC 13+ / MSYS2 UCRT64 GCC 14.2+ / Clang 15+)
 - **Build Tool:** GNU `make` or `mingw32-make`
-- **SDL2:** MinGW-w64 development libraries are self-contained in [`third_party/SDL2/`](third_party/SDL2/), with `SDL2.dll` provided for runtime execution.
+- **SDL2:** MinGW-w64 development libraries are self-contained in [`lifted/third_party/SDL2/`](lifted/third_party/SDL2/), with `SDL2.dll` provided for runtime execution.
 
 ---
 
@@ -302,13 +302,7 @@ For over two decades, Little Fighter 2 players experienced sudden match freezes 
 * **Shared Pool Competition:** Player characters (slots 0–7), enemy minions, dropped weapons (knives, baseball bats, rocks), projectiles (energy balls, ice swords), and transient particle effects (blood splatters, smoke puffs) all compete for these 400 slots. In `object_t`, the victim rest array `vrest_of_objects` is also exactly **400 bytes** (`0x0F0`–`0x280`).
 * **The Crash Mechanism:** In heavy Stage Mode battles (e.g. Stage 5 with dozens of bandits or Firzen/LouisEX casting large multi-part special moves), the object spawner at `0x0042E100` scans the 400 slots looking for a free slot (`is_object_exists[i] == 0`). If all 400 slots are exhausted, newly spawned projectiles or weapon drops fail silently or return a null pointer that subsequent rendering and physics passes attempt to dereference, triggering an instant Crash-to-Desktop (CTD).
 
-### 3. The Rudolf Stage Boundary Teleportation Glitch (`0x00403270`)
-* In `func_00403270`, Rudolf’s special move teleportation targets either the nearest enemy (`teleport_to == 1`) or furthest teammate (`teleport_to == 2`), positioning him with a directional offset:
-  $$x[\text{dest}] = x[\text{target}] + (\text{facing} == 0 \ ? \ -120 : +120) \quad (\text{nearest enemy})$$
-  $$x[\text{dest}] = x[\text{target}] + (\text{facing} == 0 \ ? \ -60 : +60) \quad (\text{furthest teammate})$$
-* **Missing Boundary Clamp:** The original assembly directly commits `x_position = x_dest` without clamping against camera boundaries or stage boundaries ($0 \le x \le \text{stage\_width}$). When targeting an entity near the edge of the stage, Rudolf teleports into out-of-bounds space outside the playable world, causing the character to enter an infinite falling trajectory or become permanently unplayable.
-
-### 4. Player Name Grave Accent Substitution in `control.txt` (`0x004233E0` / `0x0042353A`)
+### 3. Player Name Grave Accent Substitution in `control.txt` (`0x004233E0` / `0x0042353A`)
 * **The Parser Whitespace Dilemma:** In `data/control.txt`, player profiles, 11 keyboard mapping scan codes per player, and custom player names are serialized via standard C runtime `fscanf` / `fprintf`. Because `fscanf("%s")` delimits tokens on whitespace, any player name containing spaces (e.g. `"Little Bear"`) would corrupt line parsing.
 * **The Clever Workaround:** At `0x004233E0`, Marti Wong implemented a character substitution loop that replaces every space (`' '`, ASCII `0x20`) with a grave accent character (`` '`' ``, ASCII `0x60`) before writing to disk:
   ```text
@@ -316,7 +310,7 @@ For over two decades, Little Fighter 2 players experienced sudden match freezes 
   ```
 * At `0x0042353A`, during game boot, the parser reads the string and converts every `` '`' `` back to a space (`' '`). Players who opened `control.txt` in Notepad over the years often wondered why mysterious backticks appeared in their usernames!
 
-### 5. Deterministic Battle Replay Recording (`.lfr` at `0x0042D080` / `0x00402980`)
+### 4. Deterministic Battle Replay Recording (`.lfr` at `0x0042D080` / `0x00402980`)
 * **100% Deterministic Playback:** Rather than saving full video or large coordinate streams, LF2 replays (`.lfr` files) record only the initial 3,000-byte circular PRNG table seed (`0x0044D024`), character choices, and 8 bytes of packed controller input states per frame.
 * **On-Screen HUD Indicators:** At `0x00402980`, the engine uses DirectDraw to render color-coded notification banners at the bottom of the viewport ($y = 531$ / `0x213`):
   * **Orange (`0x00FF7800`):** `"Start recording '%s'..."` upon match commencement.

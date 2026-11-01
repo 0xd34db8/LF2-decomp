@@ -18,6 +18,7 @@ lifted/
 │   └── net/            # Lockstep network synchronization & packets
 ├── tests/              # 14 comprehensive unit test suites
 ├── tools/              # Embedded UI asset generation pipeline
+├── third_party/        # Self-contained MinGW-w64 SDL2 development headers & libraries
 ├── data/               # UI source assets and control configuration
 └── Makefile            # Independent build system for the lifted engine
 ```

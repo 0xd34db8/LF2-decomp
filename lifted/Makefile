@@ -3,7 +3,7 @@ AR ?= ar
 
 BUILD_DIR ?= build
 
-SDL2_DIR ?= ../third_party/SDL2/x86_64-w64-mingw32
+SDL2_DIR ?= third_party/SDL2/x86_64-w64-mingw32
 SDL2_INC = -I$(SDL2_DIR)/include -I$(SDL2_DIR)/include/SDL2
 SDL2_LIB = -L$(SDL2_DIR)/lib -lmingw32 -lSDL2main -lSDL2
 
