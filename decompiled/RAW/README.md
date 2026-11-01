@@ -29,7 +29,7 @@ Because these files are direct exports from the decompiler, they exhibit standar
 - **Synthetic Types:** Types such as `undefined1`, `undefined4`, `undefined8`, `byte`, and `float10` represent generic memory blocks or x87 floating-point registers.
 - **Standard Library Inlining:** Several runtime calls (such as `_time64`, `sprintf`, `operator new`) are referenced directly with MSVC CRT mangling.
 
-For a buildable C target with all synthetic types, calling convention shims, and global memory mappings resolved, refer to the sibling [`decompiled/Compilable/`](../Compilable/) suite. For the modernized, cross-platform C++20 SDL2 implementation, refer to [`src/`](../../src/).
+For a buildable C target with all synthetic types, calling convention shims, and global memory mappings resolved, refer to the sibling [`decompiled/Compilable/`](../Compilable/) suite. For the modernized, cross-platform C++20 SDL2 implementation, refer to [`lifted/`](../../lifted/).
 
 ---
 

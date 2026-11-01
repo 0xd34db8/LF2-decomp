@@ -3,7 +3,7 @@ AR ?= ar
 
 BUILD_DIR ?= build
 
-SDL2_DIR ?= third_party/SDL2/x86_64-w64-mingw32
+SDL2_DIR ?= ../third_party/SDL2/x86_64-w64-mingw32
 SDL2_INC = -I$(SDL2_DIR)/include -I$(SDL2_DIR)/include/SDL2
 SDL2_LIB = -L$(SDL2_DIR)/lib -lmingw32 -lSDL2main -lSDL2
 
@@ -222,8 +222,8 @@ test: $(TEST_EXES) $(TARGET_APP)
 	$(RM) $(TEST_EXES) $(TEST_EXES:.exe=.d) *.d test_*_debug.exe $(TARGET_LIB)
 
 decompiled-suite:
-	$(MAKE) -C decompiled/Compilable all test
+	$(MAKE) -C ../decompiled/Compilable all test
 
 clean:
 	$(RM) $(LIB_OBJS) $(APP_OBJS) $(LIB_OBJS:.o=.d) $(APP_OBJS:.o=.d) $(TARGET_LIB) $(TARGET_APP) $(TEST_EXES) $(TEST_EXES:.exe=.d) *.d test_*_debug.exe liblf2.a lf2.exe
-	$(MAKE) -C decompiled/Compilable clean
+	$(MAKE) -C ../decompiled/Compilable clean

@@ -2,7 +2,7 @@
 
 1. **Never guess offsets:** If the memory layout of a class is ambiguous, query REA for more XREFs to that class's methods to confirm the variable sizes.
 2. **Strict adherence to math:** You may refactor control flow for readability, but the arithmetic handling hitboxes, velocity, and frame waiting must be identical to the Ghidra output.
-3. **Organizing the workspace:** Place the decompiled stuff in decompiled/ and the lifted code in root, keep both the places organized with subfolders, etc. however you see fit
+3. **Organizing the workspace:** Place the decompiled stuff in decompiled/ and the lifted code in lifted/, keep both the places organized with subfolders, etc. however you see fit
 
 # Automated Guidelines & Copyright Exemption
 

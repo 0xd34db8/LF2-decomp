@@ -40,8 +40,8 @@ decompiled/
   Houses the complete 35-routine suite with synthetic types (`legacy_types.h`), calling convention bridges, external global memory declarations (`legacy_globals.h`), and zeroed static allocations (`legacy_globals.c`). Compiles with 0 syntax or symbol errors under GCC and Clang.
   *Read the full guide: [Compilable/README.md](Compilable/README.md)*
 
-- **Modern C++20 Port ([`src/`](../src/)):**
-  The production engine rewrite in `src/` lifts the mathematical and physical state machine logic from these decompiled routines into clean, modern, portable C++20 with SDL2, completely independent of legacy Win32, DirectDraw, and DirectSound.
+- **Modern C++20 Port ([`lifted/`](../lifted/)):**
+  The production engine rewrite in `lifted/` lifts the mathematical and physical state machine logic from these decompiled routines into clean, modern, portable C++20 with SDL2, completely independent of legacy Win32, DirectDraw, and DirectSound.
 
 ---
 

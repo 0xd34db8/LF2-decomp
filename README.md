@@ -50,34 +50,32 @@ Over the last two decades, the Little Fighter 2 community has attempted several 
 ```text
 LF2/
 ├── assets/                     # Media assets for this repo
-├── decompiled/                 # Ground-truth raw C decompilations from Ghidra
-│   ├── app/                    # WinMain, WindowProc, message pumping, cheat recognizers
-│   ├── core/                   # Fixed PRNG circular table, fast abs, AABB primitives
-│   ├── data/                   # Vigenère decryption, .dat loading/saving, struct ctors
-│   ├── gameplay/               # Rudolf teleport, attack processing, collision detection, object ctor
-│   ├── graphics/               # DirectDraw display init, blitting, 2D clipping, parallax math
-│   └── README.md               # Memory address cross-reference & function index
-├── src/                        # Lifted & modernized C++20 source code
-│   ├── core/                   # Memory maps, game data structures & PRNG table
-│   │   ├── constants.h         # File IDs, object types, states, weapon IDs
-│   │   ├── types.h             # Portable native pointer definitions
-│   │   ├── bdy.h               # Bounding box collision struct (0x28 / 40 bytes)
-│   │   ├── itr.h               # Interaction hitbox struct (0x50 / 80 bytes)
-│   │   ├── frame.h             # Frame state machine (0x178 / 376 bytes)
-│   │   ├── file.h              # Character / weapon definition (0x25360 / 152,416 bytes)
-│   │   ├── object.h            # World entity instance (0x370 / 880 bytes)
-│   │   ├── global.h            # World manager state & method interfaces
-│   │   ├── overlap.h           # 2D axis-aligned bounding box intersection math (0x4171C0)
-│   │   ├── random_table.h      # 3,000-byte precomputed PRNG table extracted from .data
-│   │   └── random.h / .cpp     # Deterministic PRNG implementation (0x417170)
-│   ├── gameplay/               # Lifted gameplay logic routines
-│   │   ├── teleport.cpp        # 1:1 Rudolf teleportation logic (0x403270)
-│   │   ├── attack.cpp          # 1:1 Hitbox collision & attack queueing (0x417400)
-│   │   └── entity.h / .cpp     # 1:1 Entity init (0x4061d0), 3D motion, gravity, wait counters
-│   ├── data/                   # Resource loaders & crypto
-│   │   ├── cipher.h / .cpp     # Authentic Vigenère .dat cipher & decryptor (0x4148a0)
-│   │   ├── data_txt.h / .cpp   # Manifest parser for data/data.txt
-│   │   └── dat_loader.h / .cpp # Full .dat script tokenizer and loader (0x40ef70)
+├── decompiled/                 # Ground-truth raw & compilable C decompilations from Ghidra
+│   ├── RAW/                    # Pristine decompiler output directly from Ghidra
+│   ├── Compilable/             # Self-contained, compilable C suite (46 translation units)
+│   └── README.md               # Function registry & memory address cross-reference
+├── lifted/                     # Dedicated source lift & modernized C++20 / SDL2 engine
+│   ├── src/                    # Modernized game engine code
+│   │   ├── app/                # Application lifecycle, SDL2 window/input, scenes, game loop
+│   │   ├── audio/              # DirectSound to SDL2 audio pipeline & mixer
+│   │   ├── core/               # Memory maps, game data structures & PRNG table
+│   │   ├── data/               # Resource loaders & Vigenère crypto
+│   │   ├── gameplay/           # Lifted gameplay logic routines (combat, hitboxes, AI)
+│   │   ├── graphics/           # Software renderer, parallax background, embedded UI
+│   │   └── net/                # Lockstep network synchronization & packets
+│   ├── tests/                  # 15 comprehensive unit test suites
+│   ├── tools/                  # Embedded UI generation pipeline
+│   ├── data/                   # UI source assets and control configuration
+│   ├── build/                  # Dedicated build directory (lf2.exe, liblf2.a)
+│   ├── Makefile                # Independent build system for the lifted engine
+│   └── README.md               # Lifted engine documentation
+├── internal/                   # Engineering notes & reference documentation
+├── scratch/                    # Intermediate research & scratch experiments
+├── third_party/                # External runtime dependencies (SDL2)
+├── .legacy/                    # Original game binary & asset baseline
+├── AGENTS.md                   # Pair programming directives & architectural rules
+├── REFERENCE_ERRORS.md         # Reference error catalog
+└── README.md                   # Master repository documentation
 │   ├── graphics/               # Visual rendering pipeline & camera
 │   │   ├── background.h / .cpp # Multi-layer parallax background loader & geometry
 │   │   └── renderer.h / .cpp   # Modern SDL2 renderer, texture cache, color keying, clipping
