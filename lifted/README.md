@@ -16,10 +16,9 @@ lifted/
 │   ├── gameplay/       # Combat dispatcher, hitbox intersection, AI, weapons
 │   ├── graphics/       # Software renderer, parallax background, embedded UI
 │   └── net/            # Lockstep network synchronization & packets
-├── tests/              # 15 comprehensive unit test suites
+├── tests/              # 14 comprehensive unit test suites
 ├── tools/              # Embedded UI asset generation pipeline
 ├── data/               # UI source assets and control configuration
-├── build/              # Dedicated output directory for compiled binaries
 └── Makefile            # Independent build system for the lifted engine
 ```
 
@@ -33,7 +32,7 @@ From within the `lifted/` directory (or from the repository root via `-C lifted`
 # Build the modern game executable (build/lf2.exe)
 mingw32-make -C lifted
 
-# Run the 15 unit test suites and 30-frame verification test
+# Run all 14 unit test suites and the 30-frame verification test (15 tests total)
 mingw32-make -C lifted test
 
 # Clean all build artifacts
@@ -42,5 +41,5 @@ mingw32-make -C lifted clean
 
 ### Game Asset Placement
 
-Authentic game data folders (`data/`, `bg/`, `sprite/`) should be placed in `lifted/build/` (or repository root/`.legacy/`) to enable full asset and character loading during gameplay.
+Authentic game data folders (`data/`, `bg/`, `sprite/`) should be placed in `lifted/build/` (or inside an existing authentic LF2 game directory) to enable full asset and character loading during gameplay.
 All frontend UI bitmaps are pre-baked directly into the binary (`src/graphics/embedded_ui.cpp`) mirroring authentic Win32 PE `.rsrc` resource architecture.

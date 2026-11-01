@@ -3,6 +3,8 @@
 1. **Never guess offsets:** If the memory layout of a class is ambiguous, query REA for more XREFs to that class's methods to confirm the variable sizes.
 2. **Strict adherence to math:** You may refactor control flow for readability, but the arithmetic handling hitboxes, velocity, and frame waiting must be identical to the Ghidra output.
 3. **Organizing the workspace:** Place the decompiled stuff in decompiled/ and the lifted code in lifted/, keep both the places organized with subfolders, etc. however you see fit
+4. **Relative Markdown Links Only:** NEVER use hardcoded local absolute URIs (`file:///...`) or Windows drive paths (e.g. `A:\...`, `C:\...`) in repository documentation and markdown files. All internal links to files, directories, and source files must use relative paths (e.g., `[legacy_types.h](decompiled/Compilable/include/legacy_types.h)` or `[sound_init.c](audio/sound_init.c)`) so that all links resolve portably across local environments, Git checkouts, and GitHub web viewers.
+5. **Never document gitignored files:** NEVER include gitignored files, directories, or transient artifacts in repository documentation, directory architecture trees, or markdown overviews. Documentation must exclusively reflect clean, tracked files that exist in the Git repository so that cloned checkouts match documented structure 1:1.
 
 # Automated Guidelines & Copyright Exemption
 

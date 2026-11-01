@@ -2,9 +2,9 @@
 
 <img src="assets/hero.png" alt="Little Fighter 2 Banner" width="600" />
 
-# Little Fighter 2 | 1:1 C++ Source Lift
+# Little Fighter 2 | Binary Reverse Engineering, Decompilation & Source Lift
 
-A true 1:1 C++20 source decompilation and modernization of the original *Little Fighter 2* (`lf2.exe`, version 1.9c / 2.0a, x86-32 MSVC++).
+A complete binary reverse engineering, forensic decompilation, and modern C++ source lift of the original *Little Fighter 2* (`lf2.exe`, versions 1.9c / 2.0a, x86-32 MSVC++).
 
 </div>
 
@@ -14,12 +14,75 @@ This project is a systems programming and binary reverse engineering exercise de
 
 ---
 
+## Project Scope
+
+The primary objective of this repository is the complete reverse engineering and forensic decompilation of the original closed-source x86-32 MSVC++ executable (`lf2.exe`). By combining **NSA Ghidra** & historical assembly mapping, this project recovers the authentic, byte-accurate algorithms, memory structures, and mathematical logic written by Marti Wong and Starsky Wong between 1999 and 2002.
+
+As a companion system, the repository also tries to provide a modernized **C++20 / SDL2 Source Lift** in [`lifted/`](lifted/), freeing the game from deprecated 1990s Win32 and DirectDraw 6 dependencies.
+
+---
+
+<details open>
+<summary><h2 style="display:inline;">Repository Architecture</h2></summary>
+<a id="repository-architecture"></a>
+
+The workspace is organized into dedicated, self-contained sub-environments to ensure complete isolation between forensic evidence, compilable legacy code, modern engine code, and project documentation:
+
+```text
+LF2/
+├── assets/                     # Media documentation assets & hero banners
+├── decompiled/                 # Primary Reverse Engineering Archive
+│   ├── RAW/                    # Pristine decompiler outputs directly from Ghidra
+│   │   ├── app/                # Raw WinMain, WndProc, menu & tournament state machines
+│   │   ├── audio/              # Raw DirectSound & WAV buffer loaders
+│   │   ├── core/               # Raw PRNG table & coordinate math
+│   │   ├── data/               # Raw .dat lexers, cipher decryption & control.txt parsers
+│   │   ├── gameplay/           # Raw combat dispatcher, hitboxes, AI & weapon attachment
+│   │   ├── graphics/           # Raw DirectDraw blitters, clipping & parallax math
+│   │   └── net/                # Raw lockstep network exchange & packet verifiers
+│   ├── Compilable/             # Self-contained, compilable legacy C suite (47 translation units)
+│   │   ├── include/            # legacy_types.h (typed structs), legacy_signatures.h, legacy_globals.h
+│   │   ├── app/                # Clean C routines: winmain.c, wndproc.c, battle_mode.c, etc.
+│   │   ├── audio/              # Clean C routines: sound_init.c, sound_load_wav.c, sound_play.c
+│   │   ├── core/               # Clean C routines: abs.c, random.c, overlap.c, legacy_globals.c
+│   │   ├── data/               # Clean C routines: load_dat.c, save_dat.c, decrypt_dat.c, etc.
+│   │   ├── gameplay/           # Clean C routines: attack_process.c, teleport.c, ai_process.c, etc.
+│   │   ├── graphics/           # Clean C routines: draw_object.c, parallax_calc.c, clip_rect.c, etc.
+│   │   ├── net/                # Clean C routines: net_init.c, net_lockstep.c
+│   │   ├── Makefile            # Dedicated build system for compilable legacy archive
+│   │   ├── test_legacy.c       # Verification suite for data layout & decompiled math parity
+│   │   └── README.md           # Documentation, memory mapping & type registries
+│   └── README.md               # Master decompiled function registry & Ghidra address index
+├── lifted/                     # Dedicated Modern C++20 / SDL2 Source Lift
+│   ├── src/                    # Modernized game engine code
+│   │   ├── app/                # SDL2 windowing, event pump, scene transitions, fixed 30 FPS pacing
+│   │   ├── audio/              # DirectSound replacement via modern SDL2 audio pipeline & mixer
+│   │   ├── core/               # Domain structures, deterministic PRNG, replay pipeline
+│   │   ├── data/               # Lexer, Vigenère cipher decrypter & control configuration parser
+│   │   ├── gameplay/           # Combat dispatcher, hitbox intersection, entity physics & AI
+│   │   ├── graphics/           # SDL2 software renderer, parallax background & embedded UI
+│   │   └── net/                # Modern lockstep network sync & packet serialization
+│   ├── data/                   # UI source bitmaps & default control.txt configurations
+│   ├── tests/                  # 14 comprehensive unit test suites
+│   ├── tools/                  # Embedded UI generation pipeline (generate_embedded_ui.py)
+│   ├── Makefile                # Independent build system for the lifted engine
+│   └── README.md               # Documentation for the modern source lift
+├── third_party/                # Self-contained MinGW-w64 SDL2 development headers & libraries
+├── AGENTS.md                   # Pair programming directives & architectural rules
+├── REFERENCE_ERRORS.md         # Reference error catalog of past community decompilations
+├── .gitignore                  # Git ignore rules
+└── README.md                   # Master repository documentation (this file)
+```
+
+</details>
+
+---
 
 <details>
 <summary><h2 style="display:inline;">Prior Art vs. This Project</h2></summary>
 <a id="prior-art-vs-this-project"></a>
 
-Over the last two decades, the Little Fighter 2 community has attempted several ambitious projects to modernize or recreate the game. To understand our mission, it is vital to distinguish between modding, clean-room rewrites, and true binary source lifting:
+Over the last two decades, the Little Fighter 2 community has attempted several ambitious projects to modernize or recreate the game. To understand our mission, it is vital to distinguish between modding, clean-room rewrites, and true binary reverse engineering:
 
 ### What Other Projects Did
 
@@ -31,73 +94,20 @@ Over the last two decades, the Little Fighter 2 community has attempted several 
 | **Open-Source Engine Reimplementations** | Modern clean-room clones built with contemporary frameworks and libraries specifically to parse and load legacy `.dat` assets. | Approximates mechanics from the outside, but lacks authentic assembly state machines, deterministic random generators, and timing quirks. |
 | **Manual Disassembly Archives** | Manually translating raw disassembly into intermediate scripting languages (e.g. Ruby) or partial C stubs function-by-function. | Massive forensic undertaking that historically stalled before completing a compilable, fully modernized game engine, leaving uncorrected offset errors. |
 
-
-
 ### This Project
 
-1. **Extracting, Not Guessing:** We do not invent custom OOP hierarchies, we do not guess class offsets, and we do not write high-level approximations. We decompile the compiled x86-32 MSVC++ machine code directly from the original executable and reconstruct the authentic logic in modern C++.
+1. **Extracting, Not Guessing:** We do not invent custom OOP hierarchies, we do not guess class offsets, and we do not write high-level approximations. We decompile the compiled x86-32 MSVC++ machine code directly from the original executable and reconstruct the authentic logic in readable, typed C and modern C++.
 2. **Byte-Level Mathematical Fidelity:** Collision detection, axis-aligned bounding box projections, directional facing mirrors, velocity integrations, deterministic lookup tables, and frame state machines are mathematically identical to the original assembly.
-3. **Liberation & Modernization:** We strip away deprecated Win32 message pumps and legacy DirectDraw 6 surface management, replacing them with a portable modern C++20 / SDL2 architecture that compiles and runs cleanly across modern 32-bit and 64-bit operating systems.
+3. **Dual-Track Workflow:**
+   - **Forensic Decompilation ([`decompiled/`](decompiled/)):** Pristine Ghidra exports paired with a self-contained, human-readable, compilable C suite that preserves exact memory layouts and calling conventions.
+   - **Modernized Source Lift ([`lifted/`](lifted/)):** Portable C++20 / SDL2 implementation shedding legacy DirectDraw 6 and Win32 dependencies while retaining 100% gameplay parity.
 
 </details>
 
 ---
 
 <details>
-<summary><h2 style="display:inline;">Architecture & Project Layout</h2></summary>
-<a id="architecture--project-layout"></a>
-
-```text
-LF2/
-├── assets/                     # Media assets for this repo
-├── decompiled/                 # Ground-truth raw & compilable C decompilations from Ghidra
-│   ├── RAW/                    # Pristine decompiler output directly from Ghidra
-│   ├── Compilable/             # Self-contained, compilable C suite (46 translation units)
-│   └── README.md               # Function registry & memory address cross-reference
-├── lifted/                     # Dedicated source lift & modernized C++20 / SDL2 engine
-│   ├── src/                    # Modernized game engine code
-│   │   ├── app/                # Application lifecycle, SDL2 window/input, scenes, game loop
-│   │   ├── audio/              # DirectSound to SDL2 audio pipeline & mixer
-│   │   ├── core/               # Memory maps, game data structures & PRNG table
-│   │   ├── data/               # Resource loaders & Vigenère crypto
-│   │   ├── gameplay/           # Lifted gameplay logic routines (combat, hitboxes, AI)
-│   │   ├── graphics/           # Software renderer, parallax background, embedded UI
-│   │   └── net/                # Lockstep network synchronization & packets
-│   ├── tests/                  # 15 comprehensive unit test suites
-│   ├── tools/                  # Embedded UI generation pipeline
-│   ├── data/                   # UI source assets and control configuration
-│   ├── build/                  # Dedicated build directory (lf2.exe, liblf2.a)
-│   ├── Makefile                # Independent build system for the lifted engine
-│   └── README.md               # Lifted engine documentation
-├── internal/                   # Engineering notes & reference documentation
-├── scratch/                    # Intermediate research & scratch experiments
-├── third_party/                # External runtime dependencies (SDL2)
-├── .legacy/                    # Original game binary & asset baseline
-├── AGENTS.md                   # Pair programming directives & architectural rules
-├── REFERENCE_ERRORS.md         # Reference error catalog
-└── README.md                   # Master repository documentation
-│   ├── graphics/               # Visual rendering pipeline & camera
-│   │   ├── background.h / .cpp # Multi-layer parallax background loader & geometry
-│   │   └── renderer.h / .cpp   # Modern SDL2 renderer, texture cache, color keying, clipping
-│   └── app/                    # Platform application & loop timing
-│       ├── app.h / .cpp        # Modern SDL2 lifecycle, fixed 30 FPS pacing, input table
-│       └── main.cpp            # Application entry point & headless test harness
-├── tests/                      # Automated verification test suites
-│   ├── verify_memory_maps.cpp  # Memory map & collision math verification suite
-│   ├── test_data_loader.cpp    # Data-driven core & cipher verification suite
-│   ├── test_graphics.cpp       # Graphics, sprite slicing & camera verification suite
-│   └── test_entity_physics.cpp # Entity lifecycle, gravity, friction & frame animation suite
-├── third_party/                # Self-contained vendor dependencies (SDL2 development kit)
-├── REFERENCE_ERRORS.md         # Documented inaccuracies in prior decompilation attempts
-└── Makefile                    # Automated build script (MSYS2 UCRT64 GCC)
-```
-
-</details>
-
----
-
-<details>
-<summary><h2 style="display:inline;">Core Directives & Verification</h2></summary>
+<summary><h2 style="display:inline;">Core Directives & Verification Standards</h2></summary>
 <a id="core-directives--verification"></a>
 
 1. **Never Guess Offsets:** Every struct size and member variable offset is verified against Ghidra decompiler pseudocode and backed by compile-time `static_assert` statements.
@@ -112,18 +122,20 @@ LF2/
 <summary><h2 style="display:inline;">Data Structure Memory Maps</h2></summary>
 <a id="data-structure-memory-maps"></a>
 
+All memory structures match the exact byte layouts of the original MSVC++ 32-bit compilation target, verified via `static_assert` and unit test suites:
+
 | Structure | Size (Hex) | Size (Bytes) | Description |
 | :--- | :--- | :--- | :--- |
-| `bdy_t` | `0x28` | 40 | Bounding box / physical collision boundary |
-| `itr_t` | `0x50` | 80 | Interaction zone / attack hitbox / throw / catch |
-| `opoint_t` | `0x20` | 32 | Projectile / weapon / particle spawn coordinate |
-| `bpoint_t` | `0x0C` | 12 | Damage blood / impact particle coordinate |
-| `cpoint_t` | `0x44` | 68 | Catch & throw interaction point |
-| `wpoint_t` | `0x24` | 36 | Weapon attachment & holding position |
-| `frame_t` | `0x178` | 376 | Animation frame state machine & hitbox arrays |
-| `file_t` | `0x25360` | 152,416 | Character / weapon definition file (400 frames) |
-| `object_t` | `0x370` | 880 | Monolithic entity instance in game world |
-| `global_t` | `0x8D8`* | 2,264* | World manager (`0x458B00` static address) |
+| [`bdy_t`](decompiled/Compilable/include/legacy_types.h) | `0x28` | 40 | Bounding box / physical collision boundary |
+| [`itr_t`](decompiled/Compilable/include/legacy_types.h) | `0x50` | 80 | Interaction zone / attack hitbox / throw / catch |
+| [`opoint_t`](decompiled/Compilable/include/legacy_types.h) | `0x20` | 32 | Projectile / weapon / particle spawn coordinate |
+| [`bpoint_t`](decompiled/Compilable/include/legacy_types.h) | `0x0C` | 12 | Damage blood / impact particle coordinate |
+| [`cpoint_t`](decompiled/Compilable/include/legacy_types.h) | `0x44` | 68 | Catch & throw interaction point |
+| [`wpoint_t`](decompiled/Compilable/include/legacy_types.h) | `0x24` | 36 | Weapon attachment & holding position |
+| [`frame_t`](decompiled/Compilable/include/legacy_types.h) | `0x178` | 376 | Animation frame state machine & hitbox arrays |
+| [`file_t`](decompiled/Compilable/include/legacy_types.h) | `0x25360` | 152,416 | Character / weapon definition file (400 frames) |
+| [`object_t`](decompiled/Compilable/include/legacy_types.h) | `0x370` | 880 | Monolithic entity instance in game world |
+| [`global_t`](decompiled/Compilable/include/legacy_types.h) | `0x8D8`* | 2,264* | World manager (`0x458B00` static address) |
 
 *\* Note: On 64-bit targets, pointers expand to 8 bytes, cleanly adjusting pointer table sizes in `global_t` without shifting fixed-offset member fields.*
 
@@ -131,215 +143,82 @@ LF2/
 
 ---
 
-<details>
-<summary><h2 style="display:inline;">Building, Setup & Playing the Real Game</h2></summary>
-<a id="building-setup--playing-the-real-game"></a>
+<details open>
+<summary><h2 style="display:inline;">Building & Verification</h2></summary>
+<a id="building--verification"></a>
 
-### 1. Prerequisites
-- **Compiler:** Modern C++20 compiler (GCC 13+ / MSYS2 UCRT64 GCC 14.2+ / Clang 15+)
+### Prerequisites
+- **Compiler:** Modern C/C++ toolchain (GCC 13+ / MSYS2 UCRT64 GCC 14.2+ / Clang 15+)
 - **Build Tool:** GNU `make` or `mingw32-make`
-- **SDL2:** The repository includes self-contained MinGW-w64 SDL2 development libraries in `third_party/SDL2/` and runtime `SDL2.dll` in root, enabling immediate compilation with zero external setup.
+- **SDL2:** MinGW-w64 development libraries are self-contained in [`third_party/SDL2/`](third_party/SDL2/), with `SDL2.dll` provided for runtime execution.
 
 ---
 
-### 2. Acquiring and Setting Up Authentic Game Assets
+### 1. Compilable Decompiled Legacy Suite (`decompiled/Compilable/`)
 
 Because *Little Fighter 2* artwork, sprite sheets, sound effects, and stage backgrounds are proprietary freeware created by Marti Wong and Starsky Wong, they are not distributed in this source code repository.
 
-To experience the full game with authentic visuals and music:
+```bash
+# Build the legacy static library (decompiled/Compilable/build/liblf2_legacy.a)
+mingw32-make -C decompiled/Compilable
 
-1. Download the official game installer or archive from [lf2.net](https://lf2.net) or [LF-Empire](https://lf-empire.de) (LF2 v1.9c, v2.0, or v2.0a).
-2. Copy the authentic game asset directories from your LF2 installation into the project root:
-   ```text
-   LF2/
-   ├── data/           # Game manifest (data.txt) & encrypted character/weapon scripts (.dat)
-   ├── sprite/         # Sprite sheets for all characters, projectiles, and weapons (.bmp)
-   ├── bg/             # Multi-layer stage backgrounds & parallax layers (.dat, .bmp)
-   ├── bgm/            # Background music tracks (.wma)
-   └── sound/          # Audio effect samples (.wav)
-   ```
-   *(Alternatively, simply copy the compiled `lf2.exe` and `SDL2.dll` directly into your existing Little Fighter 2 game installation folder!)*
+# Run the decompiled verification test suite
+mingw32-make -C decompiled/Compilable test
+
+# Clean legacy build artifacts
+mingw32-make -C decompiled/Compilable clean
+```
+
+**Verification Suite (`test_legacy.exe`) checks:**
+- 1:1 Fast integer absolute value computation (`0x004034e0`)
+- 2D Bounding box overlap arithmetic (`0x004171c0`)
+- Deterministic 3,000-byte circular PRNG table lookup (`0x00417170`)
+- Exact `sizeof` and `offsetof` alignments for all 10 domain structures
+- Rudolf teleportation gameplay positioning logic (`0x00403270`)
 
 ---
 
-### 3. Compiling the Game
+### 2. Modernized Source Lift Engine (`lifted/`)
 
-To build the static engine library (`liblf2.a`), the game executable (`lf2.exe`), and all test harnesses:
+The modernized source lift builds an independent executable and static engine library:
 
 ```bash
-make
+# Build the modernized game executable (lifted/build/lf2.exe)
+mingw32-make -C lifted
+
+# Run all 14 unit test suites and the 30-frame verification test (15 tests total)
+mingw32-make -C lifted test
+
+# Clean lifted build artifacts
+mingw32-make -C lifted clean
 ```
 
-To clean intermediate build artifacts:
+#### Running the Game:
 ```bash
-make clean
-```
-
----
-
-### 4. Running and Playing
-
-```bash
-# Launch in authentic 794x550 windowed mode
-./lf2.exe
+# Launch from the lifted directory
+cd lifted && ./build/lf2.exe
 
 # Launch directly in fullscreen mode
-./lf2.exe --fullscreen
+cd lifted && ./build/lf2.exe --fullscreen
 ```
 
-* **Fullscreen Toggle:** Press `Alt + Enter` at any time during gameplay to seamlessly switch between windowed and fullscreen display.
-* **Secret Character Unlock:** Type `lf2.net` on the main menu to unlock Julian, Firzen, LouisEX, and all other enemy characters.
-* **Stage Function Keys:** Type `herofighter.com` to enable stage debug function keys.
-* **Frame Inspector:** Type `ABC` to unlock the internal frame and hitbox inspector.
+* **Controls & Player Mapping:** Player keys are configured via `control.txt`.
+* **Fullscreen Toggle:** Press `Alt + Enter` to switch between windowed (794x550) and fullscreen.
+* **Secret Cheat Codes:**
+  - Type `lf2.net` on the main menu to unlock Julian, Firzen, LouisEX, and all enemy henchmen.
+  - Type `herofighter.com` to enable stage debug function keys.
+  - Type `ABC` to unlock the internal frame and hitbox inspector.
 
 ---
 
-### 5. Automated Verification Test Suites
+### 3. Setting Up Authentic Game Assets
 
-To verify memory offsets, mathematical collision fidelity, cipher decryption, sprite sheet slicing, and 30-frame simulation:
+Little Fighter 2 artwork, character sprites, sound effects, and stage backgrounds are proprietary freeware created by Marti Wong and Starsky Wong, and are not distributed in this repository.
 
-```bash
-make test
-```
-
-<details>
-<summary><b>Expected Test Output (Click to expand)</b></summary>
-<a id="expected-test-output"></a>
-
-```text
-=== Little Fighter 2 Memory Map Verification ===
-[+] bdy_t size:    0x28 (40 bytes)
-[+] itr_t size:    0x50 (80 bytes)
-[+] opoint_t size: 0x20 (32 bytes)
-[+] bpoint_t size: 0xc (12 bytes)
-[+] cpoint_t size: 0x44 (68 bytes)
-[+] wpoint_t size: 0x24 (36 bytes)
-[+] frame_t size:  0x178 (376 bytes)
-[+] file_t size:   0x25360 (152416 bytes)
-[+] object_t size: 0x370 (880 bytes)
-[+] global_t size: 0x101c (4124 bytes)
-
-[+] Testing 1:1 lifted teleport logic...
-    Rudolf pos: (380, 0, 221)
-
-[+] Testing 1:1 lifted does_attack_success collision logic...
-    Attacks registered: 1
-    Z-out-of-bounds correctly ignored: 0
-
-[SUCCESS] All data structures, binary alignments, and lifted logic verified 100%!
-
-=== Little Fighter 2 Data-Driven Core Verification ===
-[+] Testing Cipher Encryption & Decryption Round-Trip...
-    Round-trip successfully restored exact plaintext!
-[+] Testing Decryption of Authentic .legacy/data/template.dat...
-    template.dat decrypted successfully (53588 bytes)!
-[+] Testing Parser for Authentic .legacy/data/data.txt...
-    data.txt loaded 65 objects and 12 backgrounds.
-[+] Testing Full .dat Parser on .legacy/data/davis.dat...
-    davis.dat parsed successfully:
-      Name: Davis
-      Head: sprite\sys\davis_f.bmp
-      Walking speed: 5
-      Frame 0: pic=0, bdy=(43x62)
-      Frame 5: pic=4, catch itr=(25x65)
-[+] Testing Serialization to String & Re-parsing...
-[SUCCESS] All Data-Driven Core tests passed with 100% precision!
-
-=== Little Fighter 2 Graphics, Sprite & Camera Pipeline Verification ===
-[+] Testing Software 2D Clipping (0x0043ef70)...
-    2D Software Clipping passed all edge cases.
-[+] Testing Sprite Sheet Slicing with 1-Pixel Separator Gutter...
-    Sprite Sheet Slicing verified with exact 1-pixel separator gutter.
-[+] Testing Entity Centering & Screen Projection Math (0x00415d00)...
-    Centering math correctly offsets both facing directions and ground elevation.
-[+] Testing Authentic Parallax Formula on .legacy/bg/template/1/bg.dat...
-    Parallax horizontal positioning exactly aligns layer edges with screen viewport.
-[+] Testing Decryption of .legacy/bg/sys/hkc/bg.dat...
-    HK_Coliseum stage loaded with 12 layers.
-[+] Testing SDL2 Texture Loading & Black (0,0,0) Color Key...
-    SDL2 Texture Loader and Color Keying executed without error.
-[SUCCESS] All Graphics, Sprite Management & Camera Pipeline tests passed 100%!
-
-=== Little Fighter 2 Entity Physics & State Machine Tests ===
-[+] Testing object_init (0x004061d0 1:1 parity)...
-    object_init passed: all offsets, vitals, and tables verified!
-[+] Testing 3D motion integration and stage boundaries...
-    3D motion and boundary clamping verified!
-[+] Testing jump physics, gravitational acceleration, and landing...
-    Jump arc completed in 20 ticks and landed cleanly at y = 0!
-[+] Testing ground friction deceleration...
-    Ground friction successfully halted sliding velocities!
-[+] Testing frame advancement, wait counters, and history shifting...
-    Frame state progression and particle expiration verified 100%!
-[+] Testing player input state transitions (Walk, Jump, Attack, Defend)...
-    Input state machine transitions verified 100%!
-[SUCCESS] All Entity Physics & Lifecycle tests passed with 100% precision!
-
-=== Little Fighter 2 Combat Engine & Action Dispatcher Tests ===
-[+] Testing 1:1 combat damage calculation and flinch response (0x0042E100)...
-    Damage (25 HP), front flinch frame 222, and vrest protection verified!
-[+] Testing knockdown fall state and airborne arc (fall >= 60)...
-    Knockdown fall state 80, falling frame 180, and trajectory verified!
-[+] Testing projectile instantiation into world object table...
-    Projectile spawned cleanly into slot 10 with correct velocity!
-[SUCCESS] All Combat Engine & Action Dispatcher tests passed with 100% precision!
-
-=== Little Fighter 2 Grapple, Throw & Weapon Mechanics Tests ===
-[+] Testing Grapple Catch Initiation & Anchor Sync (0x004068B0)...
-    Grapple initiation and anchor synchronization verified!
-[+] Testing Grapple Throw Execution & Launch Arc...
-    Throw launch velocities, knockdown (fall 80), and injury verified!
-[+] Testing Weapon Pickup & wpoint Synchronization (0x00408CE0)...
-    Weapon pickup and hand anchor synchronization verified!
-[+] Testing Weapon Drop upon Damage & Weapon Throw...
-    Weapon drop upon damage and throw impulse verified!
-[SUCCESS] All Grapple, Throw & Weapon Mechanics tests passed with 100% precision!
-
-=== Little Fighter 2 Artificial Intelligence Controller Tests ===
-[+] Testing AI target selection & team filtering (0x00406BA0)...
-    AI successfully targeted closest enemy (slot 3) ignoring teammates!
-[+] Testing AI tracking & approach movement generation...
-    AI correctly synthesized Right + Down approach vector!
-[+] Testing AI melee range attack synthesis...
-    AI successfully triggered melee attack and transitioned to punch frame 60!
-[SUCCESS] All AI Controller tests passed with 100% precision!
-
-=== Little Fighter 2 Tournament & Championship Engine Verification ===
-[+] Testing Tournament Initialization (1:1 with State 0x14)...
-    [PASS] 8-contestant bracket initialized to 500 HP, computer controllers, round 0.
-[+] Testing 50-Swap Bracket Seed Shuffling (1:1 with State 0x17)...
-    [PASS] 50-swap shuffle produced valid complete bracket permutation of 4 matches.
-[+] Testing Random Slot Autofill (1:1 with State 0x18)...
-    [PASS] Slots 2..7 auto-filled from available roster; manual slots preserved.
-[+] Testing HP Degradation Mathematical Formula (1:1 with State 0x1A)...
-    [PASS] Verified 300 trials across Easy (61..99%), Normal (73..99%), and Difficult (85..99%).
-[+] Testing CPU Simulation & Boss Advantage Decision Tree...
-    [PASS] Boss contestant won decisively with authentic progress and degraded HP.
-[+] Testing Full 8-Contestant Knockout Ladder Progression...
-    [PASS] Completed 7 knockout matches (4 Prelim -> 2 Semi -> 1 Final). Champion crowned with progress = 7.
-[+] Testing 2-on-2 Team Tournament Mode (4 teams / 8 contestants)...
-    [PASS] 2on2 mode simulated 3 team matches. Both team members advanced and crowned champions.
-[+] Testing Human Match Setup, Survivor HP & Authentic Replay Filename...
-    [PASS] Human match preserved exact survivor HP (342) and verified authentic replay filenames.
-
-[SUCCESS] All Tournament Subsystem Tests Passed (100% 1:1 Parity With 0x00432AB0)!
-
-==================================================
- Little Fighter 2 - Modern C++ Source Lift
- Authentic 1:1 Logic & SDL2 Modern Execution Core
-==================================================
-[LF2] Initializing Application Core (794x550)...
-[LF2] Window & Renderer initialized successfully.
-[LF2] Fixed frame pacing: 33 ms (~30.3 FPS), 100 ms lag clamp.
-[LF2] Input mapping: 256-byte Win32-compatible key state table.
-[LF2] Running in automated verification test mode for 30 frames...
-[LF2 TEST SUCCESS] 'lf2.net' cheat successfully detected and unlocked!
-[LF2 TEST SUCCESS] 'herofighter.com' cheat successfully detected and unlocked!
-[LF2 TEST SUCCESS] 'ABC' developer mode cheat successfully detected and unlocked!
-[LF2 TEST SUCCESS] Frame pacing and event loop executed 30 frames cleanly.
-```
-
-</details>
+To run the lifted engine with full audio and visual assets:
+1. Obtain an authentic Little Fighter 2 installation (v1.9c, v2.0, or v2.0a) from [lf2.net](https://lf2.net) or [LF-Empire](https://lf-empire.de).
+2. Copy the authentic game folders (`data/`, `sprite/`, `bg/`, `sound/`, `bgm/`) into `lifted/build/` (or run `lf2.exe` directly inside an existing LF2 directory).
+3. All frontend menu and character selection UI images are pre-baked directly into the binary (`lifted/src/graphics/embedded_ui.cpp`), exactly mirroring the Win32 PE resource architecture of the original binary.
 
 </details>
 
@@ -424,9 +303,10 @@ For over two decades, Little Fighter 2 players experienced sudden match freezes 
 * **The Crash Mechanism:** In heavy Stage Mode battles (e.g. Stage 5 with dozens of bandits or Firzen/LouisEX casting large multi-part special moves), the object spawner at `0x0042E100` scans the 400 slots looking for a free slot (`is_object_exists[i] == 0`). If all 400 slots are exhausted, newly spawned projectiles or weapon drops fail silently or return a null pointer that subsequent rendering and physics passes attempt to dereference, triggering an instant Crash-to-Desktop (CTD).
 
 ### 3. The Rudolf Stage Boundary Teleportation Glitch (`0x00403270`)
-* In `func_00403270`, Rudolf’s catch-and-teleport move calculates destination coordinates behind the victim:
-  $$x[\text{dest}] = x[\text{victim}] + (\text{facing} == 0 \ ? \ -40 : +40)$$
-* **Missing Boundary Clamp:** The original assembly directly commits `x_position = x_dest` without clamping against camera boundaries or the stage limits (`z_min = 0, z_max = 400`, `x_min = 0, x_max = stage_width`). If an opponent is grabbed near the far-left or far-right edge of the stage, Rudolf teleports into negative space outside the playable world, causing the character to enter an infinite falling trajectory or become permanently unplayable.
+* In `func_00403270`, Rudolf’s special move teleportation targets either the nearest enemy (`teleport_to == 1`) or furthest teammate (`teleport_to == 2`), positioning him with a directional offset:
+  $$x[\text{dest}] = x[\text{target}] + (\text{facing} == 0 \ ? \ -120 : +120) \quad (\text{nearest enemy})$$
+  $$x[\text{dest}] = x[\text{target}] + (\text{facing} == 0 \ ? \ -60 : +60) \quad (\text{furthest teammate})$$
+* **Missing Boundary Clamp:** The original assembly directly commits `x_position = x_dest` without clamping against camera boundaries or stage boundaries ($0 \le x \le \text{stage\_width}$). When targeting an entity near the edge of the stage, Rudolf teleports into out-of-bounds space outside the playable world, causing the character to enter an infinite falling trajectory or become permanently unplayable.
 
 ### 4. Player Name Grave Accent Substitution in `control.txt` (`0x004233E0` / `0x0042353A`)
 * **The Parser Whitespace Dilemma:** In `data/control.txt`, player profiles, 11 keyboard mapping scan codes per player, and custom player names are serialized via standard C runtime `fscanf` / `fprintf`. Because `fscanf("%s")` delimits tokens on whitespace, any player name containing spaces (e.g. `"Little Bear"`) would corrupt line parsing.
@@ -451,7 +331,7 @@ For over two decades, Little Fighter 2 players experienced sudden match freezes 
 <summary><h2 style="display:inline;">References & Acknowledgments</h2></summary>
 <a id="references--acknowledgments"></a>
 
-This source lift builds upon the foundation of knowledge created by decades of dedicated Little Fighter 2 community developers and reverse engineers:
+This source project builds upon the foundation of knowledge created by decades of dedicated Little Fighter 2 community developers and reverse engineers:
 
 - **Marti Wong & Starsky Wong:** The original creators of *Little Fighter 2* (1999–2002). Their iconic beat-'em-up engine, fluid sprite animations, and brilliant emergent combat design remain unmatched.
 - **xsoameix ([`xsoameix/lf2`](https://github.com/xsoameix/lf2) and [`xsoameix/openlf2`](https://github.com/xsoameix/openlf2)):** The true pioneer of LF2 decompilation. Over twelve years ago, `xsoameix` took on the monumental task of manually disassembling `lf2.exe` function-by-function into Ruby, decoded complex compiler-optimized arithmetic (such as integer division via magic multiplication constants), and drafted the initial C struct layouts. This work serves as our indispensable "Rosetta Stone".
