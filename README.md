@@ -22,7 +22,7 @@ As a companion system, the repository also tries to provide a modernized **C++20
 
 ---
 
-<details open>
+<details>
 <summary><h2 style="display:inline;">Repository Architecture</h2></summary>
 <a id="repository-architecture"></a>
 
@@ -143,7 +143,7 @@ All memory structures match the exact byte layouts of the original MSVC++ 32-bit
 
 ---
 
-<details open>
+<details>
 <summary><h2 style="display:inline;">Building & Verification</h2></summary>
 <a id="building--verification"></a>
 
