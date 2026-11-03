@@ -26,7 +26,10 @@ decompiled/
 │   ├── gameplay/
 │   ├── graphics/
 │   └── net/
-└── ui/              # Embedded graphical resources extracted from the binary
+└── resources/       # Embedded PE resources extracted from the binary
+    ├── icon/        # Application icon (lf2.ico)
+    ├── manifest/    # Assembly dependency manifest (lf2.exe.manifest)
+    └── ui/          # Bitmap image assets extracted from the PE resource table
 ```
 
 ---
@@ -41,8 +44,11 @@ decompiled/
   Houses the complete 46-routine suite with synthetic types (`legacy_types.h`), calling convention bridges, external global memory declarations (`legacy_globals.h`), and zeroed static allocations (`legacy_globals.c`). Compiles with 0 syntax or symbol errors under GCC and Clang.
   *Read the full guide: [Compilable/README.md](Compilable/README.md)*
 
-- **[`decompiled/ui/`](ui/):**
-  Houses raw graphical assets extracted directly from inside the `lf2.exe` executable binary. Unlike external asset folders (`data/`, `bg/`, `sprite/`) that shipped as loose files on disk, these image assets were embedded within the Win32 Portable Executable (PE) `.rsrc` resource section of the binary itself.
+- **[`decompiled/resources/`](resources/):**
+  Houses raw resources extracted directly from inside the `lf2.exe` executable binary's Portable Executable (PE) `.rsrc` section:
+  - **[`ui/`](resources/ui/):** Raw bitmap assets embedded internally within the binary's `RT_BITMAP` resource directory (unlike loose disk assets like `data/`, `bg/`, or `sprite/`).
+  - **[`icon/`](resources/icon/):** Authentic 32x32 application icon (`lf2.ico`) reconstructed from the binary's `RT_GROUP_ICON` and `RT_ICON` tables.
+  - **[`manifest/`](resources/manifest/):** Original CRT and MFC dependency manifest (`lf2.exe.manifest`) extracted from `RT_MANIFEST`.
 
 - **Modern C++20 Port ([`lifted/`](../lifted/)):**
   The production engine rewrite in `lifted/` lifts the mathematical and physical state machine logic from these decompiled routines into clean, modern, portable C++20 with SDL2, completely independent of legacy Win32, DirectDraw, and DirectSound.
