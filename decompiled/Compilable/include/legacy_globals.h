@@ -363,6 +363,22 @@ extern int   DAT_00451ba8;
 extern uintptr_t DAT_00451bac;
 extern uintptr_t DAT_00451bb0;
 
+// Phase 17: Options & Control Configuration Globals
+extern int   DAT_0044d060;
+extern int   DAT_0044d064;
+extern int   DAT_0044d068;
+extern int   DAT_0044d784;
+extern int   DAT_00450b48;
+extern int   DAT_004511e0;
+extern int   DAT_004511c8;
+extern char* DAT_004511c4;
+extern int   DAT_0044fb70[80];
+extern char  DAT_0044fcc0[44];
+extern char  DAT_0044fd18[100];
+extern char  DAT_0044f890[100];
+extern char  DAT_0044f900[100];
+extern char  DAT_00455388;
+
 #ifdef __cplusplus
 }
 #endif

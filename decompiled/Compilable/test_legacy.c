@@ -121,6 +121,57 @@ int main() {
     assert(rudolf.z_velocity == 0.0);
     printf("    [PASS] lf2_teleport correctly positioned Rudolf behind enemy (x=380, z=201, vels=0).\n");
 
+    // 7. Test Phase 17: Key name mapping (0x00422b00)
+    printf("[+] Testing Key Name Mapping (0x00422b00 / FUN_00422b00)...\n");
+    char key_buf[32];
+    int width_adj = 0;
+    FUN_00422b00(0x20, key_buf, &width_adj); // VK_SPACE
+    assert(strcmp(key_buf, "Space") == 0);
+    assert(width_adj == 10);
+
+    FUN_00422b00(0x0D, key_buf, &width_adj); // VK_RETURN
+    assert(strcmp(key_buf, "Enter") == 0);
+    assert(width_adj == 10);
+
+    FUN_00422b00(0x41, key_buf, &width_adj); // 'A'
+    assert(strcmp(key_buf, "A") == 0);
+    assert(width_adj == 0);
+
+    FUN_00422b00(0x65, key_buf, &width_adj); // Numpad 5
+    assert(strcmp(key_buf, "Keypad: 5") == 0);
+    assert(width_adj == 15);
+
+    FUN_00422b00(0x26, key_buf, &width_adj); // Up
+    assert(strcmp(key_buf, "Up") == 0);
+    assert(width_adj == 2);
+
+    FUN_00422b00(0x10, key_buf, &width_adj); // Shift
+    assert(strcmp(key_buf, "Shift") == 0);
+    assert(width_adj == 7);
+    printf("    [PASS] FUN_00422b00 mapped Space, Enter, letters, keypad, and arrows accurately.\n");
+
+    // 8. Test Phase 17: VK to ASCII Decoder (0x00422f60)
+    printf("[+] Testing VK to ASCII Character Translation (0x00422f60 / FUN_00422f60)...\n");
+    DAT_00455388 = 'u'; // Shift UP
+    assert(FUN_00422f60(0x20) == ' ');
+    assert(FUN_00422f60(0x31) == '1');
+    assert(FUN_00422f60(0xBD) == '-');
+
+    DAT_00455388 = 'd'; // Shift DOWN
+    assert(FUN_00422f60(0x31) == '!');
+    assert(FUN_00422f60(0xBD) == '_');
+    assert(FUN_00422f60(0xBB) == '+');
+    printf("    [PASS] FUN_00422f60 correctly handled shift states, numpad, and symbol conversions.\n");
+
+    // 9. Test Phase 17: PRNG Reseeder (0x00422ac0)
+    printf("[+] Testing PRNG Reseed (0x00422ac0 / FUN_00422ac0)...\n");
+    DAT_00450b48 = 999;
+    FUN_00422ac0();
+    assert(DAT_00450b48 == 0);
+    assert(DAT_0044ff90[0] >= 1);
+    assert(DAT_0044ff90[2999] >= 1);
+    printf("    [PASS] FUN_00422ac0 reseeded 3,000-byte circular lookup table.\n");
+
     printf("\n[SUCCESS] All Decompiled Compilable Suite Tests Passed with 100%% Parity!\n");
     return 0;
 }

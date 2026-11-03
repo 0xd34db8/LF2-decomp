@@ -2,7 +2,7 @@
 
 This directory contains the decompiled logic and ground-truth pseudocode extracted from `lf2.exe` (v1.9c / v2.0a, 32-bit x86 MSVC++) using Ghidra and REA.
 
-The archive is split into two specialized suites:
+The archive contains the following suites and extracted artifacts:
 
 ```text
 decompiled/
@@ -16,16 +16,17 @@ decompiled/
 │   ├── gameplay/
 │   ├── graphics/
 │   └── net/
-└── Compilable/      # Self-contained, compilable legacy C suite
-    ├── README.md    # Dedicated documentation, compilation instructions & type map
-    ├── include/     # legacy_types.h, legacy_globals.h, legacy_signatures.h
-    ├── app/
-    ├── audio/
-    ├── core/        # legacy_globals.c + core math routines
-    ├── data/
-    ├── gameplay/
-    ├── graphics/
-    └── net/
+├── Compilable/      # Self-contained, compilable legacy C suite
+│   ├── README.md    # Dedicated documentation, compilation instructions & type map
+│   ├── include/     # legacy_types.h, legacy_globals.h, legacy_signatures.h
+│   ├── app/
+│   ├── audio/
+│   ├── core/        # legacy_globals.c + core math routines
+│   ├── data/
+│   ├── gameplay/
+│   ├── graphics/
+│   └── net/
+└── ui/              # Embedded graphical resources extracted from the binary
 ```
 
 ---
@@ -39,6 +40,9 @@ decompiled/
 - **[`decompiled/Compilable/`](Compilable/README.md):**
   Houses the complete 46-routine suite with synthetic types (`legacy_types.h`), calling convention bridges, external global memory declarations (`legacy_globals.h`), and zeroed static allocations (`legacy_globals.c`). Compiles with 0 syntax or symbol errors under GCC and Clang.
   *Read the full guide: [Compilable/README.md](Compilable/README.md)*
+
+- **[`decompiled/ui/`](ui/):**
+  Houses raw graphical assets extracted directly from inside the `lf2.exe` executable binary. Unlike external asset folders (`data/`, `bg/`, `sprite/`) that shipped as loose files on disk, these image assets were embedded within the Win32 Portable Executable (PE) `.rsrc` resource section of the binary itself.
 
 - **Modern C++20 Port ([`lifted/`](../lifted/)):**
   The production engine rewrite in `lifted/` lifts the mathematical and physical state machine logic from these decompiled routines into clean, modern, portable C++20 with SDL2, completely independent of legacy Win32, DirectDraw, and DirectSound.

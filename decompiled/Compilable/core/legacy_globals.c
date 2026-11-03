@@ -319,3 +319,19 @@ int   DAT_00451ba4 = 0;
 int   DAT_00451ba8 = 0;
 uintptr_t DAT_00451bac = 0;
 uintptr_t DAT_00451bb0 = 0;
+
+// Phase 17: Options & Control Configuration Globals
+int   DAT_0044d060 = 0;
+int   DAT_0044d064 = 0;
+int   DAT_0044d068 = 0;
+int   DAT_0044d784 = 0;
+int   DAT_00450b48 = 0;
+int   DAT_004511e0 = 0;
+int   DAT_004511c8 = 0;
+char* DAT_004511c4 = NULL;
+int   DAT_0044fb70[80] = {0};
+char  DAT_0044fcc0[44] = {0};
+char  DAT_0044fd18[100] = {0};
+char  DAT_0044f890[100] = {0};
+char  DAT_0044f900[100] = {0};
+char  DAT_00455388 = 'u';

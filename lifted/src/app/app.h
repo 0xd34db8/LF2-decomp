@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <memory>
 #include <SDL.h>
 #include "constants.h"
 #include "global.h"
@@ -124,8 +125,11 @@ enum class scene_t : uint32_t {
     MODE_SELECT  = 1,
     CHAR_SELECT  = 2,
     LOADING      = 3,
-    BATTLE       = 4
+    BATTLE       = 4,
+    OPTIONS      = 5
 };
+
+class options_ui_t;
 
 struct char_slot_ui_t {
     bool     joined = false;
@@ -177,6 +181,8 @@ public:
 
     // Control Configuration Access
     const control_config_t& get_control_config() const { return m_control_cfg; }
+    void set_control_config(const control_config_t& cfg) { m_control_cfg = cfg; }
+    options_ui_t* get_options_ui();
 
     // Cheat Code State Queries
     bool is_lf2net_unlocked() const { return m_cheat_lf2net == 'd'; }
@@ -285,6 +291,7 @@ private:
     int             m_cpu_count{1};
 
     control_config_t m_control_cfg;
+    std::unique_ptr<options_ui_t> m_options_ui;
 
     uint32_t        m_loading_timer{0};
     std::string     m_loading_filename{""};

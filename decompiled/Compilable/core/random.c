@@ -29,3 +29,28 @@ int FUN_00417170(unsigned int param_1, int param_2)
 {
     return lf2_random(param_1, param_2);
 }
+
+int lf2_random_reseed(void)
+{
+    return FUN_00422ac0();
+}
+
+/*
+ * Address: 0x00422AC0
+ * Function: Circular PRNG table reseed
+ */
+int FUN_00422ac0(void)
+{
+    int iVar1 = 0;
+    int iVar2 = 0;
+    int iVar3 = 0;
+    do {
+        iVar1 = rand();
+        iVar3 = iVar2 + 1;
+        DAT_0044ff90[iVar2] = (unsigned char)(iVar1 % 0xFF) + 1;
+        iVar2 = iVar3;
+    } while (iVar3 < 3000);
+    DAT_00450b48 = 0;
+    return iVar1 / 0xFF;
+}
+

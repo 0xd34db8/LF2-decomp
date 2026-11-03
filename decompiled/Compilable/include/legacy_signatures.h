@@ -115,6 +115,20 @@ void FUN_004389a0();
 void FUN_00438ad0();
 void FUN_00438b40();
 
+// Phase 17: Key Reconfiguration & Display Options
+void lf2_get_key_name(int key_code, char *out_name, int *out_width_adj);
+char lf2_vk_to_ascii(int key_code);
+void lf2_options_screen(void *param_1);
+int  FUN_00422ac0(void);
+void FUN_00422b00(int key_code, char *out_name, int *out_width_adj);
+char FUN_00422f60(int key_code);
+void FUN_00423230(void);
+void FUN_004237e0(void);
+void FUN_00423940(char *str, int x, int y, int max_chars, int max_lines, int mode, int cursor);
+void FUN_00423a70(char *str, int x, int y, int max_chars, int max_lines, int mode, int cursor);
+int  func_00423480_load_control_txt(void);
+int  func_004233e0_save_control_txt(void);
+
 #ifdef __cplusplus
 }
 #endif

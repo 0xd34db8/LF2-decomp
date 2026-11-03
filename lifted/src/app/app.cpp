@@ -1,4 +1,5 @@
 #include "app.h"
+#include "app/options.h"
 #include "menu.h"
 #include "gameplay/ai.h"
 #include <iostream>
@@ -450,6 +451,12 @@ void app_t::on_key_up(uint8_t vk) {
 void app_t::process_events() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
+        if (m_scene == scene_t::OPTIONS && m_options_ui) {
+            if (m_options_ui->handle_event(event, this)) {
+                continue;
+            }
+        }
+
         switch (event.type) {
         case SDL_QUIT:
             m_running = false;
@@ -543,6 +550,11 @@ void app_t::change_scene(scene_t next_scene) {
 
     if (m_scene == scene_t::TITLE) {
         m_menu_bg_idx = 1 + (std::rand() % 13);
+    } else if (m_scene == scene_t::OPTIONS) {
+        if (!m_options_ui) {
+            m_options_ui = std::make_unique<options_ui_t>();
+        }
+        m_options_ui->init(this);
     } else if (m_scene == scene_t::CHAR_SELECT) {
         for (int i = 0; i < 8; ++i) {
             m_slots[i].joined = false;
@@ -580,6 +592,16 @@ void app_t::update_title() {
         play_ui_sound(SOUND_OK);
         if (m_title_cursor == 0) {
             change_scene(scene_t::MODE_SELECT);
+        } else if (m_title_cursor == 2) {
+            change_scene(scene_t::OPTIONS);
+            if (m_options_ui) {
+                m_options_ui->set_substate(options_substate_t::CONTROL_SETTINGS);
+            }
+        } else if (m_title_cursor == 3) {
+            change_scene(scene_t::OPTIONS);
+            if (m_options_ui) {
+                m_options_ui->set_substate(options_substate_t::PROFILE_SETTINGS);
+            }
         }
     }
 
@@ -1225,6 +1247,11 @@ void app_t::update() {
     case scene_t::BATTLE:
         update_battle();
         break;
+    case scene_t::OPTIONS:
+        if (m_options_ui) {
+            m_options_ui->update(this);
+        }
+        break;
     }
 
     std::memcpy(m_prev_key_states, m_key_states, sizeof(m_key_states));
@@ -1248,6 +1275,11 @@ void app_t::render() {
         break;
     case scene_t::BATTLE:
         render_battle();
+        break;
+    case scene_t::OPTIONS:
+        if (m_options_ui) {
+            m_options_ui->render(m_graphics, this);
+        }
         break;
     }
 
@@ -1288,6 +1320,14 @@ void app_t::run() {
         m_frame_counter = (m_frame_counter + 1) % FRAME_COUNTER_MODULO;
         m_total_ticks++;
     }
+}
+
+options_ui_t* app_t::get_options_ui() {
+    if (!m_options_ui) {
+        m_options_ui = std::make_unique<options_ui_t>();
+        m_options_ui->init(this);
+    }
+    return m_options_ui.get();
 }
 
 } // namespace lf2
