@@ -51,13 +51,33 @@ struct replay_frame_t {
 
 static_assert(sizeof(replay_frame_t) == 9, "replay_frame_t must be packed to 9 bytes");
 
-// Replay Recording Manager (0x00402980)
+// Authentic LF2 v2.0 Secondary Obfuscation Cipher Key (0x0044D7A0)
+// Exactly 1,345 characters in the .data section of lf2.exe (SHA256: a1e3e58e52cb7091bff6e1ea7ed8e14274b882f51134af69ca4ce0a72cc8613b)
+extern const char REPLAY_CIPHER_KEY[1346];
+
+// Replay file storage format
+enum class replay_format_t {
+    UNKNOWN,
+    LEGACY_RAW,        // Raw uncompressed stream (starts with magic LF2_REPLAY_MAGIC)
+    V2_COMPRESSED,     // Modern LF2 v2.0 deflated stream with secondary cipher
+    AUTHENTIC_V2_RAW   // Shipped authentic 6.4MB full buffer deflated with secondary cipher
+};
+
+// 1:1 Parity with 0x0043DD60 & 0x0043E620 secondary obfuscation cipher
+void replay_cipher_encrypt(uint8_t* buffer, size_t size);
+void replay_cipher_decrypt(uint8_t* buffer, size_t size);
+
+// Zlib deflation and inflation pipeline for replay streams
+bool compress_replay_stream(const uint8_t* src, size_t src_len, std::vector<uint8_t>& out_compressed);
+bool decompress_replay_stream(const uint8_t* src, size_t src_len, std::vector<uint8_t>& out_decompressed, size_t max_uncompressed_size = 0x631200);
+
+// Replay Recording Manager (0x00402980 & 0x0043DD60)
 class replay_recorder_t {
 public:
     replay_recorder_t();
     ~replay_recorder_t();
 
-    bool start_recording(const replay_header_t& header, const std::string& filepath);
+    bool start_recording(const replay_header_t& header, const std::string& filepath, bool compress = true);
     void record_frame(const uint8_t player_inputs[8], uint8_t control_flags = 0);
     bool finish_recording();
     void cancel_recording();
@@ -65,17 +85,20 @@ public:
     bool is_recording() const { return m_recording; }
     size_t get_recorded_frames() const { return m_frames.size(); }
     const std::string& get_filepath() const { return m_filepath; }
+    bool is_compression_enabled() const { return m_compress; }
+    void set_compression_enabled(bool enabled) { m_compress = enabled; }
 
     static std::string generate_filename(int mode, int stage);
 
 private:
     bool m_recording = false;
+    bool m_compress = true;
     std::string m_filepath;
     replay_header_t m_header{};
     std::vector<replay_frame_t> m_frames;
 };
 
-// Replay Playback Controller (0x00421D07)
+// Replay Playback Controller (0x00421D07 & 0x0043E620)
 class replay_player_t {
 public:
     replay_player_t();
@@ -90,9 +113,11 @@ public:
     size_t get_current_frame() const { return m_current_frame; }
     size_t get_total_frames() const { return m_frames.size(); }
     const replay_header_t& get_header() const { return m_header; }
+    replay_format_t get_format() const { return m_format; }
 
 private:
     bool m_loaded = false;
+    replay_format_t m_format = replay_format_t::UNKNOWN;
     replay_header_t m_header{};
     std::vector<replay_frame_t> m_frames;
     size_t m_current_frame = 0;

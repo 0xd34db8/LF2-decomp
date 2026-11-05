@@ -41,7 +41,7 @@ decompiled/
   *Read the full guide: [RAW/README.md](RAW/README.md)*
 
 - **[`decompiled/Compilable/`](Compilable/README.md):**
-  Houses the complete 46-routine suite with synthetic types (`legacy_types.h`), calling convention bridges, external global memory declarations (`legacy_globals.h`), and zeroed static allocations (`legacy_globals.c`). Compiles with 0 syntax or symbol errors under GCC and Clang.
+  Houses the complete 53-routine compilable suite with synthetic types (`legacy_types.h`), calling convention bridges, external global memory declarations (`legacy_globals.h`), and zeroed static allocations (`legacy_globals.c`). Compiles with 0 syntax or symbol errors under GCC and Clang.
   *Read the full guide: [Compilable/README.md](Compilable/README.md)*
 
 - **[`decompiled/resources/`](resources/):**
@@ -82,7 +82,16 @@ decompiled/
 | `0x00417400` | Gameplay | 3D AABB hitbox intersection testing | [`RAW/gameplay`](RAW/gameplay/func_00417400_does_attack_success.c) | [`Compilable/gameplay`](Compilable/gameplay/does_attack_success.c) |
 | `0x0041a2dd` | Graphics | Background parallax layer offset & wrap | [`RAW/graphics`](RAW/graphics/func_0041a2dd_parallax_calc.c) | [`Compilable/graphics`](Compilable/graphics/parallax_calc.c) |
 | `0x0041c5f0` | Network | 22-byte lockstep packet send/recv & desync | [`RAW/net`](RAW/net/func_0041c5f0_net_lockstep.c) | [`Compilable/net`](Compilable/net/net_lockstep.c) |
+| `0x00422ac0` | Core | PRNG lookup table re-seed & linear congruential init | [`RAW/core`](RAW/core/func_00422ac0_prng_seed.c) | [`Compilable/core`](Compilable/core/random.c) |
+| `0x00422b00` | App | Virtual Key to text name translation & width adjust | [`RAW/app`](RAW/app/func_00422b00_key_name.c) | [`Compilable/app`](Compilable/app/key_name.c) |
+| `0x00422f60` | App | Virtual Key to ASCII char translation with shift/caps | [`RAW/app`](RAW/app/func_00422f60_vk_to_char.c) | [`Compilable/app`](Compilable/app/vk_to_char.c) |
+| `0x00423230` | Data | Save key configuration to `control.txt` | [`RAW/data`](RAW/data/func_00423230_control_save.c) | [`Compilable/data`](Compilable/data/control_txt.c) |
 | `0x00423480` | Data | Key config & name serializer (`control.txt`)| [`RAW/data`](RAW/data/func_00423480_control_txt.c) | [`Compilable/data`](Compilable/data/control_txt.c) |
+| `0x004236d0` | Graphics | Display mode enumeration & resolution check | [`RAW/graphics`](RAW/graphics/func_004236d0_display_mode.c) | [`Compilable/graphics`](Compilable/graphics/init_display.c) |
+| `0x004237e0` | Graphics | Windowed display mode validation | [`RAW/graphics`](RAW/graphics/func_004237e0_display_validate.c) | [`Compilable/graphics`](Compilable/graphics/init_display.c) |
+| `0x00423840` | Graphics | Menu bitmap background loading & surface cache | [`RAW/app`](RAW/app/func_00423840_menu_bg.c) | [`Compilable/app`](Compilable/app/menu_main.c) |
+| `0x00423940` | Graphics | In-game text box string rendering with shadow | [`RAW/graphics`](RAW/graphics/func_00423940_text_box.c) | [`Compilable/graphics`](Compilable/graphics/text_box.c) |
+| `0x004246b0` | App | Options & control configuration screen state machine | [`RAW/app`](RAW/app/func_004246b0_options_screen.c) | [`Compilable/app`](Compilable/app/options_screen.c) |
 | `0x0042d080` | App | Replay timestamped `.lfr` filename assembly| [`RAW/app`](RAW/app/func_0042d080_replay_filename.c) | [`Compilable/app`](Compilable/app/replay_filename.c) |
 | `0x0042e100` | Gameplay | Master 4,000-line combat attack dispatcher | [`RAW/gameplay`](RAW/gameplay/func_0042e100_attack_process.c) | [`Compilable/gameplay`](Compilable/gameplay/attack_process.c) |
 | `0x00431b70` | App | Menu player join & controller input polling | [`RAW/app`](RAW/app/func_00431b70_menu_input.c) | [`Compilable/app`](Compilable/app/menu_input.c) |
@@ -102,6 +111,11 @@ decompiled/
 | `0x0043bdd0` | App | Win32 `CreateWindowEx` setup | [`RAW/app`](RAW/app/func_0043bdd0_create_window.c) | [`Compilable/app`](Compilable/app/create_window.c) |
 | `0x0043bec0` | Graphics | DirectDraw 6 display mode initialization | [`RAW/graphics`](RAW/graphics/func_0043bec0_init_display.c) | [`Compilable/graphics`](Compilable/graphics/init_display.c) |
 | `0x0043cf40` | App | WinMain entry point & 30.3 FPS game loop | [`RAW/app`](RAW/app/func_0043cf40_winmain.c) | [`Compilable/app`](Compilable/app/winmain.c) |
+| `0x0043dd60` | Data | Replay file save, zlib compression & secondary cipher | [`RAW/data`](RAW/data/func_0043dd60_replay_save.c) | [`Compilable/data`](Compilable/data/replay_cipher.c) |
+| `0x0043dfa0` | Data | Replay memory buffer state unpacking & entity restoration | [`RAW/data`](RAW/data/func_0043dfa0_replay_unpack.c) | [`Compilable/data`](Compilable/data/replay_cipher.c) |
+| `0x0043e620` | Data | Replay file load, secondary cipher de-obfuscation & inflation | [`RAW/data`](RAW/data/func_0043e620_replay_load.c) | [`Compilable/data`](Compilable/data/replay_cipher.c) |
 | `0x0043e9a0` | App | Game mode setup & developer cheat switches | [`RAW/app`](RAW/app/func_0043e9a0_game_mode_mgr.c) | [`Compilable/app`](Compilable/app/game_mode_mgr.c) |
 | `0x0043ef70` | Graphics | 2D software clipping against viewport | [`RAW/graphics`](RAW/graphics/func_0043ef70_clip_rect.c) | [`Compilable/graphics`](Compilable/graphics/clip_rect.c) |
 | `0x0043f010` | Graphics | DirectDraw surface blit wrapper | [`RAW/graphics`](RAW/graphics/func_0043f010_surface_blit.c) | [`Compilable/graphics`](Compilable/graphics/surface_blit.c) |
+| `0x0043f4b0` | Data | zlib `compress` buffer wrapper | [`RAW/data`](RAW/data/func_0043f4b0_zlib_compress.c) | [`Compilable/data`](Compilable/data/replay_cipher.c) |
+| `0x0043f4d0` | Data | zlib `uncompress` buffer wrapper | [`RAW/data`](RAW/data/func_0043f4d0_zlib_uncompress.c) | [`Compilable/data`](Compilable/data/replay_cipher.c) |

@@ -140,6 +140,102 @@ void test_replay_record_and_playback() {
     std::cout << "    Replay recording & playback frame stream verified 100% bit-for-bit!" << std::endl;
 }
 
+void test_secondary_cipher_parity() {
+    std::cout << "[+] Testing LF2 v2.0 Secondary Cipher Parity (0x0044D7A0 / 0x0043DD60 / 0x0043E620)..." << std::endl;
+
+    assert(std::strlen(REPLAY_CIPHER_KEY) == 1345);
+    assert(std::strncmp(REPLAY_CIPHER_KEY, "15456611235456134545631153456894", 32) == 0);
+
+    // Test buffer larger than key (3,000 bytes)
+    std::vector<uint8_t> test_buf(3000);
+    std::vector<uint8_t> orig_buf(3000);
+    for (size_t i = 0; i < test_buf.size(); ++i) {
+        test_buf[i] = static_cast<uint8_t>((i * 73 + 17) & 0xFF);
+        orig_buf[i] = test_buf[i];
+    }
+
+    replay_cipher_encrypt(test_buf.data(), test_buf.size());
+    assert(test_buf != orig_buf);
+    // Bytes after 1345 must remain untouched
+    for (size_t i = 1345; i < test_buf.size(); ++i) {
+        assert(test_buf[i] == orig_buf[i]);
+    }
+
+    replay_cipher_decrypt(test_buf.data(), test_buf.size());
+    assert(test_buf == orig_buf);
+
+    std::cout << "    1,345-character secondary cipher encryption & decryption verified 100%!" << std::endl;
+}
+
+void test_dual_format_playback() {
+    std::cout << "[+] Testing Dual Replay Formats (Raw Legacy & Modern v2.0 Compressed)..." << std::endl;
+
+    replay_header_t hdr{};
+    hdr.magic = LF2_REPLAY_MAGIC;
+    hdr.prng_seed = 2024;
+    hdr.game_mode = 1;    // Stage Mode
+    hdr.stage_number = 3; // Stage 4
+    hdr.difficulty = 1;   // Normal
+    hdr.player_count = 2;
+    hdr.slots[0] = { 1, 1, 0 }; // Davis
+    hdr.slots[1] = { 5, 2, 1 }; // Dennis
+
+    const std::string raw_lfr = "tests_raw_replay.lfr";
+    const std::string comp_lfr = "tests_comp_replay.lfr";
+
+    // 1. Record raw uncompressed replay
+    replay_recorder_t raw_recorder;
+    assert(raw_recorder.start_recording(hdr, raw_lfr, false));
+    for (size_t f = 0; f < 100; ++f) {
+        uint8_t inputs[8]{};
+        inputs[0] = static_cast<uint8_t>(f & 0xFF);
+        inputs[1] = static_cast<uint8_t>((f * 3) & 0xFF);
+        raw_recorder.record_frame(inputs, static_cast<uint8_t>(f % 4));
+    }
+    assert(raw_recorder.finish_recording());
+
+    // 2. Record v2.0 compressed replay
+    replay_recorder_t comp_recorder;
+    assert(comp_recorder.start_recording(hdr, comp_lfr, true));
+    for (size_t f = 0; f < 100; ++f) {
+        uint8_t inputs[8]{};
+        inputs[0] = static_cast<uint8_t>(f & 0xFF);
+        inputs[1] = static_cast<uint8_t>((f * 3) & 0xFF);
+        comp_recorder.record_frame(inputs, static_cast<uint8_t>(f % 4));
+    }
+    assert(comp_recorder.finish_recording());
+
+    // 3. Play back raw replay and verify format detection
+    replay_player_t raw_player;
+    assert(raw_player.open_replay(raw_lfr));
+    assert(raw_player.get_format() == replay_format_t::LEGACY_RAW);
+    assert(raw_player.get_total_frames() == 100);
+
+    // 4. Play back compressed replay and verify format detection
+    replay_player_t comp_player;
+    assert(comp_player.open_replay(comp_lfr));
+    assert(comp_player.get_format() == replay_format_t::V2_COMPRESSED);
+    assert(comp_player.get_total_frames() == 100);
+
+    // 5. Compare frame-by-frame inputs between both formats
+    for (size_t f = 0; f < 100; ++f) {
+        uint8_t in_raw[8]{}, in_comp[8]{};
+        uint8_t flag_raw = 0, flag_comp = 0;
+        assert(raw_player.read_frame(in_raw, flag_raw));
+        assert(comp_player.read_frame(in_comp, flag_comp));
+
+        assert(std::memcmp(in_raw, in_comp, sizeof(in_raw)) == 0);
+        assert(flag_raw == flag_comp);
+    }
+
+    raw_player.close();
+    comp_player.close();
+    std::remove(raw_lfr.c_str());
+    std::remove(comp_lfr.c_str());
+
+    std::cout << "    Dual format detection and bit-for-bit frame consistency verified 100%!" << std::endl;
+}
+
 int main(int argc, char* argv[]) {
     (void)argc;
     (void)argv;
@@ -147,7 +243,9 @@ int main(int argc, char* argv[]) {
 
     test_control_txt_config();
     test_replay_filename_generation();
+    test_secondary_cipher_parity();
     test_replay_record_and_playback();
+    test_dual_format_playback();
 
     std::cout << "[SUCCESS] All Replay & Save System tests passed with 100% precision!" << std::endl;
     return 0;

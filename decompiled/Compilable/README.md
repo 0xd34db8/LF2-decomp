@@ -16,8 +16,8 @@ While the pristine decompiler output is preserved untouched in [`decompiled/RAW/
 decompiled/Compilable/
 ├── include/
 │   ├── legacy_types.h       # Ghidra synthetic primitives, math macros, Win32 structs
-│   ├── legacy_globals.h     # External declarations for all 46 DAT_ global variables
-│   └── legacy_signatures.h  # Forward prototypes for all 35 decompiled routines
+│   ├── legacy_globals.h     # External declarations for all global DAT_ variables
+│   └── legacy_signatures.h  # Forward prototypes for decompiled C routines
 ├── app/                     # Window management, WinMain, WindowProc, game loop
 ├── audio/                   # DirectSound WAV loading, voice allocation, playback
 ├── core/
@@ -98,7 +98,11 @@ Remove-Item *.o
 | `0x00417400` | [`gameplay/does_attack_success.c`](gameplay/does_attack_success.c) | Gameplay | 3D AABB hitbox intersection testing (`itr` vs `bdy`) |
 | `0x0041a2dd` | [`graphics/parallax_calc.c`](graphics/parallax_calc.c) | Graphics | Background parallax layer offset & seam wrapping |
 | `0x0041c5f0` | [`net/net_lockstep.c`](net/net_lockstep.c) | Network | 22-byte lockstep packet send/recv & desync validation |
+| `0x00422b00` | [`app/key_name.c`](app/key_name.c) | App | Virtual Key to text name translation & font width adjustment |
+| `0x00422f60` | [`app/vk_to_char.c`](app/vk_to_char.c) | App | Virtual Key to ASCII char translation with shift/caps |
 | `0x00423480` | [`data/control_txt.c`](data/control_txt.c) | Data | Player key config & grave-accent serializer (`control.txt`) |
+| `0x00423940` | [`graphics/text_box.c`](graphics/text_box.c) | Graphics | In-game text box string rendering with shadow |
+| `0x004246b0` | [`app/options_screen.c`](app/options_screen.c) | App | Options & control configuration screen state machine |
 | `0x0042d080` | [`app/replay_filename.c`](app/replay_filename.c) | App | Timestamped `.lfr` replay filename generator |
 | `0x0042e100` | [`gameplay/attack_process.c`](gameplay/attack_process.c) | Gameplay | Master 4,000-line combat attack effect dispatcher |
 | `0x00431b70` | [`app/menu_input.c`](app/menu_input.c) | App | Menu player join & controller input polling |
@@ -118,6 +122,7 @@ Remove-Item *.o
 | `0x0043bdd0` | [`app/create_window.c`](app/create_window.c) | App | Win32 `CreateWindowEx` setup |
 | `0x0043bec0` | [`graphics/init_display.c`](graphics/init_display.c) | Graphics | DirectDraw 6 display mode initialization |
 | `0x0043cf40` | [`app/winmain.c`](app/winmain.c) | App | WinMain entry point & 30.3 FPS game loop |
+| `0x0043dd60` | [`data/replay_cipher.c`](data/replay_cipher.c) | Data | LF2 v2.0 replay save/load, zlib compression & secondary cipher |
 | `0x0043e9a0` | [`app/game_mode_mgr.c`](app/game_mode_mgr.c) | App | Game mode setup & developer cheat switches |
 | `0x0043ef70` | [`graphics/clip_rect.c`](graphics/clip_rect.c) | Graphics | 2D software clipping against screen boundaries |
 | `0x0043f010` | [`graphics/surface_blit.c`](graphics/surface_blit.c) | Graphics | DirectDraw surface blit wrapper |

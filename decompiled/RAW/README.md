@@ -33,7 +33,7 @@ For a buildable C target with all synthetic types, calling convention shims, and
 
 ---
 
-## Function Index (46 Decompiled Routines)
+## Function Index (62 Decompiled Routines)
 
 | Virtual Address | File Path | Subsystem | Original Routine Description |
 | :--- | :--- | :--- | :--- |
@@ -60,7 +60,18 @@ For a buildable C target with all synthetic types, calling convention shims, and
 | `0x00417400` | [`gameplay/func_00417400_does_attack_success.c`](gameplay/func_00417400_does_attack_success.c) | Gameplay | 3D AABB hitbox intersection testing (`itr` vs `bdy`) |
 | `0x0041a2dd` | [`graphics/func_0041a2dd_parallax_calc.c`](graphics/func_0041a2dd_parallax_calc.c) | Graphics | Background parallax layer offset & seam wrapping |
 | `0x0041c5f0` | [`net/func_0041c5f0_net_lockstep.c`](net/func_0041c5f0_net_lockstep.c) | Network | 22-byte lockstep packet send/recv & desync validation |
+| `0x00422ac0` | [`core/func_00422ac0_prng_seed.c`](core/func_00422ac0_prng_seed.c) | Core | PRNG lookup table re-seed & linear congruential init |
+| `0x00422b00` | [`app/func_00422b00_key_name.c`](app/func_00422b00_key_name.c) | App | Virtual Key to text name translation & width adjust |
+| `0x00422f60` | [`app/func_00422f60_vk_to_char.c`](app/func_00422f60_vk_to_char.c) | App | Virtual Key to ASCII char translation with shift/caps |
+| `0x00423230` | [`data/func_00423230_control_save.c`](data/func_00423230_control_save.c) | Data | Save key configuration to `control.txt` |
 | `0x00423480` | [`data/func_00423480_control_txt.c`](data/func_00423480_control_txt.c) | Data | Player key config & grave-accent serializer (`control.txt`) |
+| `0x004236d0` | [`graphics/func_004236d0_display_mode.c`](graphics/func_004236d0_display_mode.c) | Graphics | Display mode enumeration & resolution check |
+| `0x004237e0` | [`graphics/func_004237e0_display_validate.c`](graphics/func_004237e0_display_validate.c) | Graphics | Windowed display mode validation |
+| `0x00423840` | [`app/func_00423840_menu_bg.c`](app/func_00423840_menu_bg.c) | App | Menu background image loader & DirectDraw surface cache |
+| `0x00423910` | [`app/func_00423910_menu_bg_free.c`](app/func_00423910_menu_bg_free.c) | App | Menu background surface deallocation & release |
+| `0x00423940` | [`graphics/func_00423940_text_box.c`](graphics/func_00423940_text_box.c) | Graphics | In-game text box string rendering with shadow |
+| `0x00423a70` | [`graphics/func_00423a70_text_shadow.c`](graphics/func_00423a70_text_shadow.c) | Graphics | Drop-shadowed text blit helper |
+| `0x004246b0` | [`app/func_004246b0_options_screen.c`](app/func_004246b0_options_screen.c) | App | Options & control configuration screen state machine |
 | `0x0042d080` | [`app/func_0042d080_replay_filename.c`](app/func_0042d080_replay_filename.c) | App | Timestamped `.lfr` replay filename generator |
 | `0x0042e100` | [`gameplay/func_0042e100_attack_process.c`](gameplay/func_0042e100_attack_process.c) | Gameplay | Master 4,000-line combat attack effect dispatcher |
 | `0x00431b70` | [`app/func_00431b70_menu_input.c`](app/func_00431b70_menu_input.c) | App | Menu player join & controller input polling |
@@ -80,7 +91,12 @@ For a buildable C target with all synthetic types, calling convention shims, and
 | `0x0043bdd0` | [`app/func_0043bdd0_create_window.c`](app/func_0043bdd0_create_window.c) | App | Win32 `CreateWindowEx` setup |
 | `0x0043bec0` | [`graphics/func_0043bec0_init_display.c`](graphics/func_0043bec0_init_display.c) | Graphics | DirectDraw 6 display mode initialization |
 | `0x0043cf40` | [`app/func_0043cf40_winmain.c`](app/func_0043cf40_winmain.c) | App | WinMain entry point & 30.3 FPS game loop |
+| `0x0043dd60` | [`data/func_0043dd60_replay_save.c`](data/func_0043dd60_replay_save.c) | Data | Replay file save, zlib compression & secondary cipher |
+| `0x0043dfa0` | [`data/func_0043dfa0_replay_unpack.c`](data/func_0043dfa0_replay_unpack.c) | Data | Replay memory buffer state unpacking & entity restoration |
+| `0x0043e620` | [`data/func_0043e620_replay_load.c`](data/func_0043e620_replay_load.c) | Data | Replay file load, secondary cipher de-obfuscation & inflation |
 | `0x0043e9a0` | [`app/func_0043e9a0_game_mode_mgr.c`](app/func_0043e9a0_game_mode_mgr.c) | App | Game mode setup & developer cheat switches |
 | `0x0043ef70` | [`graphics/func_0043ef70_clip_rect.c`](graphics/func_0043ef70_clip_rect.c) | Graphics | 2D software clipping against screen boundaries |
 | `0x0043f010` | [`graphics/func_0043f010_surface_blit.c`](graphics/func_0043f010_surface_blit.c) | Graphics | DirectDraw surface blit wrapper |
+| `0x0043f4b0` | [`data/func_0043f4b0_zlib_compress.c`](data/func_0043f4b0_zlib_compress.c) | Data | zlib `compress` buffer wrapper |
+| `0x0043f4d0` | [`data/func_0043f4d0_zlib_uncompress.c`](data/func_0043f4d0_zlib_uncompress.c) | Data | zlib `uncompress` buffer wrapper |
 

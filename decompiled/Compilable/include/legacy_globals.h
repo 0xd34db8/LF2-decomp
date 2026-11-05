@@ -76,6 +76,7 @@ extern undefined4 DAT_004498d8;
 extern undefined4 DAT_00449a30;
 extern int   DAT_0044d024;
 extern int   DAT_0044d028;
+extern int   DAT_0044d030;
 extern int   DAT_0044d034;
 extern int   DAT_0044d03c;
 extern int   DAT_0044d080;
@@ -145,6 +146,7 @@ extern char  DAT_0044fb74;
 extern char  DAT_0044fd98[260];
 extern int   DAT_00450b6c;
 extern int   DAT_00450b70;
+extern int   DAT_00450b74;
 extern int   DAT_00450b84;
 extern int   DAT_00450b88;
 extern int   DAT_00450bbc;
@@ -262,7 +264,9 @@ extern int   DAT_0045757c;
 extern int   DAT_00457580;
 extern int   DAT_00458428;
 extern int   DAT_00458434;
+extern void *DAT_004588a8;
 extern int   DAT_004588ac;
+extern const char DAT_0044d7a0[1346];
 
 // Battle Mode, 2on2 Tournament & Army Skirmish Globals (Phase 15)
 extern int   DAT_0044d100;

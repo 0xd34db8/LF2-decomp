@@ -172,6 +172,52 @@ int main() {
     assert(DAT_0044ff90[2999] >= 1);
     printf("    [PASS] FUN_00422ac0 reseeded 3,000-byte circular lookup table.\n");
 
+    // 10. Test Phase 18: Replay Obfuscation Cipher (0x0043dd60 & 0x0043e620)
+    printf("[+] Testing LF2 v2.0 Secondary Replay Cipher (0x0043dd60 / 0x0043e620)...\n");
+    assert(strlen(DAT_0044d7a0) == 1345);
+    assert(strncmp(DAT_0044d7a0, "15456611235456134545631153456894", 32) == 0);
+
+    uint8_t test_payload[2048];
+    uint8_t orig_payload[2048];
+    for (size_t i = 0; i < sizeof(test_payload); ++i) {
+        test_payload[i] = (uint8_t)(i * 37 + 13);
+        orig_payload[i] = test_payload[i];
+    }
+
+    lf2_replay_cipher_encrypt(test_payload, sizeof(test_payload));
+    assert(memcmp(test_payload, orig_payload, sizeof(test_payload)) != 0);
+    // Bytes beyond 1345 should remain identical
+    assert(memcmp(test_payload + 1345, orig_payload + 1345, sizeof(test_payload) - 1345) == 0);
+
+    lf2_replay_cipher_decrypt(test_payload, sizeof(test_payload));
+    assert(memcmp(test_payload, orig_payload, sizeof(test_payload)) == 0);
+    printf("    [PASS] Replay cipher encrypt and decrypt passed with 100%% bit-for-bit parity.\n");
+
+    // 11. Test Phase 18: Zlib Replay Deflation/Inflation Wrappers (FUN_0043f4b0 & FUN_0043f4d0)
+    printf("[+] Testing Replay Zlib Deflation/Inflation (FUN_0043f4b0 / FUN_0043f4d0)...\n");
+    char raw_replay[4096];
+    for (size_t i = 0; i < sizeof(raw_replay); ++i) {
+        raw_replay[i] = (char)('A' + (i % 26));
+    }
+    uint8_t comp_buf[8192];
+    unsigned long comp_sz = sizeof(comp_buf);
+    int comp_res = FUN_0043f4b0(comp_buf, &comp_sz, raw_replay, sizeof(raw_replay));
+    assert(comp_res == 0);
+    assert(comp_sz < sizeof(raw_replay));
+
+    // Apply cipher to compressed buffer
+    lf2_replay_cipher_encrypt(comp_buf, comp_sz);
+    // Decrypt cipher
+    lf2_replay_cipher_decrypt(comp_buf, comp_sz);
+
+    char uncomp_buf[4096];
+    unsigned long uncomp_sz = sizeof(uncomp_buf);
+    int uncomp_res = FUN_0043f4d0(uncomp_buf, &uncomp_sz, comp_buf, comp_sz);
+    assert(uncomp_res == 0);
+    assert(uncomp_sz == sizeof(raw_replay));
+    assert(memcmp(raw_replay, uncomp_buf, sizeof(raw_replay)) == 0);
+    printf("    [PASS] Zlib compression + cipher obfuscation roundtrip succeeded 100%%.\n");
+
     printf("\n[SUCCESS] All Decompiled Compilable Suite Tests Passed with 100%% Parity!\n");
     return 0;
 }

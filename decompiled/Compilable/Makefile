@@ -1,10 +1,10 @@
-# Makefile for Little Fighter 2 - Decompiled Compilable Legacy C Suite
+# Makefile for Decompiled Compilable Legacy C Suite
 # Compiles all 46 authentic disassembled C translation units into a static library and test harness.
 
 CC ?= gcc
 AR ?= ar
 CFLAGS ?= -std=c11 -O2 -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Wno-int-conversion -Wno-incompatible-pointer-types -Iinclude
-LDFLAGS ?=
+LDFLAGS ?= -lz
 
 BUILD_DIR ?= build
 OBJ_DIR = $(BUILD_DIR)/obj

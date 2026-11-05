@@ -52,6 +52,10 @@ LF2/
 │   │   ├── Makefile            # Dedicated build system for compilable legacy archive
 │   │   ├── test_legacy.c       # Verification suite for data layout & decompiled math parity
 │   │   └── README.md           # Documentation, memory mapping & type registries
+│   ├── resources/              # Embedded PE resources extracted directly from lf2.exe
+│   │   ├── icon/               # Authentic 32x32 application icon (lf2.ico)
+│   │   ├── manifest/           # Original MSVC 8.0 CRT & MFC assembly dependency manifest
+│   │   └── ui/                 # 64 bitmap interface images extracted from RT_BITMAP
 │   └── README.md               # Master decompiled function registry & Ghidra address index
 ├── lifted/                     # Dedicated Modern C++20 / SDL2 Source Lift
 │   ├── src/                    # Modernized game engine code
