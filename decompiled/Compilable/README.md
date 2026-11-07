@@ -78,32 +78,43 @@ Remove-Item *.o
 | `0x004014e0` | [`audio/sound_load_wav.c`](audio/sound_load_wav.c) | Audio | RIFF WAVE sound buffer loader |
 | `0x00401970` | [`audio/sound_init.c`](audio/sound_init.c) | Audio | DirectSound subsystem initialization |
 | `0x00401a30` | [`audio/sound_play.c`](audio/sound_play.c) | Audio | DirectSound voice trigger |
-| `0x00402980` | [`app/replay_notify.c`](app/replay_notify.c) | App | Replay recording screen notifications |
-| `0x00402b80` | [`net/net_init.c`](net/net_init.c) | Network | WinSock initialization & socket setup |
+| `0x00401c90` | [`audio/bgm_manager.c`](audio/bgm_manager.c) | Audio | DirectShow COM filter graph init |
+| `0x00401d30` | [`audio/bgm_manager.c`](audio/bgm_manager.c) | Audio | DirectShow interface release & graph teardown |
+| `0x00401da0` | [`audio/bgm_manager.c`](audio/bgm_manager.c) | Audio | DirectShow media file render |
+| `0x00401e90` | [`audio/bgm_manager.c`](audio/bgm_manager.c) | Audio | Media event loop & track rewind (looping) |
+| `0x00401f30` | [`audio/bgm_manager.c`](audio/bgm_manager.c) | Audio | Audio volume level configurator |
+| `0x00402000` | [`audio/bgm_manager.c`](audio/bgm_manager.c) | Audio | BGM stream playback stop |
+| `0x00402020` | [`audio/bgm_manager.c`](audio/bgm_manager.c) | Audio | Master BGM playback dispatcher with cache check |
+| `0x00402100` | [`audio/bgm_manager.c`](audio/bgm_manager.c) | Audio | BGM playback pause & rewind to origin |
+| `0x00402130` | [`audio/bgm_manager.c`](audio/bgm_manager.c) | Audio | Menu BGM selector & HUD text cycler |
+| `0x004025b0` | [`audio/bgm_manager.c`](audio/bgm_manager.c) | Audio | Play staged current track |
+| `0x004025d0` | [`audio/bgm_manager.c`](audio/bgm_manager.c) | Audio | Master track selector & stage randomizer |
+| `0x004028a0` | [`app/replay_notify.c`](app/replay_notify.c) | App | Recording screen HUD notifications & volume |
+| `0x00402b60` | [`net/net_init.c`](net/net_init.c) | Network | WinSock initialization & socket setup |
 | `0x00403270` | [`gameplay/teleport.c`](gameplay/teleport.c) | Gameplay | Rudolf teleportation targeting logic |
 | `0x004034e0` | [`core/abs.c`](core/abs.c) | Core | Fast integer absolute value computation |
 | `0x004061d0` | [`gameplay/object_init.c`](gameplay/object_init.c) | Gameplay | Entity constructor & default state initialization |
-| `0x004068b0` | [`gameplay/grapple_sync.c`](gameplay/grapple_sync.c) | Gameplay | Grapple caught-target coordinate sync & throw release |
+| `0x004064d0` | [`gameplay/grapple_sync.c`](gameplay/grapple_sync.c) | Gameplay | Grapple caught-target coordinate sync & throw release |
 | `0x00406ba0` | [`gameplay/ai_process.c`](gameplay/ai_process.c) | Gameplay | AI combat decision tree & virtual key input synthesis |
-| `0x00408ce0` | [`gameplay/weapon_sync.c`](gameplay/weapon_sync.c) | Gameplay | Weapon attachment point sync, drop & throw physics |
+| `0x00408cb0` | [`gameplay/weapon_sync.c`](gameplay/weapon_sync.c) | Gameplay | Weapon attachment point sync, drop & throw physics |
 | `0x0040bbf0` | [`data/frame_ctor.c`](data/frame_ctor.c) | Data | Frame structure constructor & zeroing |
 | `0x0040be70` | [`data/calc_frame_coords.c`](data/calc_frame_coords.c) | Data | Sprite sheet UV cell coordinate calculator |
 | `0x0040d0a0` | [`data/save_dat.c`](data/save_dat.c) | Data | Character `.dat` file serializer |
 | `0x0040ef70` | [`data/load_dat.c`](data/load_dat.c) | Data | Master `.dat` script lexer & block parser |
 | `0x004143d0` | [`data/file_ctor.c`](data/file_ctor.c) | Data | Character file data structure constructor |
 | `0x004148a0` | [`data/decrypt_dat.c`](data/decrypt_dat.c) | Data | 123-byte header skip & Vigenère cipher decrypter |
-| `0x00415d00` | [`graphics/draw_object.c`](graphics/draw_object.c) | Graphics | Entity screen projection & mirror blit dispatch |
+| `0x004151d0` | [`graphics/draw_object.c`](graphics/draw_object.c) | Graphics | Frame debugger HUD, sprite rendering dispatch & box overlay |
 | `0x00417170` | [`core/random.c`](core/random.c) | Core | 3,000-byte precomputed circular PRNG lookup |
 | `0x004171c0` | [`core/overlap.c`](core/overlap.c) | Core | 1D coordinate interval overlap detector |
 | `0x00417400` | [`gameplay/does_attack_success.c`](gameplay/does_attack_success.c) | Gameplay | 3D AABB hitbox intersection testing (`itr` vs `bdy`) |
-| `0x0041a2dd` | [`graphics/parallax_calc.c`](graphics/parallax_calc.c) | Graphics | Background parallax layer offset & seam wrapping |
-| `0x0041c5f0` | [`net/net_lockstep.c`](net/net_lockstep.c) | Network | 22-byte lockstep packet send/recv & desync validation |
+| `0x0041a250` | [`graphics/parallax_calc.c`](graphics/parallax_calc.c) | Graphics | Background update, parallax scrolling layer calculation & camera bounds |
+| `0x0041bc90` | [`net/net_lockstep.c`](net/net_lockstep.c) | Network | Master battle main loop, lockstep frame pacing & input sampling |
 | `0x00422b00` | [`app/key_name.c`](app/key_name.c) | App | Virtual Key to text name translation & font width adjustment |
 | `0x00422f60` | [`app/vk_to_char.c`](app/vk_to_char.c) | App | Virtual Key to ASCII char translation with shift/caps |
 | `0x00423480` | [`data/control_txt.c`](data/control_txt.c) | Data | Player key config & grave-accent serializer (`control.txt`) |
 | `0x00423940` | [`graphics/text_box.c`](graphics/text_box.c) | Graphics | In-game text box string rendering with shadow |
 | `0x004246b0` | [`app/options_screen.c`](app/options_screen.c) | App | Options & control configuration screen state machine |
-| `0x0042d080` | [`app/replay_filename.c`](app/replay_filename.c) | App | Timestamped `.lfr` replay filename generator |
+| `0x00429730` | [`app/replay_filename.c`](app/replay_filename.c) | App | Character select menu flow, replay filename formatting & mode transitions |
 | `0x0042e100` | [`gameplay/attack_process.c`](gameplay/attack_process.c) | Gameplay | Master 4,000-line combat attack effect dispatcher |
 | `0x00431b70` | [`app/menu_input.c`](app/menu_input.c) | App | Menu player join & controller input polling |
 | `0x00431c70` | [`app/menu_reset.c`](app/menu_reset.c) | App | Menu input reset & keyboard buffer restore |

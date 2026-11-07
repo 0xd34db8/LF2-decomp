@@ -56,3 +56,13 @@ void func_0042d080_replay_filename(int mode, int stage) {
     g_recording_state = 1; // "Start recording..."
 }
 
+void FUN_00429730(void)
+{
+    func_0042d080_replay_filename(g_game_mode, g_stage_number);
+}
+
+void FUN_0042d080(void)
+{
+    FUN_00429730();
+}
+

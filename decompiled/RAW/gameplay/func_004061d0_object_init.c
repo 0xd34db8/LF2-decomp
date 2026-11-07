@@ -1,96 +1,156 @@
 /*
- * Virtual Address: 0x004061d0
- * Function: object_init / object_reset
- * Calling Convention: __thiscall (ECX = object_t*)
+ * Procedure: FUN_004061d0
+ * Address: 0x004061d0 - 0x004064ce (Length: 767 bytes)
+ * Purpose: Global object array initialization, slot allocation, state reset
  */
 
+#include <windows.h>
+#include <stdio.h>
 #include <stdint.h>
-#include <string.h>
+#include <stdbool.h>
 
-void __thiscall func_004061d0_object_init(void* this_ptr)
+
+
+void FUN_004061d0(void)
+
 {
-    uint8_t* obj = (uint8_t*)this_ptr;
-
-    // Reset velocities and accelerations (offsets 0x28 - 0x58)
-    *(double*)(obj + 0x50) = 0.0; // z_velocity
-    *(double*)(obj + 0x48) = 0.0; // y_velocity
-    *(double*)(obj + 0x40) = 0.0; // x_velocity
-    *(double*)(obj + 0x38) = 0.0; // z_accl
-    *(double*)(obj + 0x30) = 0.0; // y_accl
-    *(double*)(obj + 0x28) = 0.0; // pic_x_gain
-
-    // Reset continuous positions (offsets 0x58 - 0x70)
-    *(double*)(obj + 0x68) = 0.0; // z_position
-    *(double*)(obj + 0x60) = 0.0; // y_position
-    *(double*)(obj + 0x58) = 0.0; // x_position
-
-    // Integer positions (offsets 0x10 - 0x1C)
-    *(int32_t*)(obj + 0x10) = 0;   // x
-    *(int32_t*)(obj + 0x14) = 0;   // y
-    *(int32_t*)(obj + 0x18) = 0;   // z
-    *(uint32_t*)(obj + 0x1c) = 0;
-
-    // Counters and flags
-    *(uint32_t*)(obj + 0x00) = 0;   // move_counter
-    *(uint32_t*)(obj + 0x04) = 0;   // run_counter
-    *(uint32_t*)(obj + 0x08) = 0;   // invincible_time
-    *(uint32_t*)(obj + 0x0c) = 0;
-
-    // Frame identifiers (offsets 0x70 - 0x80)
-    *(uint32_t*)(obj + 0x70) = 0;   // frame_id1
-    *(uint32_t*)(obj + 0x74) = 0;   // frame_id2
-    *(uint32_t*)(obj + 0x78) = 0;   // frame_id3
-    *(uint32_t*)(obj + 0x7c) = 0;   // frame_id4
-    *(uint8_t*)(obj + 0x80)  = 0;   // facing (0 = right)
-    *(uint32_t*)(obj + 0x84) = 0;
-    *(uint32_t*)(obj + 0x88) = 0;   // wait_counter
-
-    // Weapon & holding states
-    *(uint32_t*)(obj + 0x8c) = 0;   // cpoint_catcher
-    *(uint32_t*)(obj + 0x90) = 0;   // cpoint_timer
-    *(uint32_t*)(obj + 0x94) = 0;
-    *(uint32_t*)(obj + 0x98) = 0;   // weapon_type
-    *(uint32_t*)(obj + 0x9c) = 0;   // weapon_id
-    *(uint32_t*)(obj + 0xa0) = 0;   // holder_id
-    *(uint32_t*)(obj + 0xa4) = 0;
-    *(uint32_t*)(obj + 0xa8) = 0;
-    *(uint32_t*)(obj + 0xac) = 0;
-    *(int32_t*)(obj + 0xb0)  = 0;   // fall
-    *(int32_t*)(obj + 0xb4)  = 0;   // shaking
-    *(uint32_t*)(obj + 0xb8) = 0;   // bdefend
-
-    // Keystates (offsets 0xCA - 0xD3)
-    memset(obj + 0xbc, 0, 0x18);
-    *(uint8_t*)(obj + 0xeb) = 0;
-
-    // Combat statistics (offsets 0x348 - 0x35C)
-    *(uint32_t*)(obj + 0x348) = 0;  // total_attack
-    *(uint32_t*)(obj + 0x34c) = 0;  // hp_lost
-    *(uint32_t*)(obj + 0x350) = 0;  // mp_used
-    *(uint32_t*)(obj + 0x354) = 99; // owner (default 99 = unassigned)
-    *(uint32_t*)(obj + 0x358) = 0;  // kills
-    *(uint32_t*)(obj + 0x35c) = 0;  // get_weapon_counter
-    *(uint32_t*)(obj + 0x364) = 0;  // team
-
-    // HP & MP initialization (500 by default)
-    *(int32_t*)(obj + 0x2fc) = 500; // hp
-    *(int32_t*)(obj + 0x300) = 500; // dark_hp
-    *(int32_t*)(obj + 0x304) = 500; // max_hp
-    *(int32_t*)(obj + 0x308) = 500; // mp
-
-    // Clear victim rest arrays (400 bytes at 0x0F0)
-    memset(obj + 0x0f0, 0, 400);
-
-    // Clear attack injury and itr buffers (20 slots)
-    for (int i = 0; i < 20; ++i) {
-        *(int32_t*)(obj + 0x280 + i * 4) = 0;
-        *(uint8_t*)(obj + 0x2d0 + i) = 0;
-    }
-
-    // Default distance thresholds
-    *(int32_t*)(obj + 0x2e4) = 0;    // successful_attacks
-    *(int32_t*)(obj + 0x2e8) = 1000; // attackable_distance
-    *(int32_t*)(obj + 0x2ec) = 1000; // vulnerable_distance
-    *(int32_t*)(obj + 0x2f0) = 1000;
+  int iVar1;
+  undefined4 *in_ECX;
+  undefined4 *puVar2;
+  
+  *(undefined8 *)(in_ECX + 0x14) = 0x3fb999999999999a;
+  *(undefined8 *)(in_ECX + 0x12) = 0x3fb999999999999a;
+  *(undefined8 *)(in_ECX + 0x10) = 0x3fb999999999999a;
+  in_ECX[0xfe] = 0xffffffff;
+  *(undefined8 *)(in_ECX + 0xe) = 0x3fb999999999999a;
+  in_ECX[1] = 0;
+  *(undefined8 *)(in_ECX + 0xc) = 0x3fb999999999999a;
+  *in_ECX = 0;
+  *(undefined8 *)(in_ECX + 10) = 0x3fb999999999999a;
+  *(undefined1 *)(in_ECX + 0x2f) = 0;
+  in_ECX[0x2c] = 0;
+  *(undefined8 *)(in_ECX + 0x1a) = 0;
+  in_ECX[0x26] = 0;
+  *(undefined8 *)(in_ECX + 0x18) = 0;
+  in_ECX[0x25] = 0;
+  *(undefined8 *)(in_ECX + 0x16) = 0;
+  in_ECX[0x24] = 0;
+  in_ECX[0x23] = 0;
+  in_ECX[0x22] = 0;
+  in_ECX[0x21] = 0;
+  *(undefined1 *)(in_ECX + 0x20) = 0;
+  in_ECX[0x1e] = 0;
+  in_ECX[0x1d] = 0;
+  in_ECX[0x1f] = 0;
+  in_ECX[0x1c] = 0;
+  in_ECX[6] = 0;
+  in_ECX[5] = 0;
+  in_ECX[4] = 0;
+  in_ECX[3] = 0;
+  *(undefined1 *)((int)in_ECX + 0xeb) = 0;
+  in_ECX[0x28] = 0;
+  in_ECX[0x27] = 0;
+  in_ECX[0xd9] = 0;
+  in_ECX[0x2b] = 0;
+  in_ECX[0x2a] = 0;
+  in_ECX[0x29] = 0;
+  in_ECX[2] = 0;
+  in_ECX[7] = 0;
+  *(undefined1 *)((int)in_ECX + 0xd3) = 0;
+  *(undefined1 *)((int)in_ECX + 0xd2) = 0;
+  *(undefined1 *)((int)in_ECX + 0xd1) = 0;
+  *(undefined1 *)(in_ECX + 0x34) = 0;
+  *(undefined1 *)((int)in_ECX + 0xcf) = 0;
+  *(undefined1 *)((int)in_ECX + 0xce) = 0;
+  *(undefined1 *)((int)in_ECX + 0xcd) = 0;
+  *(undefined1 *)(in_ECX + 0x33) = 0;
+  *(undefined1 *)((int)in_ECX + 0xcb) = 0;
+  *(undefined1 *)((int)in_ECX + 0xca) = 0;
+  *(undefined1 *)((int)in_ECX + 0xc9) = 0;
+  *(undefined1 *)(in_ECX + 0x32) = 0;
+  *(undefined1 *)((int)in_ECX + 199) = 0;
+  *(undefined1 *)((int)in_ECX + 0xc6) = 0;
+  *(undefined1 *)((int)in_ECX + 0xc1) = 0;
+  *(undefined1 *)(in_ECX + 0x30) = 0;
+  *(undefined1 *)((int)in_ECX + 0xbf) = 0;
+  *(undefined1 *)((int)in_ECX + 0xbe) = 0;
+  *(undefined1 *)((int)in_ECX + 0xc5) = 0;
+  *(undefined1 *)((int)in_ECX + 0xc3) = 0;
+  *(undefined1 *)(in_ECX + 0x31) = 0;
+  *(undefined1 *)((int)in_ECX + 0xc2) = 0;
+  *(undefined1 *)(in_ECX + 0x37) = 0;
+  *(undefined1 *)((int)in_ECX + 0xdb) = 0;
+  *(undefined1 *)((int)in_ECX + 0xda) = 0;
+  *(undefined1 *)((int)in_ECX + 0xd9) = 0;
+  *(undefined1 *)(in_ECX + 0x36) = 0;
+  *(undefined1 *)((int)in_ECX + 0xd7) = 0;
+  *(undefined1 *)((int)in_ECX + 0xd6) = 0;
+  *(undefined1 *)((int)in_ECX + 0xd5) = 0;
+  *(undefined1 *)(in_ECX + 0x35) = 0;
+  in_ECX[0x38] = 0;
+  in_ECX[0x39] = 0;
+  in_ECX[0x2e] = 0;
+  in_ECX[0x2d] = 0;
+  *(undefined1 *)((int)in_ECX + 0xea) = 0;
+  in_ECX[0xbd] = 0xffffffff;
+  in_ECX[0xbe] = 0xffffffff;
+  *(undefined1 *)((int)in_ECX + 0xe9) = 0;
+  *(undefined1 *)(in_ECX + 0x3a) = 0;
+  in_ECX[0xba] = 0;
+  in_ECX[0x3b] = 0;
+  in_ECX[200] = 0;
+  in_ECX[8] = 0;
+  in_ECX[0xc6] = 0;
+  in_ECX[0xc5] = 0;
+  in_ECX[0xc4] = 0;
+  in_ECX[0xc3] = 0;
+  in_ECX[0xd2] = 0;
+  in_ECX[0xd3] = 0;
+  in_ECX[0xd4] = 0;
+  in_ECX[0xd6] = 0;
+  in_ECX[0xd7] = 0;
+  in_ECX[0xd5] = 99;
+  in_ECX[0xbf] = 500;
+  in_ECX[0xc1] = 500;
+  in_ECX[0xc0] = 500;
+  in_ECX[0xc2] = 500;
+  in_ECX[0xd8] = 0xffffffff;
+  in_ECX[0xfd] = 0;
+  in_ECX[0xfc] = 0;
+  in_ECX[0xfb] = 0;
+  in_ECX[0xfa] = 0;
+  in_ECX[0xc9] = 0xffffffff;
+  in_ECX[0xca] = 0xffffffff;
+  in_ECX[0xcb] = 0xffffffff;
+  in_ECX[0xce] = 0;
+  in_ECX[0xcc] = 0;
+  in_ECX[0xcd] = 0;
+  in_ECX[0xcf] = 0xffffffff;
+  in_ECX[0xdb] = 0;
+  memset(in_ECX + 0x3c,0,400);
+  iVar1 = 0;
+  puVar2 = in_ECX + 0xa0;
+  do {
+    *(undefined1 *)((int)in_ECX + iVar1 + 0x2d0) = 0;
+    *puVar2 = 0;
+    iVar1 = iVar1 + 1;
+    puVar2 = puVar2 + 1;
+  } while (iVar1 < 0x14);
+  in_ECX[0xba] = 1000;
+  in_ECX[0xbb] = 1000;
+  in_ECX[0xbc] = 1000;
+  in_ECX[0xb9] = 0;
+  *(undefined1 *)((int)in_ECX + 0xeb) = 0;
+  in_ECX[0x100] = 0xfffffc18;
+  in_ECX[0xff] = 0xfffffc18;
+  in_ECX[0x101] = 0;
+  in_ECX[0x106] = 0;
+  in_ECX[0x105] = 0;
+  in_ECX[0x104] = 0;
+  in_ECX[0x103] = 0;
+  in_ECX[0x102] = 0;
+  in_ECX[0xd0] = 0;
+  in_ECX[0xd1] = 0;
+  return;
 }
 

@@ -37,11 +37,11 @@ decompiled/
 ## Suite Summary & Documentation
 
 - **[`decompiled/RAW/`](RAW/README.md):**
-  Houses the untouched decompiler exports directly as emitted by Ghidra. Preserves raw `DAT_` pointers, synthetic registers (`in_ECX`), and original formatting without patches. Serves as immutable forensic evidence for mathematical validation.
+  Houses the 72 pristine decompiler exports directly as emitted by Ghidra, verified 1:1 against genuine function entry points in `lf2.exe` via `verify_raw_entries.py`. Preserves raw `DAT_` pointers, synthetic registers (`in_ECX`), and original formatting without hand-written shortcuts. Serves as immutable forensic evidence for mathematical validation.
   *Read the full guide: [RAW/README.md](RAW/README.md)*
 
 - **[`decompiled/Compilable/`](Compilable/README.md):**
-  Houses the complete 53-routine compilable suite with synthetic types (`legacy_types.h`), calling convention bridges, external global memory declarations (`legacy_globals.h`), and zeroed static allocations (`legacy_globals.c`). Compiles with 0 syntax or symbol errors under GCC and Clang.
+  Houses the complete 59-routine compilable suite with synthetic types (`legacy_types.h`), calling convention bridges, external global memory declarations (`legacy_globals.h`), and zeroed static allocations (`legacy_globals.c`). Compiles with 0 syntax or symbol errors under GCC and Clang.
   *Read the full guide: [Compilable/README.md](Compilable/README.md)*
 
 - **[`decompiled/resources/`](resources/):**
@@ -62,26 +62,37 @@ decompiled/
 | `0x004014e0` | Audio | RIFF WAVE audio parser & buffer allocation | [`RAW/audio`](RAW/audio/func_004014e0_sound_load_wav.c) | [`Compilable/audio`](Compilable/audio/sound_load_wav.c) |
 | `0x00401970` | Audio | DirectSound subsystem initialization | [`RAW/audio`](RAW/audio/func_00401970_sound_init.c) | [`Compilable/audio`](Compilable/audio/sound_init.c) |
 | `0x00401a30` | Audio | Voice trigger & playback cursor reset | [`RAW/audio`](RAW/audio/func_00401a30_sound_play.c) | [`Compilable/audio`](Compilable/audio/sound_play.c) |
-| `0x00402980` | App | Replay recording screen HUD notifications | [`RAW/app`](RAW/app/func_00402980_replay_notify.c) | [`Compilable/app`](Compilable/app/replay_notify.c) |
-| `0x00402b80` | Network | WinSock init, socket setup & WSAAsyncSelect | [`RAW/net`](RAW/net/func_00402b80_net_init.c) | [`Compilable/net`](Compilable/net/net_init.c) |
+| `0x00401c90` | Audio | DirectShow COM Filter Graph & Interface Init | [`RAW/audio`](RAW/audio/func_00401c90_bgm_init.c) | [`Compilable/audio`](Compilable/audio/bgm_manager.c) |
+| `0x00401d30` | Audio | DirectShow Graph Release & Cleanup | [`RAW/audio`](RAW/audio/func_00401d30_bgm_close.c) | [`Compilable/audio`](Compilable/audio/bgm_manager.c) |
+| `0x00401da0` | Audio | DirectShow Media File Render & `graph.log` diagnostics | [`RAW/audio`](RAW/audio/func_00401da0_bgm_load.c) | [`Compilable/audio`](Compilable/audio/bgm_manager.c) |
+| `0x00401e90` | Audio | DirectShow Media Seeking & Track Loop Check | [`RAW/audio`](RAW/audio/func_00401e90_bgm_loop.c) | [`Compilable/audio`](Compilable/audio/bgm_manager.c) |
+| `0x00401f30` | Audio | DirectShow Audio Volume Control (dB calculation) | [`RAW/audio`](RAW/audio/func_00401f30_bgm_volume.c) | [`Compilable/audio`](Compilable/audio/bgm_manager.c) |
+| `0x00402000` | Audio | DirectShow Playback Stop | [`RAW/audio`](RAW/audio/func_00402000_bgm_stop.c) | [`Compilable/audio`](Compilable/audio/bgm_manager.c) |
+| `0x00402020` | Audio | DirectShow Playback Run & Graph Init Dispatch | [`RAW/audio`](RAW/audio/func_00402020_bgm_play.c) | [`Compilable/audio`](Compilable/audio/bgm_manager.c) |
+| `0x00402100` | Audio | DirectShow Playback Pause | [`RAW/audio`](RAW/audio/func_00402100_bgm_pause.c) | [`Compilable/audio`](Compilable/audio/bgm_manager.c) |
+| `0x00402130` | Audio | BGM Track Selection HUD & Menu Input Handling | [`RAW/audio`](RAW/audio/func_00402130_bgm_menu.c) | [`Compilable/audio`](Compilable/audio/bgm_manager.c) |
+| `0x004025b0` | Audio | Play Current Track Selection | [`RAW/audio`](RAW/audio/func_004025b0_bgm_play_current.c) | [`Compilable/audio`](Compilable/audio/bgm_manager.c) |
+| `0x004025d0` | Audio | Stage / Boss / Random Track Selection | [`RAW/audio`](RAW/audio/func_004025d0_bgm_select.c) | [`Compilable/audio`](Compilable/audio/bgm_manager.c) |
+| `0x004028a0` | App | Recording screen HUD notifications & volume | [`RAW/app`](RAW/app/func_004028a0_recording_notify.c) | [`Compilable/app`](Compilable/app/replay_notify.c) |
+| `0x00402b60` | Network | WinSock init, socket setup & WSAAsyncSelect | [`RAW/net`](RAW/net/func_00402b60_net_init.c) | [`Compilable/net`](Compilable/net/net_init.c) |
 | `0x00403270` | Gameplay | Rudolf team teleportation targeting | [`RAW/gameplay`](RAW/gameplay/func_00403270_teleport.c) | [`Compilable/gameplay`](Compilable/gameplay/teleport.c) |
 | `0x004034e0` | Core | Fast integer absolute value computation | [`RAW/core`](RAW/core/func_004034e0_abs.c) | [`Compilable/core`](Compilable/core/abs.c) |
 | `0x004061d0` | Gameplay | Entity constructor & default state init | [`RAW/gameplay`](RAW/gameplay/func_004061d0_object_init.c) | [`Compilable/gameplay`](Compilable/gameplay/object_init.c) |
-| `0x004068b0` | Gameplay | Grapple caught-target coordinate sync | [`RAW/gameplay`](RAW/gameplay/func_004068b0_grapple_sync.c) | [`Compilable/gameplay`](Compilable/gameplay/grapple_sync.c) |
+| `0x004064d0` | Gameplay | Grapple caught-target coordinate sync | [`RAW/gameplay`](RAW/gameplay/func_004064d0_grapple_catch.c) | [`Compilable/gameplay`](Compilable/gameplay/grapple_sync.c) |
 | `0x00406ba0` | Gameplay | AI combat decision tree & input synthesis | [`RAW/gameplay`](RAW/gameplay/func_00406ba0_ai_process.c) | [`Compilable/gameplay`](Compilable/gameplay/ai_process.c) |
-| `0x00408ce0` | Gameplay | Weapon attachment point sync, drop & throw | [`RAW/gameplay`](RAW/gameplay/func_00408ce0_weapon_sync.c) | [`Compilable/gameplay`](Compilable/gameplay/weapon_sync.c) |
+| `0x00408cb0` | Gameplay | Weapon attachment point sync, drop & throw | [`RAW/gameplay`](RAW/gameplay/func_00408cb0_weapon_process.c) | [`Compilable/gameplay`](Compilable/gameplay/weapon_sync.c) |
 | `0x0040bbf0` | Data | Frame structure constructor & zeroing | [`RAW/data`](RAW/data/func_0040bbf0_frame_ctor.c) | [`Compilable/data`](Compilable/data/frame_ctor.c) |
 | `0x0040be70` | Data | Sprite sheet UV coordinate calculation | [`RAW/data`](RAW/data/func_0040be70_calc_frame_coords.c) | [`Compilable/data`](Compilable/data/calc_frame_coords.c) |
 | `0x0040d0a0` | Data | Character `.dat` file serializer | [`RAW/data`](RAW/data/func_0040d0a0_save_dat.c) | [`Compilable/data`](Compilable/data/save_dat.c) |
 | `0x0040ef70` | Data | Master `.dat` script lexer & parser | [`RAW/data`](RAW/data/func_0040ef70_load_dat.c) | [`Compilable/data`](Compilable/data/load_dat.c) |
 | `0x004143d0` | Data | Master character file data constructor | [`RAW/data`](RAW/data/func_004143d0_file_ctor.c) | [`Compilable/data`](Compilable/data/file_ctor.c) |
 | `0x004148a0` | Data | 123-byte header skip & Vigenère decrypter | [`RAW/data`](RAW/data/func_004148a0_decrypt_dat.c) | [`Compilable/data`](Compilable/data/decrypt_dat.c) |
-| `0x00415d00` | Graphics | Entity screen projection & mirror blit | [`RAW/graphics`](RAW/graphics/func_00415d00_draw_object.c) | [`Compilable/graphics`](Compilable/graphics/draw_object.c) |
+| `0x004151d0` | Graphics | Frame debugger HUD, sprite rendering dispatch & box overlay | [`RAW/graphics`](RAW/graphics/func_004151d0_frame_debugger.c) | [`Compilable/graphics`](Compilable/graphics/draw_object.c) |
 | `0x00417170` | Core | 3,000-byte precomputed circular PRNG | [`RAW/core`](RAW/core/func_00417170_random.c) | [`Compilable/core`](Compilable/core/random.c) |
 | `0x004171c0` | Core | 1D coordinate interval overlap check | [`RAW/core`](RAW/core/func_004171c0_overlap.c) | [`Compilable/core`](Compilable/core/overlap.c) |
 | `0x00417400` | Gameplay | 3D AABB hitbox intersection testing | [`RAW/gameplay`](RAW/gameplay/func_00417400_does_attack_success.c) | [`Compilable/gameplay`](Compilable/gameplay/does_attack_success.c) |
-| `0x0041a2dd` | Graphics | Background parallax layer offset & wrap | [`RAW/graphics`](RAW/graphics/func_0041a2dd_parallax_calc.c) | [`Compilable/graphics`](Compilable/graphics/parallax_calc.c) |
-| `0x0041c5f0` | Network | 22-byte lockstep packet send/recv & desync | [`RAW/net`](RAW/net/func_0041c5f0_net_lockstep.c) | [`Compilable/net`](Compilable/net/net_lockstep.c) |
+| `0x0041a250` | Graphics | Background update, parallax scrolling layer calculation & camera bounds | [`RAW/graphics`](RAW/graphics/func_0041a250_background_update.c) | [`Compilable/graphics`](Compilable/graphics/parallax_calc.c) |
+| `0x0041bc90` | Network | Master battle main loop, lockstep frame pacing & input sampling | [`RAW/net`](RAW/net/func_0041bc90_battle_main_loop.c) | [`Compilable/net`](Compilable/net/net_lockstep.c) |
 | `0x00422ac0` | Core | PRNG lookup table re-seed & linear congruential init | [`RAW/core`](RAW/core/func_00422ac0_prng_seed.c) | [`Compilable/core`](Compilable/core/random.c) |
 | `0x00422b00` | App | Virtual Key to text name translation & width adjust | [`RAW/app`](RAW/app/func_00422b00_key_name.c) | [`Compilable/app`](Compilable/app/key_name.c) |
 | `0x00422f60` | App | Virtual Key to ASCII char translation with shift/caps | [`RAW/app`](RAW/app/func_00422f60_vk_to_char.c) | [`Compilable/app`](Compilable/app/vk_to_char.c) |
@@ -92,14 +103,13 @@ decompiled/
 | `0x00423840` | Graphics | Menu bitmap background loading & surface cache | [`RAW/app`](RAW/app/func_00423840_menu_bg.c) | [`Compilable/app`](Compilable/app/menu_main.c) |
 | `0x00423940` | Graphics | In-game text box string rendering with shadow | [`RAW/graphics`](RAW/graphics/func_00423940_text_box.c) | [`Compilable/graphics`](Compilable/graphics/text_box.c) |
 | `0x004246b0` | App | Options & control configuration screen state machine | [`RAW/app`](RAW/app/func_004246b0_options_screen.c) | [`Compilable/app`](Compilable/app/options_screen.c) |
-| `0x0042d080` | App | Replay timestamped `.lfr` filename assembly| [`RAW/app`](RAW/app/func_0042d080_replay_filename.c) | [`Compilable/app`](Compilable/app/replay_filename.c) |
+| `0x00429730` | App | Character select menu flow, replay filename formatting & mode transitions | [`RAW/app`](RAW/app/func_00429730_charmenu_flow.c) | [`Compilable/app`](Compilable/app/replay_filename.c) |
 | `0x0042e100` | Gameplay | Master 4,000-line combat attack dispatcher | [`RAW/gameplay`](RAW/gameplay/func_0042e100_attack_process.c) | [`Compilable/gameplay`](Compilable/gameplay/attack_process.c) |
 | `0x00431b70` | App | Menu player join & controller input polling | [`RAW/app`](RAW/app/func_00431b70_menu_input.c) | [`Compilable/app`](Compilable/app/menu_input.c) |
 | `0x00431c70` | App | Menu input reset & keyboard buffer restore | [`RAW/app`](RAW/app/func_00431c70_menu_reset.c) | [`Compilable/app`](Compilable/app/menu_reset.c) |
 | `0x00431d10` | App | Main menu navigation, replay loader & links | [`RAW/app`](RAW/app/func_00431d10_menu_main.c) | [`Compilable/app`](Compilable/app/menu_main.c) |
 | `0x00432ab0` | App | Championship tournament bracket state machine | [`RAW/app`](RAW/app/func_00432ab0_tournament.c) | [`Compilable/app`](Compilable/app/tournament.c) |
 | `0x00434ab0` | App | 2-on-2 championship tournament state machine | [`RAW/app`](RAW/app/func_00434ab0_tournament_2on2.c) | [`Compilable/app`](Compilable/app/tournament_2on2.c) |
-| `0x00436900` | App | Character spawn & battle setup | [`RAW/app`](RAW/app/func_00436900_battle_setup.c) | [`Compilable/app`](Compilable/app/battle_setup.c) |
 | `0x00436fc0` | App | Stage/survival wave advance & player vitals recovery | [`RAW/app`](RAW/app/func_00436fc0_stage_advance.c) | [`Compilable/app`](Compilable/app/stage_advance.c) |
 | `0x00437220` | App | Stage clear / survival game-over transition curtain | [`RAW/app`](RAW/app/func_00437220_survival_curtain.c) | [`Compilable/app`](Compilable/app/survival_curtain.c) |
 | `0x00437400` | App | Unit spawn allocation & world object table insert | [`RAW/app`](RAW/app/func_00437400_spawn_unit.c) | [`Compilable/app`](Compilable/app/spawn_unit.c) |

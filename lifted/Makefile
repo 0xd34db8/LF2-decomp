@@ -6,7 +6,7 @@ BUILD_DIR ?= build
 SDL2_DIR ?= third_party/SDL2/x86_64-w64-mingw32
 SDL2_INC = -I$(SDL2_DIR)/include -I$(SDL2_DIR)/include/SDL2
 SDL2_LIB = -L$(SDL2_DIR)/lib -lmingw32 -lSDL2main -lSDL2
-SYSTEM_LIBS = $(SDL2_LIB) -lws2_32 -lz
+SYSTEM_LIBS = $(SDL2_LIB) -lws2_32 -lz -lmfplat -lmfreadwrite -lmfuuid -lole32
 
 INCLUDES = -Isrc -Isrc/core -Isrc/gameplay -Isrc/data -Isrc/graphics -Isrc/app -I. $(SDL2_INC)
 CXXFLAGS ?= -std=c++20 -Wall -Wextra -O2 -MMD -MP $(INCLUDES)
@@ -83,6 +83,7 @@ LIB_SRCS = \
 	src/graphics/renderer.cpp \
 	src/graphics/embedded_ui.cpp \
 	src/audio/audio.cpp \
+	src/audio/bgm.cpp \
 	src/net/network.cpp \
 	src/app/menu.cpp \
 	src/app/stage.cpp \
@@ -144,7 +145,10 @@ TEST_SRV_EXE = $(BUILD_DIR)/test_survival_mode.exe
 TEST_OPT_SRCS = tests/test_options_control.cpp
 TEST_OPT_EXE = $(BUILD_DIR)/test_options_control.exe
 
-TEST_EXES = $(TEST_MAP_EXE) $(TEST_DAT_EXE) $(TEST_GFX_EXE) $(TEST_ENT_EXE) $(TEST_CBT_EXE) $(TEST_GRP_EXE) $(TEST_AI_EXE) $(TEST_AUD_EXE) $(TEST_STG_EXE) $(TEST_NET_EXE) $(TEST_RPL_EXE) $(TEST_TRN_EXE) $(TEST_BTL_EXE) $(TEST_SRV_EXE) $(TEST_OPT_EXE)
+TEST_BGM_SRCS = tests/test_bgm_system.cpp
+TEST_BGM_EXE = $(BUILD_DIR)/test_bgm_system.exe
+
+TEST_EXES = $(TEST_MAP_EXE) $(TEST_DAT_EXE) $(TEST_GFX_EXE) $(TEST_ENT_EXE) $(TEST_CBT_EXE) $(TEST_GRP_EXE) $(TEST_AI_EXE) $(TEST_AUD_EXE) $(TEST_BGM_EXE) $(TEST_STG_EXE) $(TEST_NET_EXE) $(TEST_RPL_EXE) $(TEST_TRN_EXE) $(TEST_BTL_EXE) $(TEST_SRV_EXE) $(TEST_OPT_EXE)
 
 .PHONY: all test clean $(BUILD_DIR)
 
@@ -206,6 +210,9 @@ $(TEST_SRV_EXE): $(TEST_SRV_SRCS) $(TARGET_LIB) | $(BUILD_DIR)
 $(TEST_OPT_EXE): $(TEST_OPT_SRCS) $(TARGET_LIB) | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $(TEST_OPT_SRCS) -L$(BUILD_DIR) -llf2 $(SYSTEM_LIBS) -o $@
 
+$(TEST_BGM_EXE): $(TEST_BGM_SRCS) $(TARGET_LIB) | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) $(TEST_BGM_SRCS) -L$(BUILD_DIR) -llf2 $(SYSTEM_LIBS) -o $@
+
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
@@ -220,6 +227,7 @@ test: $(TEST_EXES) $(TARGET_APP)
 	./$(TEST_GRP_EXE)
 	./$(TEST_AI_EXE)
 	./$(TEST_AUD_EXE)
+	./$(TEST_BGM_EXE)
 	./$(TEST_STG_EXE)
 	./$(TEST_NET_EXE)
 	./$(TEST_RPL_EXE)

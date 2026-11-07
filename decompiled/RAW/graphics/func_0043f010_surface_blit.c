@@ -1,49 +1,122 @@
-/* Decompiled from
- * - 0x0040be70: FUN_0040be70 - Lookup sprite sheet & calculate frame coordinates
- * - 0x0043f010: FUN_0043f010 - Surface blit manager with alpha blending / color keying
+/*
+ * Procedure: FUN_0043f010
+ * Address: 0x0043f010 - 0x0043f1dd (Length: 462 bytes)
+ * Purpose: DirectDraw surface blit wrapper, clipping rect calculation, color-key blitting
  */
 
+#include <windows.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
 
-extern int lf2_clip_rect(int *dst_x1, int *dst_y1, int *dst_x2, int *dst_y2,
-                         int *src_x1, int *src_y1, int *src_x2, int *src_y2,
-                         int screen_w, int screen_h);
 
-typedef struct {
-    void* ddraw_surface; // IDirectDrawSurface pointer
-    int   width;         // 0x04
-    int   height;        // 0x08
-    int   color_key;     // 0x0C
-} lf2_surface_t;
 
-// Blits surface to back buffer with clipping and color keying (0x0043f010)
-void lf2_surface_blit(lf2_surface_t* surf, int dst_x, int dst_y, int src_x, int src_y,
-                      int w, int h, int color_key_flag, int alpha_flag)
+void FUN_0043f010(int param_1,int param_2,int param_3,int param_4,int param_5,int *param_6)
+
 {
-    if (!surf) return;
-
-    int dst_x1 = dst_x;
-    int dst_y1 = dst_y;
-    int dst_x2 = dst_x + w;
-    int dst_y2 = dst_y + h;
-
-    int src_x1 = src_x;
-    int src_y1 = src_y;
-    int src_x2 = src_x + w;
-    int src_y2 = src_y + h;
-
-    int screen_w = 794;
-    int screen_h = 550;
-
-    // Perform authentic software clipping before DirectDraw Blt
-    if (!lf2_clip_rect(&dst_x1, &dst_y1, &dst_x2, &dst_y2,
-                       &src_x1, &src_y1, &src_x2, &src_y2,
-                       screen_w, screen_h)) {
-        return; // Culled
+  int iVar1;
+  undefined4 *in_ECX;
+  uint uVar2;
+  undefined4 uVar3;
+  int *piVar4;
+  undefined4 *puVar5;
+  int local_b4;
+  int local_b0;
+  int local_ac;
+  int local_a8;
+  int local_a4;
+  int local_a0;
+  int local_9c;
+  int local_98;
+  int local_94;
+  int local_90;
+  int local_8c;
+  int local_88;
+  int local_84;
+  int local_80;
+  int local_7c;
+  int local_78;
+  int iStack_74;
+  int iStack_70;
+  int iStack_6c;
+  int iStack_68;
+  undefined4 local_64;
+  undefined4 local_60;
+  
+  if (param_5 != 0) {
+    memset(&local_64,0,100);
+    local_64 = 100;
+    local_60 = 2;
+  }
+  if ((in_ECX[3] == 0) || (param_3 < 0)) {
+    local_a0 = in_ECX[1];
+    local_a8 = in_ECX[2];
+    local_a4 = local_a8 + param_2;
+    local_b4 = param_2;
+    local_98 = local_a0 + param_1;
+    local_b0 = param_1;
+    local_9c = 0;
+    local_ac = 0;
+    iVar1 = FUN_0043ef70(&local_9c,&local_ac,&local_a0,&local_a8,&local_98,&local_a4);
+    if (iVar1 != 0) {
+      local_94 = local_b0;
+      local_90 = local_b4;
+      local_8c = local_98;
+      local_88 = local_a4;
+      local_84 = local_9c;
+      local_80 = local_ac;
+      local_7c = local_a0;
+      local_78 = local_a8;
+      if (param_5 == 0) {
+        puVar5 = (undefined4 *)0x0;
+        uVar2 = -(uint)(param_4 != 0) & 0x8000 | 0x1000000;
+      }
+      else {
+        puVar5 = &local_64;
+        uVar2 = -(uint)(param_4 != 0) & 0x8000 | 0x1000800;
+      }
+      (**(code **)(*param_6 + 0x14))(param_6,&local_94,*in_ECX,&local_84,uVar2,puVar5);
     }
-
-    // DirectDraw Blt call:
-    // Blt(dst_rect, surf->ddraw_surface, src_rect, DDBLT_KEYSRC | DDBLT_WAIT, NULL)
+  }
+  if (param_3 < (int)in_ECX[3]) {
+    local_a4 = in_ECX[param_3 + 4];
+    local_98 = in_ECX[param_3 + 0x1f8];
+    local_b4 = local_a4 + in_ECX[param_3 + 0x3ec];
+    local_b0 = local_98 + in_ECX[param_3 + 0x5e0];
+    local_9c = in_ECX[param_3 + 0x5e0] + param_2;
+    local_a0 = param_2;
+    local_ac = in_ECX[param_3 + 0x3ec] + param_1;
+    local_a8 = param_1;
+    iVar1 = FUN_0043ef70(&local_a4,&local_98,&local_b4,&local_b0,&local_ac,&local_9c);
+    if (iVar1 != 0) {
+      local_94 = local_a8;
+      local_90 = local_a0;
+      local_8c = local_ac;
+      local_88 = local_9c;
+      iStack_74 = local_a4;
+      iStack_70 = local_98;
+      iStack_6c = local_b4;
+      iStack_68 = local_b0;
+      if (param_5 == 0) {
+        puVar5 = (undefined4 *)0x0;
+        uVar2 = -(uint)(param_4 != 0) & 0x8000 | 0x1000000;
+        piVar4 = &iStack_74;
+        uVar3 = *in_ECX;
+      }
+      else {
+        local_7c = in_ECX[param_3 + 4];
+        local_80 = local_98;
+        local_84 = (local_7c * 2 - local_b4) + in_ECX[param_3 + 0x3ec];
+        local_7c = (in_ECX[param_3 + 0x3ec] - (local_a4 - local_7c)) + local_7c;
+        puVar5 = &local_64;
+        uVar2 = -(uint)(param_4 != 0) & 0x8000 | 0x1000800;
+        piVar4 = &local_84;
+        uVar3 = *in_ECX;
+        local_78 = local_b0;
+      }
+      (**(code **)(*param_6 + 0x14))(param_6,&local_94,uVar3,piVar4,uVar2,puVar5);
+    }
+  }
+  return;
 }
 

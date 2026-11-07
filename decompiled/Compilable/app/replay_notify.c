@@ -19,7 +19,7 @@ extern char g_replay_filename[260]; // 0x0044FD98
 extern int g_recording_state;       // 0x00450B70
 extern void* g_back_surface;        // 0x00455608
 
-void func_00402980_replay_notify(void) {
+void func_004028a0_recording_notify(void) {
     char msg[512];
 
     if (g_recording_state == 1) {
@@ -35,5 +35,18 @@ void func_00402980_replay_notify(void) {
         sprintf(msg, "Recording canceled!");
         // DrawText(g_back_surface, msg, x=0, y=0x213, color=0x000000FF)
     }
+}
+
+void func_00402980_replay_notify(void) {
+    func_004028a0_recording_notify();
+}
+
+void FUN_004028a0(void) {
+    func_004028a0_recording_notify();
+}
+
+int FUN_00402980(void) {
+    FUN_004028a0();
+    return 0;
 }
 

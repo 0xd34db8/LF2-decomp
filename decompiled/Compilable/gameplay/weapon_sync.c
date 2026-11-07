@@ -74,8 +74,13 @@ void lf2_weapon_sync(global_t *global, uint32_t char_id)
     }
 }
 
-// MSVC __thiscall bridge for FUN_00408ce0
-void FUN_00408ce0(void)
+// MSVC __thiscall bridge for FUN_00408cb0 / FUN_00408ce0
+void FUN_00408cb0(void)
 {
     lf2_weapon_sync((global_t *)in_ECX, (uint32_t)(uintptr_t)in_ECX);
+}
+
+void FUN_00408ce0(void)
+{
+    FUN_00408cb0();
 }

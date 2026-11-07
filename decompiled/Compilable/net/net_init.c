@@ -72,3 +72,16 @@ int func_00402b80_net_init(HWND hwnd) {
     return 1;
 }
 
+int func_00402b60_net_init(HWND hwnd) {
+    return func_00402b80_net_init(hwnd);
+}
+
+void FUN_00402b60(HWND hwnd) {
+    func_00402b80_net_init(hwnd);
+}
+
+int FUN_00402b80(void) {
+    return func_00402b80_net_init(g_hWnd);
+}
+
+

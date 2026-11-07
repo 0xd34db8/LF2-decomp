@@ -100,3 +100,13 @@ int func_0041c5f0_net_lockstep(void) {
 
     return 0;
 }
+
+int FUN_0041bc90(void)
+{
+    return func_0041c5f0_net_lockstep();
+}
+
+int FUN_0041c5f0(void)
+{
+    return FUN_0041bc90();
+}

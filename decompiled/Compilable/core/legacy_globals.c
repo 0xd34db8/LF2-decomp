@@ -337,3 +337,16 @@ char  DAT_0044fd18[100] = {0};
 char  DAT_0044f890[100] = {0};
 char  DAT_0044f900[100] = {0};
 char  DAT_00455388 = 'u';
+
+// Phase 19: BGM Streaming & Audio Globals
+int   DAT_0044d010 = 1;
+int   DAT_0044d000 = 80;
+int   DAT_0044f18c = 0;
+char  DAT_0044ef04[260] = {0};
+char  DAT_0044eed0[260] = {0};
+char  DAT_0044f128[64] = "Random";
+char  DAT_0044f060[260] = {0};
+void* DAT_0044f040 = NULL;
+void* DAT_0044f044 = NULL;
+void* DAT_0044f048 = NULL;
+void* DAT_0044f04c = NULL;

@@ -40,10 +40,10 @@ LF2/
 │   │   ├── gameplay/           # Raw combat dispatcher, hitboxes, AI & weapon attachment
 │   │   ├── graphics/           # Raw DirectDraw blitters, clipping & parallax math
 │   │   └── net/                # Raw lockstep network exchange & packet verifiers
-│   ├── Compilable/             # Self-contained, compilable legacy C suite (47 translation units)
+│   ├── Compilable/             # Self-contained, compilable legacy C suite (48 translation units, 59 routines)
 │   │   ├── include/            # legacy_types.h (typed structs), legacy_signatures.h, legacy_globals.h
 │   │   ├── app/                # Clean C routines: winmain.c, wndproc.c, battle_mode.c, etc.
-│   │   ├── audio/              # Clean C routines: sound_init.c, sound_load_wav.c, sound_play.c
+│   │   ├── audio/              # Clean C routines: sound_init.c, sound_load_wav.c, sound_play.c, bgm_manager.c
 │   │   ├── core/               # Clean C routines: abs.c, random.c, overlap.c, legacy_globals.c
 │   │   ├── data/               # Clean C routines: load_dat.c, save_dat.c, decrypt_dat.c, etc.
 │   │   ├── gameplay/           # Clean C routines: attack_process.c, teleport.c, ai_process.c, etc.
@@ -60,14 +60,14 @@ LF2/
 ├── lifted/                     # Dedicated Modern C++20 / SDL2 Source Lift
 │   ├── src/                    # Modernized game engine code
 │   │   ├── app/                # SDL2 windowing, event pump, scene transitions, fixed 30 FPS pacing
-│   │   ├── audio/              # DirectSound replacement via modern SDL2 audio pipeline & mixer
+│   │   ├── audio/              # DirectSound & DirectShow replacement via SDL2 audio pipeline, mixer & BGM streamer
 │   │   ├── core/               # Domain structures, deterministic PRNG, replay pipeline
 │   │   ├── data/               # Lexer, Vigenère cipher decrypter & control configuration parser
 │   │   ├── gameplay/           # Combat dispatcher, hitbox intersection, entity physics & AI
 │   │   ├── graphics/           # SDL2 software renderer, parallax background & embedded UI
 │   │   └── net/                # Modern lockstep network sync & packet serialization
 │   ├── data/                   # UI source bitmaps & default control.txt configurations
-│   ├── tests/                  # 14 comprehensive unit test suites
+│   ├── tests/                  # 15 comprehensive unit test suites
 │   ├── tools/                  # Embedded UI generation pipeline (generate_embedded_ui.py)
 │   ├── third_party/            # Self-contained MinGW-w64 SDL2 development headers & libraries
 │   ├── Makefile                # Independent build system for the lifted engine
@@ -314,9 +314,9 @@ For over two decades, Little Fighter 2 players experienced sudden match freezes 
   ```
 * At `0x0042353A`, during game boot, the parser reads the string and converts every `` '`' `` back to a space (`' '`). Players who opened `control.txt` in Notepad over the years often wondered why mysterious backticks appeared in their usernames!
 
-### 4. Deterministic Battle Replay Recording (`.lfr` at `0x0042D080` / `0x00402980`)
+### 4. Deterministic Battle Replay Recording (`.lfr` at `0x00429730` / `0x004028A0`)
 * **100% Deterministic Playback:** Rather than saving full video or large coordinate streams, LF2 replays (`.lfr` files) record only the initial 3,000-byte circular PRNG table seed (`0x0044D024`), character choices, and 8 bytes of packed controller input states per frame.
-* **On-Screen HUD Indicators:** At `0x00402980`, the engine uses DirectDraw to render color-coded notification banners at the bottom of the viewport ($y = 531$ / `0x213`):
+* **On-Screen HUD Indicators:** At `0x004028A0` (interior `0x00402980`), the engine uses DirectDraw to render color-coded notification banners at the bottom of the viewport ($y = 531$ / `0x213`):
   * **Orange (`0x00FF7800`):** `"Start recording '%s'..."` upon match commencement.
   * **Green (`0x0000FF00`):** `"Recording file '%s' saved!"` upon successful match conclusion.
   * **Red (`0x000000FF`):** `"Recording canceled!"` if the match is aborted prematurely.

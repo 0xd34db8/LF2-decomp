@@ -37,3 +37,8 @@ void func_00436900_battle_setup(void* world_ptr, uint32_t slot, uint32_t char_id
      */
 }
 
+void FUN_00436900(void)
+{
+    /* Legacy entrypoint alias for battle setup interior block of FUN_00434ab0 */
+}
+

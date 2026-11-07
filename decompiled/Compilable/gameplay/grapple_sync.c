@@ -90,8 +90,13 @@ void lf2_grapple_sync(global_t *global, uint32_t catcher_id)
     }
 }
 
-// MSVC __thiscall bridge for FUN_004068b0
-void FUN_004068b0(void)
+// MSVC __thiscall bridge for FUN_004064d0 / FUN_004068b0
+void FUN_004064d0(void)
 {
     lf2_grapple_sync((global_t *)in_ECX, (uint32_t)(uintptr_t)in_ECX);
+}
+
+void FUN_004068b0(void)
+{
+    FUN_004064d0();
 }

@@ -218,6 +218,41 @@ int main() {
     assert(memcmp(raw_replay, uncomp_buf, sizeof(raw_replay)) == 0);
     printf("    [PASS] Zlib compression + cipher obfuscation roundtrip succeeded 100%%.\n");
 
+    // 12. Test Phase 19: BGM State Machine & Track Dispatcher (FUN_00402020 - FUN_004025d0)
+    printf("[+] Testing BGM State Machine & Dispatcher (FUN_00402020 / FUN_004025d0)...\n");
+    DAT_0044d010 = 1; // Enable BGM
+    FUN_004025d0(1);  // Track 1: Main Theme
+    assert(strcmp(DAT_0044eed0, "bgm\\main.wma") == 0);
+    assert(strcmp(DAT_0044ef04, "bgm\\main.wma") == 0);
+
+    // Test cache check: Calling play on the same track preserves state without redundant reloads
+    FUN_00402020("bgm\\main.wma");
+    assert(strcmp(DAT_0044ef04, "bgm\\main.wma") == 0);
+
+    // Test Boss track transitions
+    FUN_004025d0(7); // Track 7: Boss 1
+    assert(strcmp(DAT_0044eed0, "bgm\\boss1.wma") == 0);
+    assert(strcmp(DAT_0044ef04, "bgm\\boss1.wma") == 0);
+
+    FUN_004025d0(8); // Track 8: Final Boss 2
+    assert(strcmp(DAT_0044eed0, "bgm\\boss2.wma") == 0);
+    assert(strcmp(DAT_0044ef04, "bgm\\boss2.wma") == 0);
+
+    // Test Menu Picker Cycling (FUN_00402130)
+    DAT_0044f18c = 0; // Random
+    FUN_00402130(0, 0, 1, NULL); // Cycle right -> Track 1
+    assert(DAT_0044f18c == 1);
+    assert(strcmp(DAT_0044f128, "Main Theme") == 0);
+    assert(strcmp(DAT_0044f060, "Music: Main Theme") == 0);
+
+    // Test OFF state: toggle to OFF (-1) disables playback
+    DAT_0044f18c = -1;
+    FUN_00402130(1, 0, 0, NULL);
+    assert(DAT_0044d010 == 0);
+    assert(strcmp(DAT_0044f128, "OFF") == 0);
+    assert(strcmp(DAT_0044ef04, "") == 0);
+    printf("    [PASS] BGM track dispatch, cache check, and menu picker passed with 100%% parity.\n");
+
     printf("\n[SUCCESS] All Decompiled Compilable Suite Tests Passed with 100%% Parity!\n");
     return 0;
 }

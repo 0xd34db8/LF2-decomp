@@ -1,4 +1,5 @@
 #include "audio/audio.h"
+#include "audio/bgm.h"
 #include <iostream>
 #include <cstring>
 #include <cstdio>
@@ -302,6 +303,9 @@ void audio_system_t::audio_callback(uint8_t* stream, int len)
 {
     std::memset(stream, 0, len);
     if (m_muted) return;
+
+    // Mix background music stream first
+    get_bgm_manager().mix_audio(stream, len, m_obtained_spec.format);
 
     for (uint32_t i = 0; i < MAX_CHANNELS; ++i) {
         if (!m_channels[i].active || m_channels[i].remaining == 0) continue;

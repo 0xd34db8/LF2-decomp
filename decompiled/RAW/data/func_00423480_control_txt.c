@@ -1,82 +1,150 @@
 /*
- * Function: Player Control Configuration & Name Serializer (control.txt)
- * Original Virtual Address: 0x004233E0 (Save) / 0x00423480 (Load)
- *
- * Description: Reads and writes player keyboard mappings and player profile names
- * from "data/control.txt".
+ * Procedure: FUN_00423480
+ * Address: 0x00423480 - 0x00423984 (Length: 1285 bytes)
+ * Purpose: Control configuration parser (system/control.txt), player key mappings loader
  */
 
+#include <windows.h>
 #include <stdio.h>
-#include <string.h>
+#include <stdint.h>
+#include <stdbool.h>
 
-#define MAX_CONTROL_PLAYERS 4
-#define KEYS_PER_PLAYER 11
 
-extern int g_player_keys[MAX_CONTROL_PLAYERS][KEYS_PER_PLAYER]; // 0x0044FB70
-extern char g_player_names[MAX_CONTROL_PLAYERS][16];            // 0x0044FCC0
-extern int g_replay_mode;                                       // 0x00450BE4
-extern int g_demo_mode;                                         // 0x00450BE8
 
-int func_00423480_load_control_txt(void) {
-    FILE* fp = fopen("data\\control.txt", "r");
-    if (!fp) return 0;
+void FUN_00423480(void)
 
-    // 0x004234D0: Load 11 keys for each of 4 players
-    for (int p = 0; p < MAX_CONTROL_PLAYERS; ++p) {
-        for (int k = 0; k < KEYS_PER_PLAYER; ++k) {
-            fscanf(fp, "%d", &g_player_keys[p][k]);
+{
+  char cVar1;
+  char *pcVar2;
+  uint uVar3;
+  uint uVar4;
+  undefined4 *puVar5;
+  FILE *pFVar6;
+  undefined4 *puVar7;
+  char *pcVar8;
+  code *pcVar9;
+  int iVar10;
+  FILE *local_200 [2];
+  char local_1f8 [500];
+  uint local_4;
+  
+  local_4 = DAT_0044eea4 ^ (uint)local_200;
+  local_200[0] = fopen("data\\control.txt","r");
+  puVar5 = &DAT_0044fb70;
+  do {
+    iVar10 = 0xb;
+    puVar7 = puVar5;
+    do {
+      fscanf(local_200[0],"%d",puVar7);
+      pFVar6 = local_200[0];
+      puVar7 = puVar7 + 1;
+      iVar10 = iVar10 + -1;
+    } while (iVar10 != 0);
+    puVar5 = puVar5 + 0x14;
+  } while ((int)puVar5 < 0x44fcb0);
+  fscanf(local_200[0],"%s %s %s %s\n",&DAT_0044fcc0,&DAT_0044fccb,&DAT_0044fcd6,&DAT_0044fce1);
+  pcVar8 = &DAT_0044fcc0;
+  do {
+    uVar3 = 0;
+    pcVar2 = pcVar8;
+    do {
+      cVar1 = *pcVar2;
+      pcVar2 = pcVar2 + 1;
+    } while (cVar1 != '\0');
+    if (pcVar2 != pcVar8 + 1) {
+      do {
+        if (pcVar8[uVar3] == '`') {
+          pcVar8[uVar3] = ' ';
         }
+        uVar3 = uVar3 + 1;
+        pcVar2 = pcVar8;
+        do {
+          cVar1 = *pcVar2;
+          pcVar2 = pcVar2 + 1;
+        } while (cVar1 != '\0');
+      } while (uVar3 < (uint)((int)pcVar2 - (int)(pcVar8 + 1)));
     }
-
-    // 0x00423510: Load 4 player names "%s %s %s %s"
-    fscanf(fp, "%s %s %s %s",
-           g_player_names[0], g_player_names[1],
-           g_player_names[2], g_player_names[3]);
-
-    // Replace grave accent '`' with space ' '
-    for (int p = 0; p < MAX_CONTROL_PLAYERS; ++p) {
-        for (int i = 0; g_player_names[p][i]; ++i) {
-            if (g_player_names[p][i] == '`') {
-                g_player_names[p][i] = ' ';
-            }
-        }
+    pcVar8 = pcVar8 + 0xb;
+  } while ((int)pcVar8 < 0x44fcec);
+  fscanf(pFVar6,"%d\n",&DAT_00450be8);
+  fscanf(pFVar6,"%d\n",&DAT_00450be4);
+  pcVar9 = fgets_exref;
+  fgets(&DAT_0044fd18,100,pFVar6);
+  fgets(&DAT_0044f890,100,pFVar6);
+  pcVar8 = &DAT_0044fd18;
+  do {
+    cVar1 = *pcVar8;
+    pcVar8 = pcVar8 + 1;
+  } while (cVar1 != '\0');
+  if (pcVar8 != &DAT_0044fd19) {
+    pcVar8 = &DAT_0044fd18;
+    do {
+      pcVar2 = pcVar8;
+      pcVar8 = pcVar2 + 1;
+    } while (*pcVar2 != '\0');
+    for (pcVar2 = pcVar2 + -0x44fd19;
+        (-1 < (int)pcVar2 &&
+        (((cVar1 = pcVar2[0x44fd18], cVar1 == ' ' || (cVar1 == '\r')) || (cVar1 == '\n'))));
+        pcVar2 = pcVar2 + -1) {
+      pcVar2[0x44fd18] = '\0';
     }
-
-    // 0x0042356B: Load demo & replay mode flags
-    fscanf(fp, "%d", &g_demo_mode);
-    fscanf(fp, "%d", &g_replay_mode);
-
-    fclose(fp);
-    return 1;
-}
-
-int func_004233e0_save_control_txt(void) {
-    FILE* fp = fopen("data\\control.txt", "w");
-    if (!fp) return 0;
-
-    // Save player keys
-    for (int p = 0; p < MAX_CONTROL_PLAYERS; ++p) {
-        for (int k = 0; k < KEYS_PER_PLAYER; ++k) {
-            fprintf(fp, "%d\n", g_player_keys[p][k]);
-        }
+  }
+  pcVar8 = &DAT_0044f890;
+  do {
+    cVar1 = *pcVar8;
+    pcVar8 = pcVar8 + 1;
+  } while (cVar1 != '\0');
+  if (pcVar8 != &DAT_0044f891) {
+    pcVar8 = &DAT_0044f890;
+    do {
+      pcVar2 = pcVar8;
+      pcVar8 = pcVar2 + 1;
+    } while (*pcVar2 != '\0');
+    for (pcVar2 = pcVar2 + -0x44f891;
+        (-1 < (int)pcVar2 &&
+        (((cVar1 = pcVar2[0x44f890], cVar1 == ' ' || (cVar1 == '\r')) || (cVar1 == '\n'))));
+        pcVar2 = pcVar2 + -1) {
+      pcVar2[0x44f890] = '\0';
     }
-
-    // Save player names (spaces replaced with '`')
-    for (int p = 0; p < MAX_CONTROL_PLAYERS; ++p) {
-        char name_buf[16];
-        strncpy(name_buf, g_player_names[p], 15);
-        name_buf[15] = '\0';
-        for (int i = 0; name_buf[i]; ++i) {
-            if (name_buf[i] == ' ') name_buf[i] = '`';
-        }
-        fprintf(fp, "%s%s", name_buf, (p == 3) ? "\n" : " ");
+  }
+  DAT_0044f900 = 0;
+  iVar10 = feof(pFVar6);
+  if (iVar10 == 0) {
+    while( true ) {
+      pFVar6 = local_200[0];
+      (*pcVar9)(local_1f8,100,local_200[0]);
+      pcVar8 = local_1f8;
+      do {
+        cVar1 = *pcVar8;
+        pcVar8 = pcVar8 + 1;
+      } while (cVar1 != '\0');
+      uVar3 = (int)pcVar8 - (int)local_1f8;
+      pcVar8 = (char *)((int)&DAT_0044f8fc + 3);
+      do {
+        pcVar2 = pcVar8 + 1;
+        pcVar8 = pcVar8 + 1;
+      } while (*pcVar2 != '\0');
+      pcVar2 = local_1f8;
+      for (uVar4 = uVar3 >> 2; uVar4 != 0; uVar4 = uVar4 - 1) {
+        *(undefined4 *)pcVar8 = *(undefined4 *)pcVar2;
+        pcVar2 = pcVar2 + 4;
+        pcVar8 = pcVar8 + 4;
+      }
+      for (uVar3 = uVar3 & 3; uVar3 != 0; uVar3 = uVar3 - 1) {
+        *pcVar8 = *pcVar2;
+        pcVar2 = pcVar2 + 1;
+        pcVar8 = pcVar8 + 1;
+      }
+      iVar10 = feof(pFVar6);
+      if (iVar10 != 0) break;
+      pcVar9 = fgets_exref;
     }
-
-    // Save demo & replay mode flags
-    fprintf(fp, "%d\n", g_demo_mode);
-    fprintf(fp, "%d\n", g_replay_mode);
-
-    fclose(fp);
-    return 1;
+  }
+  else {
+    pFVar6 = local_200[0];
+  }
+  fclose(pFVar6);
+  __security_check_cookie(local_4 ^ (uint)local_200);
+  return;
 }
 

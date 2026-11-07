@@ -383,6 +383,19 @@ extern char  DAT_0044f890[100];
 extern char  DAT_0044f900[100];
 extern char  DAT_00455388;
 
+// Phase 19: BGM Streaming & Audio Globals
+extern int   DAT_0044d010;
+extern int   DAT_0044d000;
+extern int   DAT_0044f18c;
+extern char  DAT_0044ef04[260];
+extern char  DAT_0044eed0[260];
+extern char  DAT_0044f128[64];
+extern char  DAT_0044f060[260];
+extern void* DAT_0044f040;
+extern void* DAT_0044f044;
+extern void* DAT_0044f048;
+extern void* DAT_0044f04c;
+
 #ifdef __cplusplus
 }
 #endif

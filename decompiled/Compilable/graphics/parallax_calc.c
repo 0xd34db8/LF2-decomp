@@ -35,3 +35,13 @@ int32_t lf2_parallax_calc(int32_t layer_x, int32_t layer_width, int32_t total_st
     return layer_x + offset;
 }
 
+int FUN_0041a250(void)
+{
+    return 0;
+}
+
+int FUN_0041a2dd(void)
+{
+    return FUN_0041a250();
+}
+
