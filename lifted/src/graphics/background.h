@@ -19,7 +19,9 @@ struct bg_layer_t {
     int32_t     rect_y{0};
     int32_t     rect_w{0};
     int32_t     rect_h{0};
+    int32_t     rect_color{0};
     bool        has_rect{false};
+    bool        is_rect{false};
     int32_t     cc{0};
     int32_t     c1{0};
     int32_t     c2{0};

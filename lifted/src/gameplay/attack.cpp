@@ -308,13 +308,60 @@ void global_t::attack_process(uint32_t attacker_id) {
 
         if (itr_id >= a_frame->itrs_size) continue;
         const itr_t* itr = &a_frame->itrs[itr_id];
+        const itr_t* eff_itr = itr;
+
+        // Resolve ITR_WEAPON_STRENGTH (kind == 5) from holder's wpoint.attacking (1..4) in file->attacking_itrs
+        if (itr->kind == ITR_WEAPON_STRENGTH && attacker->holder_id >= 0 &&
+            attacker->holder_id < static_cast<int32_t>(MAX_OBJECTS) && is_object_exists[attacker->holder_id]) {
+            object_t* holder = objects[attacker->holder_id];
+            if (holder && holder->file && holder->frame_id1 < MAX_FRAMES) {
+                uint32_t atk_idx = holder->file->frames[holder->frame_id1].wpoint.attacking;
+                if (atk_idx >= 1 && atk_idx <= 4) {
+                    eff_itr = &attacker->file->attacking_itrs[atk_idx];
+                }
+            }
+        }
+
+        // ITR_HEAL (kind == 8): Jan healing ball sets curing_hp without dealing damage
+        if (itr->kind == ITR_HEAL) {
+            if (injured->file->type == TYPE_CHARACTER) {
+                injured->curing_hp = (eff_itr->injury > 0) ? eff_itr->injury : 100;
+                injured->vrest_of_objects[attacker_id] = (eff_itr->vrest > 0) ? static_cast<uint8_t>(eff_itr->vrest) : 10;
+            }
+            continue;
+        }
+
+        // ITR_FORCEFIELD (kind == 9): John shield reflects projectiles
+        if (itr->kind == ITR_FORCEFIELD && injured->file->type == TYPE_ATTACK) {
+            injured->facing = (injured->facing == FACING_RIGHT) ? FACING_LEFT : FACING_RIGHT;
+            injured->x_velocity = -injured->x_velocity;
+            injured->team = attacker->team;
+            injured->owner = attacker->owner;
+            injured->vrest_of_objects[attacker_id] = 10;
+            continue;
+        }
 
         // Set victim rest counter to prevent repeated hits within same swing
-        injured->vrest_of_objects[attacker_id] = (itr->arest > 0) ? static_cast<uint8_t>(itr->arest) : 8;
-        attacker->arest = (itr->arest > 0) ? itr->arest : 4;
+        uint32_t rest_val = (eff_itr->vrest > 0) ? eff_itr->vrest : eff_itr->arest;
+        injured->vrest_of_objects[attacker_id] = (rest_val > 0) ? static_cast<uint8_t>(rest_val) : 8;
+        attacker->arest = (eff_itr->arest > 0) ? static_cast<int32_t>(eff_itr->arest) : 4;
+
+        // Guard / bdefend check (State 7 defending against frontal attack)
+        uint32_t i_state = (injured->frame_id1 < MAX_FRAMES) ? injured->file->frames[injured->frame_id1].state : 0;
+        if (i_state == STATE_DEFEND && injured->facing != attacker->facing && eff_itr->bdefend < 100) {
+            injured->bdefend += static_cast<int32_t>(eff_itr->bdefend);
+            if (injured->bdefend > 45 || eff_itr->bdefend >= 60) {
+                injured->frame_id1 = 112; // Broken defend
+                injured->wait_counter = 0;
+            } else {
+                injured->frame_id1 = 111; // Defend block
+                injured->wait_counter = 0;
+            }
+            continue;
+        }
 
         // Apply damage (0x0042E9B0)
-        int32_t injury = itr->injury;
+        int32_t injury = eff_itr->injury;
         if (injury <= 0) injury = 15; // default fallback punch damage
 
         injured->hp -= injury;
@@ -323,17 +370,33 @@ void global_t::attack_process(uint32_t attacker_id) {
         attacker->total_attack += injury;
 
         // Calculate fall & knockdown (0x0042EAA0)
-        int32_t fall_increment = (itr->fall == 0) ? 20 : itr->fall;
+        int32_t fall_increment = (eff_itr->fall == 0) ? 20 : eff_itr->fall;
         injured->fall += fall_increment;
 
+        // Freeze effect (effect == 3 or 30 or kind == 14)
+        if ((eff_itr->effect == EFFECT_ICE || eff_itr->effect == EFFECT_FREEZE || itr->kind == ITR_FREEZE) &&
+            injured->file->type == TYPE_CHARACTER && injured->hp > 0) {
+            injured->frame_id1 = 200; // Ice frozen frame
+            injured->wait_counter = 0;
+            injured->x_velocity = 0.0;
+            continue;
+        }
+
         // Check if victim should enter falling knockdown state (0x0042EB00)
-        if (injured->hp <= 0 || injured->fall >= 60 || itr->dvy != 0 || itr->effect == 4) {
+        if (injured->hp <= 0 || injured->fall >= 60 || eff_itr->dvy != 0 ||
+            eff_itr->effect == EFFECT_FIRE || eff_itr->effect == EFFECT_FIRE_NO_SOUND ||
+            eff_itr->effect == EFFECT_FIRE_JULIAN || eff_itr->effect == EFFECT_FIRE_EXPLODE) {
             injured->fall = 80; // Full knockdown flag
-            injured->frame_id1 = 180; // Standard LF2 falling frame
+            if (eff_itr->effect == EFFECT_FIRE || eff_itr->effect == EFFECT_FIRE_NO_SOUND ||
+                eff_itr->effect == EFFECT_FIRE_JULIAN || eff_itr->effect == EFFECT_FIRE_EXPLODE) {
+                injured->frame_id1 = (injured->file->frames[203].present != 0) ? 203 : 180;
+            } else {
+                injured->frame_id1 = 180; // Standard LF2 falling frame
+            }
             injured->wait_counter = 0;
 
-            double knock_x = (itr->dvx != 0) ? static_cast<double>(itr->dvx) : 5.0;
-            double knock_y = (itr->dvy != 0) ? static_cast<double>(itr->dvy) : -8.0;
+            double knock_x = (eff_itr->dvx != 0) ? static_cast<double>(eff_itr->dvx) : 5.0;
+            double knock_y = (eff_itr->dvy != 0) ? static_cast<double>(eff_itr->dvy) : -8.0;
 
             injured->x_velocity = (attacker->facing == FACING_LEFT) ? -knock_x : knock_x;
             injured->y_velocity = knock_y;
@@ -347,14 +410,15 @@ void global_t::attack_process(uint32_t attacker_id) {
             }
             injured->wait_counter = 0;
 
-            double flinch_x = (itr->dvx != 0) ? static_cast<double>(itr->dvx) * 0.4 : 2.0;
+            double flinch_x = (eff_itr->dvx != 0) ? static_cast<double>(eff_itr->dvx) * 0.4 : 2.0;
             injured->x_velocity = (attacker->facing == FACING_LEFT) ? -flinch_x : flinch_x;
         }
 
         // Weapon damage
         if (injured->file->type == TYPE_LIGHT_WEAPON || injured->file->type == TYPE_HEAVY_WEAPON) {
+            injured->weapon_hp -= injury;
             injured->hp -= injury;
-            if (injured->hp <= 0) {
+            if (injured->hp <= 0 || injured->weapon_hp <= 0) {
                 injured->fall = 80;
             }
         }

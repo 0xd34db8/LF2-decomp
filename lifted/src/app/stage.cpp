@@ -73,6 +73,8 @@ bool stage_manager_t::parse_stage_text(const std::string& text)
         } else if (in_phase) {
             if (token == "music:") {
                 ls >> current_phase.music;
+            } else if (token == "when_clear_goto_phase:") {
+                ls >> current_phase.when_clear_goto_phase;
             } else if (token == "id:") {
                 stage_enemy_spawn_t spawn;
                 ls >> spawn.id;
@@ -84,10 +86,20 @@ bool stage_manager_t::parse_stage_text(const std::string& text)
                         ls >> spawn.times;
                     } else if (param == "ratio:") {
                         ls >> spawn.ratio;
-                    } else if (param == "boss:" || param == "boss") {
+                    } else if (param == "boss:" || param == "boss" || param == "<boss>") {
                         spawn.is_boss = true;
+                    } else if (param == "<soldier>") {
+                        spawn.is_soldier = true;
                     } else if (param == "x:") {
                         ls >> spawn.spawn_x;
+                    } else if (param == "act:") {
+                        ls >> spawn.act;
+                    } else if (param == "reserve:") {
+                        ls >> spawn.reserve;
+                    } else if (param == "join:") {
+                        ls >> spawn.join;
+                    } else if (param == "join_reserve:") {
+                        ls >> spawn.join_reserve;
                     }
                 }
                 current_phase.enemies.push_back(spawn);

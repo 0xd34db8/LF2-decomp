@@ -42,8 +42,8 @@ struct file_t {
     int32_t          weapon_hit_sound_id;   // 0x0A4
     int32_t          weapon_drop_sound_id;  // 0x0A8
     int32_t          weapon_broken_sound_id;// 0x0AC
-    itr_t            attacking_itrs[4];     // 0x0B0 - 0x1F0 (4 * 0x50 = 0x140 bytes)
-    uint8_t          _pad3[0x2A8];          // 0x1F0 - 0x498
+    itr_t            attacking_itrs[5];     // 0x0B0 - 0x240 (1-based: index 0 at 0x0B0, entry 1..4 at 0x100..0x23F)
+    uint8_t          _pad3[0x258];          // 0x240 - 0x498
     int32_t          bmp_count;             // 0x498
     char             bmp_paths[10][40];     // 0x49C - 0x62C (10 sprite sheet filenames)
     int32_t          sheet_start[10];       // 0x62C - 0x654 (first frame pic id for each sheet)

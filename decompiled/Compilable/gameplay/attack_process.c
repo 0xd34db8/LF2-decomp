@@ -26,7 +26,8 @@ void FUN_0042e100(int param_1)
 
   int iVar8;
 
-  int in_ECX = (int)(intptr_t)in_ECX;
+  int in_ecx_val = (int)(intptr_t)in_ECX;
+#define in_ECX in_ecx_val
 
   int iVar9;
 

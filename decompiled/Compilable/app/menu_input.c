@@ -29,9 +29,12 @@ void lf2_menu_check_player_join_input(global_t *global)
 
     int *join_status = (int *)&DAT_00451320;
 
-    for (int p = 0; p < 4; ++p) {
+    for (int p = 0; p < 8; ++p) {
         object_t *obj = global->objects[p];
-        if (!obj) continue;
+        if (!obj) {
+            join_status[p] = 0;
+            continue;
+        }
 
         if (obj->click_up != 0) {
             if (join_status[p] == 0) DAT_004513a4 = 1;

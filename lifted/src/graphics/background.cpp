@@ -50,8 +50,13 @@ bool background_t::parse_content(const std::string& content) {
             stream >> shadow_w >> shadow_h;
         } else if (token == "layer:") {
             bg_layer_t layer;
-            // The first token inside layer: is typically the layer texture path
+            // The first token inside layer: is either the layer texture path or "rect:"
             if (stream >> layer.path) {
+                if (layer.path == "rect:") {
+                    layer.is_rect = true;
+                    layer.has_rect = true;
+                    stream >> layer.rect_color;
+                }
                 while (stream >> token && token != "layer_end") {
                     if (!token.empty() && token[0] == '#') {
                         std::string dummy;
@@ -78,9 +83,8 @@ bool background_t::parse_content(const std::string& content) {
                     } else if (token == "c2:") {
                         stream >> layer.c2;
                     } else if (token == "rect:") {
-                        // In some bg.dat: rect: <id> x: <x> y: <y> width: <w> height: <h>
-                        std::string rect_id;
-                        stream >> rect_id;
+                        stream >> layer.rect_color;
+                        layer.is_rect = true;
                         layer.has_rect = true;
                     }
                 }

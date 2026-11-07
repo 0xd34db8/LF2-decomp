@@ -115,7 +115,7 @@ survival_wave_spec_t survival_manager_t::generate_wave(uint32_t wave_number) con
     // Heavy units: Knights & Golems (Wave 6+)
     if (wave_number >= 6) {
         stage_enemy_spawn_t heavy;
-        heavy.id = 34; // Knight
+        heavy.id = KNIGHT_DAT; // Knight (37)
         heavy.hp = static_cast<int32_t>(200.0 * hp_multiplier);
         heavy.times = 1 + (wave_number / 10);
         heavy.ratio = 1.5;
@@ -136,24 +136,24 @@ survival_wave_spec_t survival_manager_t::generate_wave(uint32_t wave_number) con
 
         switch (milestone_tier) {
             case 1:
-                boss.id = 38; // Firzen
+                boss.id = FIRZEN_DAT; // Firzen (51)
                 boss.hp = static_cast<int32_t>(500.0 * boss_hp_scale);
                 break;
             case 2:
-                boss.id = 37; // Louis
+                boss.id = LOUISE_EX_DAT; // LouisEX (50)
                 boss.hp = static_cast<int32_t>(700.0 * boss_hp_scale);
                 break;
             case 3:
-                boss.id = 36; // Bat
+                boss.id = BAT_DAT; // Bat (38)
                 boss.hp = static_cast<int32_t>(900.0 * boss_hp_scale);
                 break;
             case 4:
-                boss.id = 38; // Firzen Boss
+                boss.id = FIRZEN_DAT; // Firzen Boss (51)
                 boss.hp = static_cast<int32_t>(1100.0 * boss_hp_scale);
                 break;
             case 5:
             default:
-                boss.id = 39; // Julian (Master Boss)
+                boss.id = JULIAN_DAT; // Julian (52)
                 boss.hp = static_cast<int32_t>(1500.0 * boss_hp_scale);
                 break;
         }
@@ -167,6 +167,24 @@ survival_wave_spec_t survival_manager_t::generate_wave(uint32_t wave_number) con
     }
 
     return wave;
+}
+
+survival_wave_spec_t survival_manager_t::generate_wave_from_stage_data(const stage_manager_t& stage_mgr, uint32_t wave_number) const {
+    const stage_definition_t* s50 = stage_mgr.get_stage(50);
+    if (s50 && wave_number >= 1 && wave_number <= s50->phases.size()) {
+        const auto& phase = s50->phases[wave_number - 1];
+        survival_wave_spec_t wave;
+        wave.wave_number = wave_number;
+        wave.is_boss_wave = is_boss_milestone(wave_number);
+        wave.bgm = !phase.music.empty() ? phase.music : get_milestone_bgm(wave_number);
+        wave.spawns = phase.enemies;
+        wave.total_enemies = 0;
+        for (const auto& sp : wave.spawns) {
+            wave.total_enemies += sp.times;
+        }
+        return wave;
+    }
+    return generate_wave(wave_number);
 }
 
 std::string survival_manager_t::format_hud() const {

@@ -56,6 +56,7 @@ void FUN_00432ab0(undefined4 param_1,int *param_2,undefined4 *param_3)
   uint local_4;
   
   local_4 = DAT_0044eea4 ^ (uint)&local_9f4;
+  local_9f0 = (int)(uintptr_t)in_ECX;
   local_9ec = param_1;
   local_9f4 = param_2;
   local_9dc = param_3;

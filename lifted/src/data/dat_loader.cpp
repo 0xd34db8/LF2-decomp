@@ -211,11 +211,65 @@ bool dat_loader_t::parse_content(file_t* file, const std::string& content, uint3
                 } else if (token == "weapon_drop_hurt:") {
                     stream >> file->weapon_drop_hurt;
                 } else if (token == "weapon_hit_sound:") {
-                    stream >> file->weapon_hit_sound;
+                    std::string snd_str;
+                    if (stream >> snd_str) {
+                        size_t d_pos = snd_str.find_first_of("0123456789");
+                        if (d_pos != std::string::npos) {
+                            try {
+                                int snd_id = std::stoi(snd_str.substr(d_pos));
+                                file->weapon_hit_sound = static_cast<uint32_t>(snd_id);
+                                file->weapon_hit_sound_id = snd_id;
+                            } catch (...) {}
+                        }
+                    }
                 } else if (token == "weapon_drop_sound:") {
-                    stream >> file->weapon_drop_sound;
+                    std::string snd_str;
+                    if (stream >> snd_str) {
+                        size_t d_pos = snd_str.find_first_of("0123456789");
+                        if (d_pos != std::string::npos) {
+                            try {
+                                int snd_id = std::stoi(snd_str.substr(d_pos));
+                                file->weapon_drop_sound = static_cast<uint32_t>(snd_id);
+                                file->weapon_drop_sound_id = snd_id;
+                            } catch (...) {}
+                        }
+                    }
                 } else if (token == "weapon_broken_sound:") {
-                    stream >> file->weapon_broken_sound;
+                    std::string snd_str;
+                    if (stream >> snd_str) {
+                        size_t d_pos = snd_str.find_first_of("0123456789");
+                        if (d_pos != std::string::npos) {
+                            try {
+                                int snd_id = std::stoi(snd_str.substr(d_pos));
+                                file->weapon_broken_sound = static_cast<uint32_t>(snd_id);
+                                file->weapon_broken_sound_id = snd_id;
+                            } catch (...) {}
+                        }
+                    }
+                } else if (token == "<weapon_strength_list>") {
+                    int current_entry_idx = 0;
+                    while (stream >> token && token != "<weapon_strength_list_end>") {
+                        if (!token.empty() && token[0] == '#') {
+                            std::string dummy;
+                            std::getline(stream, dummy);
+                            continue;
+                        }
+                        if (token == "entry:") {
+                            std::string entry_name;
+                            stream >> current_entry_idx >> entry_name;
+                        } else if (current_entry_idx >= 1 && current_entry_idx <= 4) {
+                            itr_t& w_itr = file->attacking_itrs[current_entry_idx];
+                            if (token == "dvx:") stream >> w_itr.dvx;
+                            else if (token == "dvy:") stream >> w_itr.dvy;
+                            else if (token == "fall:") stream >> w_itr.fall;
+                            else if (token == "arest:") stream >> w_itr.arest;
+                            else if (token == "vrest:") stream >> w_itr.vrest;
+                            else if (token == "respond:") stream >> w_itr.respond;
+                            else if (token == "effect:") stream >> w_itr.effect;
+                            else if (token == "bdefend:") stream >> w_itr.bdefend;
+                            else if (token == "injury:") stream >> w_itr.injury;
+                        }
+                    }
                 }
             }
         } else if (token == "<frame>") {
@@ -305,19 +359,27 @@ bool dat_loader_t::parse_content(file_t* file, const std::string& content, uint3
                             else if (token == "dvz:") stream >> frame.wpoint.dvz;
                         }
                     } else if (token == "cpoint:") {
+                        frame.cpoint.throwvx = -0x21524111;
                         while (stream >> token && token != "cpoint_end:") {
                             if (token == "kind:") stream >> frame.cpoint.kind;
                             else if (token == "x:") stream >> frame.cpoint.x;
                             else if (token == "y:") stream >> frame.cpoint.y;
-                            else if (token == "throwvx:") stream >> frame.cpoint.throwv_x;
-                            else if (token == "throwvy:") stream >> frame.cpoint.throwv_y;
-                            else if (token == "throwinjury:") stream >> frame.cpoint.throw_injury;
-                            else if (token == "vaction:") stream >> frame.cpoint.v_action;
-                            else if (token == "taction:") stream >> frame.cpoint.throw_a;
-                            else if (token == "aaction:") stream >> frame.cpoint.throw_d;
-                            else if (token == "jaction:") stream >> frame.cpoint.throw_j;
-                            else if (token == "fronthurtact:") stream >> frame.cpoint.front_hurt_act;
-                            else if (token == "backhurtact:") stream >> frame.cpoint.back_hurt_act;
+                            else if (token == "injury:") stream >> frame.cpoint.injury;
+                            else if (token == "fronthurtact:") stream >> frame.cpoint.fronthurtact;
+                            else if (token == "cover:") stream >> frame.cpoint.cover;
+                            else if (token == "backhurtact:") stream >> frame.cpoint.backhurtact;
+                            else if (token == "vaction:") stream >> frame.cpoint.vaction;
+                            else if (token == "aaction:") stream >> frame.cpoint.aaction;
+                            else if (token == "jaction:") stream >> frame.cpoint.jaction;
+                            else if (token == "daction:") stream >> frame.cpoint.daction;
+                            else if (token == "taction:") stream >> frame.cpoint.taction;
+                            else if (token == "throwvx:") stream >> frame.cpoint.throwvx;
+                            else if (token == "throwvy:") stream >> frame.cpoint.throwvy;
+                            else if (token == "throwvz:") stream >> frame.cpoint.throwvz;
+                            else if (token == "hurtable:") stream >> frame.cpoint.hurtable;
+                            else if (token == "throwinjury:") stream >> frame.cpoint.throwinjury;
+                            else if (token == "decrease:") stream >> frame.cpoint.decrease;
+                            else if (token == "dircontrol:") stream >> frame.cpoint.dircontrol;
                         }
                     } else if (token == "opoint:") {
                         while (stream >> token && token != "opoint_end:") {

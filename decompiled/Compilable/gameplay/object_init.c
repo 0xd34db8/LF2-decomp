@@ -16,92 +16,50 @@ void lf2_object_init(object_t *obj)
 {
     if (!obj) return;
 
-    // Reset velocities and accelerations (offsets 0x28 - 0x58)
-    obj->pic_x_gain = 0.0;
-    obj->y_accl = 0.0;
-    obj->z_accl = 0.0;
-    obj->x_velocity = 0.0;
-    obj->y_velocity = 0.0;
-    obj->z_velocity = 0.0;
+    memset(obj, 0, sizeof(object_t));
 
-    // Continuous positions (offsets 0x58 - 0x70)
+    // Exact initial constants from FUN_004061d0 (0x004061D0)
+    // IEEE-754 0x3fb999999999999a == 0.1
+    obj->pic_x_gain = 0.1;
+    obj->y_accl = 0.1;
+    obj->z_accl = 0.1;
+    obj->x_velocity = 0.1;
+    obj->y_velocity = 0.1;
+    obj->z_velocity = 0.1;
+
     obj->x_position = 0.0;
     obj->y_position = 0.0;
     obj->z_position = 0.0;
 
-    // Discrete coordinates (offsets 0x10 - 0x1C)
-    obj->x = 0;
-    obj->y = 0;
-    obj->z = 0;
-
-    // Counters and flags (offsets 0x00 - 0x0C)
-    obj->move_counter = 0;
-    obj->run_counter = 0;
-    obj->invincible_time = 0;
-
-    // Frame states (offsets 0x70 - 0x88)
-    obj->frame_id1 = 0;
-    obj->frame_id2 = 0;
-    obj->frame_id3 = 0;
-    obj->frame_id4 = 0;
     obj->facing = FACING_RIGHT;
-    obj->wait_counter = 0;
 
-    // Weapon & holding states (offsets 0x8C - 0xB8)
-    obj->cpoint_catcher = 0;
-    obj->cpoint_timer = 0;
-    obj->weapon_type = 0;
-    obj->weapon_id = 0;
-    obj->holder_id = 0;
-    obj->fall = 0;
-    obj->shaking = 0;
-    obj->bdefend = 0;
-
-    // Input state bitfields
-    obj->holding_up = 0;
-    obj->holding_down = 0;
-    obj->holding_left = 0;
-    obj->holding_right = 0;
-    obj->holding_attack = 0;
-    obj->holding_jump = 0;
-    obj->holding_defend = 0;
-    obj->click_up = 0;
-    obj->click_down = 0;
-    obj->click_left = 0;
-    obj->click_right = 0;
-    obj->click_attack = 0;
-    obj->click_jump = 0;
-    obj->click_defend = 0;
-    obj->defense_breaking = 0;
-
-    // Combat tracking arrays
-    memset(obj->vrest_of_objects, 0, sizeof(obj->vrest_of_objects));
-    memset(obj->injured_of_attack, 0, sizeof(obj->injured_of_attack));
-    memset(obj->itr_of_attack, 0, sizeof(obj->itr_of_attack));
+    // Combat tracking defaults (0x2E8 - 0x2F8)
     obj->successful_attacks = 0;
-    obj->attackable_distance = 0;
-    obj->vulnerable_distance = 0;
-    obj->clone = 0;
+    obj->attackable_distance = 1000;
+    obj->vulnerable_distance = 1000;
+    obj->_unknown29 = 1000;
+    obj->clone = -1;
+    obj->weapon_throw_injury = -1;
 
-    // Health, MP, and scoring
-    obj->hp = 0;
-    obj->dark_hp = 0;
-    obj->max_hp = 0;
-    obj->mp = 0;
-    obj->pic_no_gain = 0;
-    obj->drink_hp = 0;
-    obj->thrown_injury = 0;
-    obj->firen_counter = 0;
-    obj->armor_multiplier = 0;
-    obj->total_attack = 0;
-    obj->hp_lost = 0;
-    obj->mp_used = 0;
-    obj->owner = 0;
-    obj->kills = 0;
-    obj->get_weapon_counter = 0;
-    obj->enemy = 0;
+    // Health and MP defaults (0x2FC - 0x308)
+    obj->hp = 500;
+    obj->dark_hp = 500;
+    obj->max_hp = 500;
+    obj->mp = 500;
+
+    // Ownership and identity defaults (0x324 - 0x364)
+    obj->uid = -1;
+    obj->_unknown34_rest[0] = -1;
+    obj->_unknown34_rest[1] = -1;
+    obj->_unknown39 = -1;
+    obj->owner = 99;
+    obj->enemy = -1;
     obj->team = 0;
-    obj->file = NULL;
+
+    // AI target defaults (0x3F8 - 0x400)
+    *((int32_t *)&obj->ai_target_x - 1) = -1;
+    obj->ai_target_x = -1000;
+    obj->ai_target_z = -1000;
 }
 
 // MSVC __thiscall bridge for FUN_004061d0

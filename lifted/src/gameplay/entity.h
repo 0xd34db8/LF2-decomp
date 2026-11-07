@@ -2,11 +2,20 @@
 
 #include <cstdint>
 #include "core/object.h"
+#include "core/global.h"
 
 namespace lf2 {
 
 // 1:1 Lift of 0x004061d0: Initializes/resets an object_t instance
 void object_init(object_t* obj);
+
+// 1:1 Lift of 0x00406a20: Spawns an opoint object/projectile in world->objects[50..399]
+int32_t object_spawn_opoint(global_t* world, int32_t file_id, int32_t owner, int32_t frame_id,
+                            int32_t team, int32_t x, int32_t y, int32_t z,
+                            double vx, double vy, double vz, uint8_t facing);
+
+// 1:1 Lift of 0x00406ba0: Processes hit_Fa homing/chase/volcano projectile physics
+void object_process_hit_fa(global_t* world, int32_t obj_idx);
 
 // 1:1 Lift of 0x00417F80: Integrates continuous 3D velocity and rounds to integer coordinates
 void object_update_motion(object_t* obj, int32_t stage_z_min = 0, int32_t stage_z_max = 400, int32_t stage_width = 2000);

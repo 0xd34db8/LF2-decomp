@@ -113,6 +113,19 @@ bool control_config_t::load_from_file(const std::string& filepath) {
     file >> demo_mode;
     file >> replay_mode;
 
+    // 0x00423590: Read 3 profile strings (Name, Email, Info)
+    std::string dummy;
+    std::getline(file, dummy);
+    if (std::getline(file, profile_name)) {
+        if (!profile_name.empty() && profile_name.back() == '\r') profile_name.pop_back();
+    }
+    if (std::getline(file, profile_email)) {
+        if (!profile_email.empty() && profile_email.back() == '\r') profile_email.pop_back();
+    }
+    if (std::getline(file, profile_info)) {
+        if (!profile_info.empty() && profile_info.back() == '\r') profile_info.pop_back();
+    }
+
     return true;
 }
 
@@ -122,10 +135,10 @@ bool control_config_t::save_to_file(const std::string& filepath) const {
         return false;
     }
 
-    // 0x004233E0: Write 11 keys per player
+    // 0x00423230: Write 11 space-separated keys per player line
     for (size_t p = 0; p < MAX_CONTROL_PLAYERS; ++p) {
         for (size_t k = 0; k < KEYS_PER_PLAYER; ++k) {
-            file << player_keys[p][k] << "\n";
+            file << player_keys[p][k] << (k == KEYS_PER_PLAYER - 1 ? "\n" : " ");
         }
     }
 
@@ -136,11 +149,14 @@ bool control_config_t::save_to_file(const std::string& filepath) const {
         for (char& c : encoded) {
             if (c == ' ') c = '`';
         }
-        file << encoded << (p == MAX_CONTROL_PLAYERS - 1 ? "\n" : " ");
+        file << encoded << "\n";
     }
 
     file << demo_mode << "\n";
     file << replay_mode << "\n";
+    file << profile_name << "\n";
+    file << profile_email << "\n";
+    file << profile_info << "\n";
 
     return true;
 }

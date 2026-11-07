@@ -13,6 +13,9 @@
 #include "dat_loader.h"
 #include "menu.h"
 #include "audio/audio.h"
+#include "app/stage.h"
+#include "app/battle.h"
+#include "app/survival.h"
 
 namespace lf2 {
 
@@ -115,9 +118,13 @@ struct control_config_t {
     player_control_t players[4];
     int demo_mode = 0;
     int replay_mode = 0;
+    char profile_name[64] = "<No name>";
+    char profile_email[64] = "<No email>";
+    char profile_info[64] = "<No info>";
 
     void init_defaults();
     bool load_from_file(const std::string& path);
+    bool save_to_file(const std::string& path) const;
 };
 
 enum class scene_t : uint32_t {
@@ -311,6 +318,15 @@ private:
     object_t        m_fighters[MAX_OBJECTS];
     file_t*         m_loaded_files[MAX_FILES];
     uint32_t        m_num_fighters{0};
+
+    // Volume level (0..1000, step 50) & HUD display timer (0x004028A0)
+    int32_t         m_volume_level{1000};
+    int32_t         m_volume_display_timer{0};
+
+    // Game mode managers (0x0041C920)
+    stage_manager_t             m_stage_mgr;
+    battle_skirmish_simulator_t m_battle_mgr;
+    survival_manager_t          m_survival_mgr;
 };
 
 } // namespace lf2

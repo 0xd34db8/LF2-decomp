@@ -40,6 +40,76 @@ uint32_t ai_find_nearest_target(const global_t* world, uint32_t ai_id)
     return best_target;
 }
 
+bool ai_evaluate_character_special(object_t* self, const object_t* target, input_state_t& out_input)
+{
+    if (!self || !self->file || !target || !target->file) return false;
+
+    int32_t dx = std::abs(target->x - self->x);
+    int32_t dz = std::abs(target->z - self->z);
+    uint32_t cid = self->file->id;
+
+    switch (cid) {
+        case DEEP_DAT:
+            if (dx < 80 && dz < 16 && self->mp >= 75 && lf2_random(0x20, 6) == 0) {
+                out_input.defend = true;
+                out_input.down = true;
+                out_input.attack = true;
+                return true;
+            }
+            break;
+        case JOHN_DAT:
+        case DENNIS_DAT:
+        case DAVIS_DAT:
+        case FIREN_DAT:
+        case FREEZE_DAT:
+        case FIRZEN_DAT:
+        case JULIAN_DAT:
+            if (dx > 120 && dx < 380 && dz < 18 && self->mp >= 80 && lf2_random(0x21, 5) == 0) {
+                out_input.defend = true;
+                if (target->x > self->x) out_input.right = true;
+                else out_input.left = true;
+                out_input.attack = true;
+                return true;
+            }
+            break;
+        default:
+            break;
+    }
+    return false;
+}
+
+bool ai_evaluate_weapon_decision(const global_t* world, uint32_t ai_id, uint32_t target_id, input_state_t& out_input)
+{
+    if (!world || ai_id >= MAX_OBJECTS || target_id >= MAX_OBJECTS) return false;
+    const object_t* self = world->objects[ai_id];
+    const object_t* target = world->objects[target_id];
+    if (!self || !target || self->weapon_type == 0) return false;
+
+    int32_t w_id = self->weapon_id;
+    if (w_id < 0 || w_id >= static_cast<int32_t>(MAX_OBJECTS) || !world->is_object_exists[w_id]) return false;
+    const object_t* weapon = world->objects[w_id];
+    if (!weapon || !weapon->file) return false;
+
+    uint32_t wid = weapon->file->id;
+    int32_t dx = std::abs(target->x - self->x);
+    int32_t dz = std::abs(target->z - self->z);
+
+    if (wid == MILK_DAT || wid == BEER_DAT) {
+        if (dx > 120 && lf2_random(0x34, 5) == 0) {
+            out_input.attack = true;
+            return true;
+        }
+        return false;
+    }
+
+    if ((wid == STONE_DAT || wid == WOODEN_BOX_DAT) && dx < 280 && dz < 12 && lf2_random(0x2D, 6) == 0) {
+        out_input.attack = true;
+        return true;
+    }
+
+    return false;
+}
+
 input_state_t ai_evaluate_behavior(const global_t* world, uint32_t ai_id, ai_difficulty_t difficulty)
 {
     input_state_t input{};
@@ -54,13 +124,14 @@ input_state_t ai_evaluate_behavior(const global_t* world, uint32_t ai_id, ai_dif
     if (self->fall > 0) return input;
 
     // Locate target
-    uint32_t target_id = self->enemy;
+    int32_t target_id_signed = self->enemy;
+    uint32_t target_id = (target_id_signed >= 0) ? static_cast<uint32_t>(target_id_signed) : MAX_OBJECTS;
     if (target_id >= MAX_OBJECTS || target_id == ai_id ||
         !world->is_object_exists[target_id] ||
         world->objects[target_id]->hp <= 0 ||
         world->objects[target_id]->team == self->team) {
         target_id = ai_find_nearest_target(world, ai_id);
-        self->enemy = target_id;
+        self->enemy = (target_id < MAX_OBJECTS) ? static_cast<int32_t>(target_id) : -1;
     }
 
     if (target_id >= MAX_OBJECTS || !world->is_object_exists[target_id]) {
@@ -68,6 +139,9 @@ input_state_t ai_evaluate_behavior(const global_t* world, uint32_t ai_id, ai_dif
     }
 
     const object_t* target = world->objects[target_id];
+    self->ai_target_x = target->x;
+    self->ai_target_z = target->z;
+
     int32_t dx = target->x - self->x;
     int32_t dz = target->z - self->z;
     int32_t abs_dx = std::abs(dx);
@@ -107,7 +181,12 @@ input_state_t ai_evaluate_behavior(const global_t* world, uint32_t ai_id, ai_dif
         return input;
     }
 
-    // 3. Approach movement
+    // 3. Held weapon decision (0x00408CB0)
+    if (ai_evaluate_weapon_decision(world, ai_id, target_id, input)) {
+        return input;
+    }
+
+    // 4. Approach movement
     // Z-axis lane alignment
     if (dz > 10) {
         input.down = true;
@@ -124,7 +203,11 @@ input_state_t ai_evaluate_behavior(const global_t* world, uint32_t ai_id, ai_dif
         self->facing = FACING_LEFT;
     }
 
-    // 4. Long-range projectile attack
+    // 5. Character-specific & long-range projectile attack (0x00403A40 / 0x004094B0)
+    if (ai_evaluate_character_special(self, target, input)) {
+        return input;
+    }
+
     if (abs_dx > 120 && abs_dz <= 20 && self->mp >= 50) {
         uint32_t ranged_roll = lf2_random(0x9B, 100);
         uint32_t ranged_threshold = (difficulty == AI_CRAZY) ? 35 :

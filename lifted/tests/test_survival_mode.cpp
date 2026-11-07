@@ -118,13 +118,13 @@ static void test_milestone_boss_progression() {
     for (const auto& sp : w10.spawns) {
         if (sp.is_boss) {
             found_boss = true;
-            assert(sp.id == 38); // Firzen
+            assert(sp.id == FIRZEN_DAT); // Firzen (51)
             assert(sp.hp > 500);
         }
     }
     assert(found_boss);
 
-    // Boss Wave 20: Louis
+    // Boss Wave 20: LouisEX
     survival_wave_spec_t w20 = mgr.generate_wave(20);
     assert(w20.is_boss_wave);
     assert(w20.bgm == "bgm\\boss2.wma");
@@ -132,7 +132,7 @@ static void test_milestone_boss_progression() {
     for (const auto& sp : w20.spawns) {
         if (sp.is_boss) {
             found_boss = true;
-            assert(sp.id == 37); // Louis
+            assert(sp.id == LOUISE_EX_DAT); // LouisEX (50)
         }
     }
     assert(found_boss);
@@ -145,7 +145,7 @@ static void test_milestone_boss_progression() {
     for (const auto& sp : w50.spawns) {
         if (sp.is_boss) {
             found_boss = true;
-            assert(sp.id == 39); // Julian
+            assert(sp.id == JULIAN_DAT); // Julian (52)
             assert(sp.hp >= 3000);
         }
     }

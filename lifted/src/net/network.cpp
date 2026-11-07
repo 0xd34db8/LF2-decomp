@@ -288,7 +288,7 @@ uint8_t network_manager_t::compute_hp_checksum(const object_t* const* objects, i
     if (!objects || count <= 0) return 0;
 
     uint32_t hp_sum = 0;
-    for (int i = 0; i < count && i < 8; ++i) {
+    for (int i = 0; i < count && i < static_cast<int>(MAX_OBJECTS); ++i) {
         if (objects[i]) {
             hp_sum += static_cast<uint32_t>(objects[i]->hp);
         }

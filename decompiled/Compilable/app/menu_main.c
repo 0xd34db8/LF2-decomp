@@ -66,7 +66,7 @@ void FUN_00431d10(undefined4 param_1,undefined4 *param_2,uint *param_3,undefined
   local_704 = param_2;
   local_708 = param_3;
   local_6f8 = param_4;
-  local_6fc = 0;
+  local_6fc = (int)(uintptr_t)in_ECX;
   DAT_00451b7c = 0;
   FUN_00415160(0,0,0x31a,0x226,0x122565);
   if (DAT_004511ac == 0) {

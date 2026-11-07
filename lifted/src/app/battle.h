@@ -75,6 +75,9 @@ struct battle_army_t {
 void apply_archetype_preset(battle_army_t& army, battle_archetype_t archetype,
                             int32_t unit_type_count = 10);
 
+// 1:1 with 0x00438B40: Authentic Battle Mode preset tables (500 HP per unit, (base * scale_factor) / 3)
+void apply_authentic_battle_preset(battle_army_t& army, int32_t preset_id, int32_t scale_factor = 3);
+
 // Status HUD string formatters (1:1 with 0x00437860 sprintf format strings)
 std::string format_battle_status_hud(int32_t man_count, int32_t hp, int32_t reserve_count);
 std::string format_stage_hud(int32_t stage_code);

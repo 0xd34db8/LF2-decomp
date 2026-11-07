@@ -387,6 +387,7 @@ extern char  DAT_00455388;
 extern int   DAT_0044d010;
 extern int   DAT_0044d000;
 extern int   DAT_0044f18c;
+extern int   DAT_0044f190;
 extern char  DAT_0044ef04[260];
 extern char  DAT_0044eed0[260];
 extern char  DAT_0044f128[64];
@@ -395,6 +396,25 @@ extern void* DAT_0044f040;
 extern void* DAT_0044f044;
 extern void* DAT_0044f048;
 extern void* DAT_0044f04c;
+extern int   DAT_00450be8;
+extern int   DAT_00450bfc;
+extern char  DAT_004553f2;
+extern char  DAT_004553f3;
+extern int   DAT_00457588[400];
+extern int   DAT_00457bc8[400];
+extern int   DAT_00452170[400];
+extern int   DAT_00453e10[400];
+extern int   DAT_004527e8[400];
+extern int   DAT_004554c8[400];
+
+// AI Difficulty & Decision Globals
+extern int   DAT_0044f604;
+extern int   DAT_0044f608;
+extern int   DAT_0044f60c;
+extern int   DAT_0044f610;
+extern int   DAT_0044f614;
+extern int   DAT_0044f618;
+extern int   DAT_0044f61c;
 
 #ifdef __cplusplus
 }

@@ -180,6 +180,10 @@ update_status:
     }
 
     snprintf(DAT_0044f060, sizeof(DAT_0044f060), "Music: %s", DAT_0044f128);
+    if (param_4 != NULL) {
+        FUN_00401290(param_4, DAT_0044f060, 0, 0xd8775a, 0x25b, 3);
+        FUN_00401290(param_4, "(Press Left/Right to change)", 0, 0xa03f22, 0x25b, 0x14);
+    }
 }
 
 void FUN_004025b0(void)
@@ -196,6 +200,12 @@ void FUN_004025d0(int track_id)
     }
 
     int chosen = track_id;
+    if (chosen == 0 && in_ECX != NULL) {
+        int ecx_val = (int)(intptr_t)in_ECX;
+        if (ecx_val >= 1 && ecx_val <= 8) {
+            chosen = ecx_val;
+        }
+    }
     if (chosen == 0) {
         chosen = FUN_00417170(2, 8) + 1;
     }

@@ -35,33 +35,45 @@ struct bpoint_t {
 // Catch Point (cpoint: catching, holding, and throwing entities)
 // Size: 0x44 (68 bytes)
 struct cpoint_t {
-    uint32_t kind;       // 0x00
-    int32_t  x;          // 0x04
-    int32_t  y;          // 0x08
+    int32_t   kind;          // 0x00 (file_t + 0x82C)
+    int32_t   x;             // 0x04 (file_t + 0x830)
+    int32_t   y;             // 0x08 (file_t + 0x834)
     union {
-        // kind == 1: Catcher properties
-        struct {
-            int32_t  throwv_x;        // 0x0C
-            int32_t  throwv_y;        // 0x10
-            uint32_t _unknown1;       // 0x14
-            uint32_t _unknown2;       // 0x18
-            uint32_t throw_injury;    // 0x1C
-            uint32_t _unknown3;       // 0x20
-            uint32_t v_action;        // 0x24
-            uint32_t throw_a;         // 0x28
-            uint32_t throw_d;         // 0x2C
-            uint32_t throw_j;         // 0x30
-            uint32_t throw_Fa;        // 0x34
-            uint32_t throw_Ua;        // 0x38
-            uint32_t throw_Da;        // 0x3C
-            uint32_t _unknown4;       // 0x40
-        };
-        // kind == 2: Caught properties
-        struct {
-            uint32_t front_hurt_act;  // 0x0C
-            uint32_t back_hurt_act;   // 0x10
-            uint32_t _pad_caught[12];
-        };
+        int32_t  injury;         // 0x0C (file_t + 0x838, kind 1 catcher)
+        int32_t  fronthurtact;   // 0x0C (file_t + 0x838, kind 2 caught)
+        uint32_t front_hurt_act; // 0x0C alias
+    };
+    union {
+        int32_t  cover;          // 0x10 (file_t + 0x83C, kind 1 catcher)
+        int32_t  backhurtact;    // 0x10 (file_t + 0x83C, kind 2 caught)
+        uint32_t back_hurt_act;  // 0x10 alias
+    };
+    union {
+        int32_t  vaction;        // 0x14 (file_t + 0x840)
+        uint32_t v_action;       // 0x14 alias
+    };
+    int32_t   aaction;       // 0x18 (file_t + 0x844)
+    int32_t   jaction;       // 0x1C (file_t + 0x848)
+    int32_t   daction;       // 0x20 (file_t + 0x84C)
+    union {
+        int32_t  throwvx;        // 0x24 (file_t + 0x850)
+        int32_t  throwv_x;       // 0x24 alias
+    };
+    union {
+        int32_t  throwvy;        // 0x28 (file_t + 0x854)
+        int32_t  throwv_y;       // 0x28 alias
+    };
+    int32_t   hurtable;      // 0x2C (file_t + 0x858)
+    int32_t   decrease;      // 0x30 (file_t + 0x85C)
+    int32_t   dircontrol;    // 0x34 (file_t + 0x860)
+    int32_t   taction;       // 0x38 (file_t + 0x864)
+    union {
+        int32_t  throwinjury;    // 0x3C (file_t + 0x868)
+        uint32_t throw_injury;   // 0x3C alias
+    };
+    union {
+        int32_t  throwvz;        // 0x40 (file_t + 0x86C)
+        int32_t  throwv_z;       // 0x40 alias
     };
 };
 

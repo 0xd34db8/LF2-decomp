@@ -26,7 +26,7 @@ void FUN_00437860(int param_1,int *param_2)
 
   int iVar5;
 
-  char *in_ecx = (char *)in_ecx;
+  char *in_ecx = (char *)in_ECX;
 
   int iVar6;
 

@@ -9,7 +9,7 @@ void FUN_00437220(undefined4 param_1,undefined4 *param_2)
 {
   int iVar1;
   int iVar2;
-  char *in_ecx = (char *)0;
+  char *in_ecx = (char *)in_ECX;
   int *piVar3;
   int iVar4;
   int iVar5;

@@ -43,8 +43,11 @@ public:
     // Revives dead players with 5 HP and restores MP to 500
     void apply_wave_clear_vitals(std::vector<object_t*>& players);
 
-    // Procedural wave generation & scaling formula (incremental counts, HP multipliers, boss tiers)
+    // Procedural / fallback wave generation & scaling formula (incremental counts, HP multipliers, boss tiers)
     survival_wave_spec_t generate_wave(uint32_t wave_number) const;
+
+    // 1:1 with 0x00434AB0: Load Survival wave from stage.dat (<stage> id: 50)
+    survival_wave_spec_t generate_wave_from_stage_data(const stage_manager_t& stage_mgr, uint32_t wave_number) const;
 
     // Milestone evaluation (every 10 waves is a boss milestone)
     static bool is_boss_milestone(uint32_t wave_number) {

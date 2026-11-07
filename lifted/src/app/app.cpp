@@ -61,6 +61,9 @@ void control_config_t::init_defaults() {
     std::strcpy(players[3].name, "4");
     demo_mode = 1;
     replay_mode = 0;
+    std::strcpy(profile_name, "<No name>");
+    std::strcpy(profile_email, "<No email>");
+    std::strcpy(profile_info, "<No info>");
 }
 
 bool control_config_t::load_from_file(const std::string& path) {
@@ -93,6 +96,67 @@ bool control_config_t::load_from_file(const std::string& path) {
 
     std::fscanf(fp, "%d", &demo_mode);
     std::fscanf(fp, "%d", &replay_mode);
+
+    auto read_profile_line = [](FILE* f, char* dest, size_t max_len) {
+        char buf[128] = {0};
+        if (std::fgets(buf, sizeof(buf), f)) {
+            size_t len = std::strlen(buf);
+            while (len > 0 && (buf[len - 1] == '\r' || buf[len - 1] == '\n')) {
+                buf[--len] = '\0';
+            }
+            if (len > 0) {
+                std::strncpy(dest, buf, max_len - 1);
+                dest[max_len - 1] = '\0';
+            }
+        }
+    };
+
+    int ch = std::fgetc(fp);
+    while (ch == '\r' || ch == '\n') {
+        ch = std::fgetc(fp);
+    }
+    if (ch != EOF) {
+        std::ungetc(ch, fp);
+        read_profile_line(fp, profile_name, sizeof(profile_name));
+        read_profile_line(fp, profile_email, sizeof(profile_email));
+        read_profile_line(fp, profile_info, sizeof(profile_info));
+    }
+
+    std::fclose(fp);
+    return true;
+}
+
+bool control_config_t::save_to_file(const std::string& path) const {
+    FILE* fp = std::fopen(path.c_str(), "w");
+    if (!fp) {
+        return false;
+    }
+
+    for (int p = 0; p < 4; ++p) {
+        for (int k = 0; k < 11; ++k) {
+            std::fprintf(fp, "%d%s", players[p].keys[k], (k == 10) ? "\n" : " ");
+        }
+    }
+
+    for (int p = 0; p < 4; ++p) {
+        char safe_name[16] = {0};
+        std::strncpy(safe_name, players[p].name, 15);
+        if (safe_name[0] == '\0') {
+            std::snprintf(safe_name, sizeof(safe_name), "%d", p + 1);
+        }
+        for (int i = 0; safe_name[i]; ++i) {
+            if (safe_name[i] == ' ') {
+                safe_name[i] = '`';
+            }
+        }
+        std::fprintf(fp, "%s%s", safe_name, (p == 3) ? "\n" : " ");
+    }
+
+    std::fprintf(fp, "%d\n", demo_mode);
+    std::fprintf(fp, "%d\n", replay_mode);
+    std::fprintf(fp, "%s\n", profile_name[0] ? profile_name : "<No name>");
+    std::fprintf(fp, "%s\n", profile_email[0] ? profile_email : "<No email>");
+    std::fprintf(fp, "%s", profile_info[0] ? profile_info : "<No info>");
 
     std::fclose(fp);
     return true;
@@ -441,6 +505,19 @@ void app_t::on_key_down(uint8_t vk) {
         } else if (vk != 'B') {
             m_cheat_abc_idx = 0;
         }
+    }
+
+    // Authentic F11 / F12 volume control (0x004028A0)
+    if (vk == VK_LF2_F11) {
+        m_volume_level = std::max(0, m_volume_level - 50);
+        m_volume_display_timer = 50;
+        get_audio_system().set_master_volume((m_volume_level * SDL_MIX_MAXVOLUME) / 1000);
+        play_ui_sound(SOUND_OK);
+    } else if (vk == VK_LF2_F12) {
+        m_volume_level = std::min(1000, m_volume_level + 50);
+        m_volume_display_timer = 50;
+        get_audio_system().set_master_volume((m_volume_level * SDL_MIX_MAXVOLUME) / 1000);
+        play_ui_sound(SOUND_OK);
     }
 }
 
@@ -1087,6 +1164,24 @@ void app_t::start_battle() {
 
     m_camera.x = 0;
     m_camera.y = 0;
+
+    // Mode-specific initialization (0x0041C920 & 0x00438B40)
+    if (m_selected_mode == MODE_STAGE) {
+        m_stage_mgr.load_stages("data/stage.dat");
+        m_stage_mgr.start_stage(1, &m_world);
+    } else if (m_selected_mode == MODE_BATTLE) {
+        m_battle_mgr.reset();
+        battle_army_t army1;
+        army1.army_id = 0;
+        army1.team_id = 1;
+        apply_authentic_battle_preset(army1, 0, 3);
+        m_battle_mgr.add_army(army1);
+        battle_army_t army2;
+        army2.army_id = 1;
+        army2.team_id = 2;
+        apply_authentic_battle_preset(army2, 1, 3);
+        m_battle_mgr.add_army(army2);
+    }
 }
 
 void app_t::return_to_menu() {
@@ -1123,13 +1218,30 @@ void app_t::update_battle() {
         }
     }
 
+    // Mode-specific wave / army spawning dispatch (0x0041C920)
+    switch (m_selected_mode) {
+    case MODE_STAGE:
+        m_stage_mgr.update_stage(&m_world, m_camera.x);
+        break;
+    case MODE_BATTLE:
+        m_battle_mgr.step_simulation();
+        break;
+    case MODE_VS:
+    case MODE_1ON1:
+    case MODE_2ON2:
+    case MODE_DEMO:
+    case MODE_PLAYBACK:
+    default:
+        break;
+    }
+
     // Process inputs for all active fighters (Players 0..3 read their control.txt mappings)
     for (uint32_t i = 0; i < m_num_fighters; ++i) {
         object_t* fighter = &m_fighters[i];
         if (!fighter->file) continue;
 
         uint32_t slot = fighter->owner;
-        if (slot < 4 && m_slots[slot].is_human) {
+        if (slot < 4 && m_slots[slot].is_human && m_selected_mode != MODE_DEMO) {
             input_state_t input;
             input.left   = is_player_key_down(slot, ctrl_action_t::LEFT);
             input.right  = is_player_key_down(slot, ctrl_action_t::RIGHT);
@@ -1175,17 +1287,33 @@ void app_t::render_battle() {
         m_graphics.draw_background(&m_background, m_camera.x, m_camera.y);
     }
 
+    // Pass 1: Draw all active object shadows first, and collect active indices for Z-sorting (0x0041A5A0)
+    std::vector<uint32_t> active_indices;
+    active_indices.reserve(MAX_OBJECTS);
+
+    SDL_Texture* shadow_tex = nullptr;
+    if (m_stage_loaded && !m_background.shadow_path.empty()) {
+        shadow_tex = m_graphics.load_texture(m_background.shadow_path, true);
+    }
+
     for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
         const object_t* obj = m_world.objects[i];
         if (!obj || !obj->file) continue;
 
-        if (m_stage_loaded && !m_background.shadow_path.empty()) {
-            SDL_Texture* shadow_tex = m_graphics.load_texture(m_background.shadow_path, true);
-            if (shadow_tex) {
-                m_graphics.draw_shadow(shadow_tex, obj->x, obj->z, m_camera.x, m_camera.y,
-                                       m_background.shadow_w, m_background.shadow_h);
-            }
+        if (shadow_tex) {
+            m_graphics.draw_shadow(shadow_tex, obj->x, obj->z, m_camera.x, m_camera.y,
+                                   m_background.shadow_w, m_background.shadow_h);
         }
+        active_indices.push_back(i);
+    }
+
+    // Pass 2: Z-sort active objects ascending by z coordinate so deeper (smaller z) objects render behind closer ones
+    std::stable_sort(active_indices.begin(), active_indices.end(), [this](uint32_t a, uint32_t b) {
+        return m_world.objects[a]->z < m_world.objects[b]->z;
+    });
+
+    for (uint32_t idx : active_indices) {
+        const object_t* obj = m_world.objects[idx];
         m_graphics.draw_character(obj->file, obj, m_camera.x, m_camera.y);
     }
 
@@ -1254,6 +1382,10 @@ void app_t::update() {
         break;
     }
 
+    if (m_volume_display_timer > 0) {
+        m_volume_display_timer--;
+    }
+
     std::memcpy(m_prev_key_states, m_key_states, sizeof(m_key_states));
 }
 
@@ -1281,6 +1413,20 @@ void app_t::render() {
             m_options_ui->render(m_graphics, this);
         }
         break;
+    }
+
+    // Authentic Volume HUD Overlay (0x004028A0): "Volume: " + 20 vertical bars
+    if (m_volume_display_timer > 0) {
+        m_graphics.draw_rect(300, 505, 195, 24, 10, 20, 55, 220, true);
+        m_graphics.draw_rect(300, 505, 195, 24, 140, 180, 255, 255, false);
+        m_graphics.draw_text("Volume: ", 308, 509, 255, 255, 255, 1);
+        for (int i = 0; i < 20; ++i) {
+            bool active_bar = (i * 50 < m_volume_level);
+            uint8_t r = active_bar ? 120 : 40;
+            uint8_t g = active_bar ? 210 : 50;
+            uint8_t b = active_bar ? 255 : 80;
+            m_graphics.draw_rect(370 + i * 6, 510, 4, 14, r, g, b, 255, true);
+        }
     }
 
     SDL_RenderPresent(m_renderer);

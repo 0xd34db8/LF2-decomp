@@ -288,17 +288,38 @@ void renderer_t::draw_shadow(SDL_Texture* shadow_texture, int32_t world_x, int32
 void renderer_t::draw_background(const background_t* bg, int32_t camera_x, int32_t camera_y) {
     if (!m_renderer || !bg) return;
 
+    static int32_t s_bg_anim_counter = 0;
+
     for (size_t i = 0; i < bg->layers.size(); ++i) {
         const auto& layer = bg->layers[i];
-        SDL_Texture* tex = load_texture(layer.path, layer.transparency != 0);
-        if (!tex) continue;
+
+        // Animated layer cycle check (cc / c1 / c2 in FUN_0041a250)
+        if (layer.cc > 0) {
+            int32_t phase = s_bg_anim_counter % layer.cc;
+            if (phase < layer.c1 || phase > layer.c2) {
+                continue;
+            }
+        }
 
         int32_t draw_x = bg->calculate_layer_x(i, camera_x);
         int32_t draw_y = layer.y - camera_y;
 
+        // Solid color fill rect layer (rect: <color> in FUN_0041a250 / FUN_0043f1c0)
+        if (layer.is_rect) {
+            uint16_t c16 = static_cast<uint16_t>(layer.rect_color);
+            uint8_t r = static_cast<uint8_t>(((c16 >> 11) & 0x1F) * 255 / 31);
+            uint8_t g = static_cast<uint8_t>(((c16 >> 5)  & 0x3F) * 255 / 63);
+            uint8_t b = static_cast<uint8_t>((c16         & 0x1F) * 255 / 31);
+            draw_rect(draw_x, draw_y, layer.width, layer.height, r, g, b, 255, true);
+            continue;
+        }
+
+        SDL_Texture* tex = load_texture(layer.path, layer.transparency != 0);
+        if (!tex) continue;
+
         SDL_Rect src;
         SDL_Rect* p_src = nullptr;
-        if (layer.has_rect && layer.rect_w > 0 && layer.rect_h > 0) {
+        if (layer.has_rect && !layer.is_rect && layer.rect_w > 0 && layer.rect_h > 0) {
             src.x = layer.rect_x;
             src.y = layer.rect_y;
             src.w = layer.rect_w;
@@ -306,8 +327,17 @@ void renderer_t::draw_background(const background_t* bg, int32_t camera_x, int32
             p_src = &src;
         }
 
-        draw_sprite(tex, p_src, draw_x, draw_y, false);
+        // Horizontal loop tiling (layer.loop > 0 in FUN_0041a250)
+        if (layer.loop > 0) {
+            for (int32_t tx = draw_x; tx < 794; tx += layer.loop) {
+                draw_sprite(tex, p_src, tx, draw_y, false);
+            }
+        } else {
+            draw_sprite(tex, p_src, draw_x, draw_y, false);
+        }
     }
+
+    s_bg_anim_counter++;
 }
 
 void renderer_t::draw_rect(int32_t x, int32_t y, int32_t w, int32_t h,

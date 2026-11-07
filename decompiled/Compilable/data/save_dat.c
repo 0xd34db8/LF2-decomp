@@ -15,7 +15,8 @@ void FUN_0040d0a0(char *param_1)
 {
   int iVar1;
   FILE *_File;
-  int in_ECX = (int)(intptr_t)in_ECX;
+  int in_ecx_val = (int)(intptr_t)in_ECX;
+#define in_ECX in_ecx_val
   int *piVar2;
   undefined4 *puVar3;
   int local_10;

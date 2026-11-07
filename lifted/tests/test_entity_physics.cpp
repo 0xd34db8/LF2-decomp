@@ -23,7 +23,8 @@ void test_object_init()
     assert(obj.facing == 0);
     assert(obj.wait_counter == 0);
     assert(obj.hp == 500 && obj.dark_hp == 500 && obj.max_hp == 500 && obj.mp == 500);
-    assert(obj.owner == 99);
+    assert(obj.owner == -1 && obj.clone == -1 && obj.enemy == -1);
+    assert(obj.in_sky == 1 && obj.weapon_hp == 1000 && obj.ai_target_x == -1000 && obj.ai_target_z == -1000);
     assert(obj.attackable_distance == 1000);
     assert(obj.vulnerable_distance == 1000);
 

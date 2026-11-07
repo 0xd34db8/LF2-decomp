@@ -187,14 +187,16 @@ enum {
 
 // Hitbox effect kinds
 enum {
-    EFFECT_BLOOD            = 0,
-    EFFECT_FIRE             = 1,
-    EFFECT_FREEZE           = 2,
-    EFFECT_BURN_RUN         = 3,
-    EFFECT_FIRE_COLUMN      = 4,
+    EFFECT_PUNCH            = 0,
+    EFFECT_BLOOD            = 1,
+    EFFECT_BLEED            = 1,
+    EFFECT_FIRE             = 2,
+    EFFECT_FREEZE           = 3,
+    EFFECT_SHINING          = 4,
     EFFECT_FLAME            = 20,
     EFFECT_FIREN_EXPLODE    = 21,
-    EFFECT_COLUMN           = 22
+    EFFECT_JULIAN_EXPLODE   = 22,
+    EFFECT_COLUMN           = 30
 };
 
 // Animation States
@@ -287,23 +289,29 @@ typedef struct bpoint {
 // 5. Catch Point (cpoint: grappling anchor)
 // Size: 0x44 (68 bytes)
 typedef struct cpoint {
-    uint32_t  kind;          // 0x00
-    int32_t   x;             // 0x04
-    int32_t   y;             // 0x08
-    int32_t   throwv_x;      // 0x0C
-    int32_t   throwv_y;      // 0x10
-    uint32_t  _unknown1;     // 0x14
-    uint32_t  _unknown2;     // 0x18
-    uint32_t  throw_injury;  // 0x1C
-    uint32_t  _unknown3;     // 0x20
-    uint32_t  v_action;      // 0x24
-    uint32_t  throw_a;       // 0x28
-    uint32_t  throw_d;       // 0x2C
-    uint32_t  throw_j;       // 0x30
-    uint32_t  throw_Fa;      // 0x34
-    uint32_t  throw_Ua;      // 0x38
-    uint32_t  throw_Da;      // 0x3C
-    uint32_t  _unknown4;     // 0x40
+    int32_t   kind;          // 0x00 (file_t + 0x82C)
+    int32_t   x;             // 0x04 (file_t + 0x830)
+    int32_t   y;             // 0x08 (file_t + 0x834)
+    union {
+        int32_t injury;       // 0x0C (file_t + 0x838, kind 1 catcher)
+        int32_t fronthurtact; // 0x0C (file_t + 0x838, kind 2 caught)
+    };
+    union {
+        int32_t cover;        // 0x10 (file_t + 0x83C, kind 1 catcher)
+        int32_t backhurtact;  // 0x10 (file_t + 0x83C, kind 2 caught)
+    };
+    int32_t   vaction;       // 0x14 (file_t + 0x840)
+    int32_t   aaction;       // 0x18 (file_t + 0x844)
+    int32_t   jaction;       // 0x1C (file_t + 0x848)
+    int32_t   daction;       // 0x20 (file_t + 0x84C)
+    int32_t   throwvx;       // 0x24 (file_t + 0x850)
+    int32_t   throwvy;       // 0x28 (file_t + 0x854)
+    int32_t   hurtable;      // 0x2C (file_t + 0x858)
+    int32_t   decrease;      // 0x30 (file_t + 0x85C)
+    int32_t   dircontrol;    // 0x34 (file_t + 0x860)
+    int32_t   taction;       // 0x38 (file_t + 0x864)
+    int32_t   throwinjury;   // 0x3C (file_t + 0x868)
+    int32_t   throwvz;       // 0x40 (file_t + 0x86C)
 } cpoint_t;
 
 // 6. Weapon Point (wpoint: carried weapon attachment)
@@ -401,8 +409,8 @@ typedef struct file {
     int32_t          weapon_hit_sound_id;   // 0x0A4
     int32_t          weapon_drop_sound_id;  // 0x0A8
     int32_t          weapon_broken_sound_id;// 0x0AC
-    itr_t            attacking_itrs[4];     // 0x0B0 - 0x1F0
-    uint8_t          _pad3[0x2A8];          // 0x1F0 - 0x498
+    itr_t            attacking_itrs[5];     // 0x0B0 - 0x240 (1-based entry: 1..4 at 0x100..0x240)
+    uint8_t          _pad3[0x258];          // 0x240 - 0x498 (includes weapon_strength_names at 0x3D0)
     int32_t          bmp_count;             // 0x498
     char             bmp_paths[10][40];     // 0x49C - 0x62C
     int32_t          sheet_start[10];       // 0x62C - 0x654
@@ -424,7 +432,7 @@ typedef struct file {
 } file_t;
 
 // 9. World Entity / Character / Weapon Instance (object)
-// Total Size: 0x370 (880 bytes)
+// Total Size: 0x418 (1048 bytes)
 typedef struct object {
     uint32_t        move_counter;             // 0x000
     uint32_t        run_counter;              // 0x004
@@ -451,19 +459,32 @@ typedef struct object {
     uint32_t        frame_id4;                // 0x07C
     uint8_t         facing;                   // 0x080 (0: right, 1: left)
     uint8_t         _unknown4[3];             // 0x081 - 0x084
-    uint32_t        _unknown7;                // 0x084
-    uint32_t        wait_counter;             // 0x088
-    uint32_t        cpoint_catcher;           // 0x08C
-    uint32_t        cpoint_timer;             // 0x090
-    uint32_t        _unknown8;                // 0x094
-    uint32_t        weapon_type;              // 0x098
-    uint32_t        weapon_id;                // 0x09C
-    uint32_t        holder_id;                // 0x0A0
-    uint32_t        _unknown9[3];             // 0x0A4 - 0x0B0
+    int32_t         wait_counter;             // 0x084
+    union {
+        int32_t     cpoint_hurt;              // 0x088
+        int32_t     in_sky;                   // 0x088
+        uint32_t    _unknown7;                // 0x088
+    };
+    int32_t         cpoint_catcher;           // 0x08C
+    union {
+        int32_t     cpoint_caught;            // 0x090
+        uint32_t    cpoint_timer;             // 0x090
+    };
+    union {
+        int32_t     cpoint_hurtable;          // 0x094
+        uint32_t    _unknown8;                // 0x094
+    };
+    int32_t         weapon_type;              // 0x098
+    int32_t         weapon_id;                // 0x09C
+    int32_t         holder_id;                // 0x0A0
+    int32_t         _unknown9[3];             // 0x0A4 - 0x0B0
     int32_t         fall;                     // 0x0B0
     int32_t         shaking;                  // 0x0B4
-    uint32_t        bdefend;                  // 0x0B8
-    uint8_t         _unknown12[10];           // 0x0BC - 0x0C6
+    int32_t         bdefend;                  // 0x0B8
+    union {
+        uint8_t     key_state[10];            // 0x0BC - 0x0C6 (0..6: up, down, left, right, attack, jump, defend)
+        uint8_t     _unknown12[10];           // 0x0BC - 0x0C6
+    };
     uint8_t         holding_up;               // 0x0C6
     uint8_t         holding_down;             // 0x0C7
     uint8_t         holding_left;             // 0x0C8
@@ -478,10 +499,26 @@ typedef struct object {
     uint8_t         click_attack;             // 0x0D1
     uint8_t         click_jump;               // 0x0D2
     uint8_t         click_defend;             // 0x0D3
-    uint32_t        defense_breaking;         // 0x0D4
-    uint32_t        _unknown15[4];            // 0x0D8 - 0x0E8
-    uint32_t        _unknown26;               // 0x0E8
-    uint32_t        arest;                    // 0x0EC
+    int32_t         defense_breaking;         // 0x0D4
+    union {
+        struct {
+            int32_t reserve;                  // 0x0D8
+            int32_t curing_speed;             // 0x0DC
+            int32_t curing_hp;                // 0x0E0
+            int32_t additional_y;             // 0x0E4
+        };
+        uint32_t    _unknown15[4];            // 0x0D8 - 0x0E8
+    };
+    union {
+        struct {
+            uint8_t effect;                   // 0x0E8
+            uint8_t has_arest;                // 0x0E9
+            uint8_t can_hit;                  // 0x0EA
+            uint8_t _pad_0eb;                 // 0x0EB
+        };
+        uint32_t    _unknown26;               // 0x0E8
+    };
+    int32_t         arest;                    // 0x0EC
     uint8_t         vrest_of_objects[MAX_OBJECTS]; // 0x0F0 - 0x280 (400 bytes)
     int32_t         injured_of_attack[20];    // 0x280 - 0x2D0 (80 bytes)
     uint8_t         itr_of_attack[20];        // 0x2D0 - 0x2E4 (20 bytes)
@@ -489,35 +526,50 @@ typedef struct object {
     int32_t         attackable_distance;      // 0x2E8
     int32_t         vulnerable_distance;      // 0x2EC
     uint32_t        _unknown29;               // 0x2F0
-    uint32_t        clone;                    // 0x2F4
-    uint32_t        _unknown30;               // 0x2F8
+    int32_t         clone;                    // 0x2F4
+    union {
+        int32_t     weapon_throw_injury;      // 0x2F8
+        uint32_t    _unknown30;               // 0x2F8
+    };
     int32_t         hp;                       // 0x2FC
     int32_t         dark_hp;                  // 0x300
     int32_t         max_hp;                   // 0x304
     int32_t         mp;                       // 0x308
     uint32_t        _unknown31[3];            // 0x30C - 0x318
-    uint32_t        pic_no_gain;              // 0x318
-    int32_t         drink_hp;                 // 0x31C
-    uint32_t        thrown_injury;            // 0x320
-    uint32_t        _unknown34[5];            // 0x324 - 0x338
-    uint32_t        firen_counter;            // 0x338
-    uint32_t        _unknown39;               // 0x33C
-    uint32_t        armor_multiplier;         // 0x340
-    uint32_t        _unknown40;               // 0x344
-    uint32_t        total_attack;             // 0x348
-    uint32_t        hp_lost;                  // 0x34C
-    uint32_t        mp_used;                  // 0x350
-    uint32_t        owner;                    // 0x354
-    uint32_t        kills;                    // 0x358
-    uint32_t        get_weapon_counter;       // 0x35C
-    uint32_t        enemy;                    // 0x360
-    uint32_t        team;                     // 0x364
-#if INTPTR_MAX == INT32_MAX
+    int32_t         pic_no_gain;              // 0x318
+    union {
+        int32_t     weapon_hp;                // 0x31C
+        int32_t     drink_hp;                 // 0x31C
+    };
+    int32_t         thrown_injury;            // 0x320
+    union {
+        struct {
+            int32_t uid;                      // 0x324
+            int32_t _unknown34_rest[4];       // 0x328 - 0x338
+        };
+        uint32_t    _unknown34[5];            // 0x324 - 0x338
+    };
+    int32_t         firen_counter;            // 0x338
+    int32_t         _unknown39;               // 0x33C
+    int32_t         armor_multiplier;         // 0x340
+    int32_t         _unknown40;               // 0x344
+    int32_t         total_attack;             // 0x348
+    int32_t         hp_lost;                  // 0x34C
+    int32_t         mp_used;                  // 0x350
+    int32_t         owner;                    // 0x354
+    int32_t         kills;                    // 0x358
+    int32_t         get_weapon_counter;       // 0x35C
+    int32_t         enemy;                    // 0x360
+    int32_t         team;                     // 0x364
     file_t*         file;                     // 0x368
-    uint32_t        _pad_end;                 // 0x36C - 0x370
+#if INTPTR_MAX == INT32_MAX
+    int32_t         ai_vars[36];              // 0x36C - 0x3FC
 #else
-    file_t*         file;                     // 0x368 - 0x370 (8-byte pointer on 64-bit)
+    int32_t         ai_vars[35];              // 0x370 - 0x3FC (8-byte pointer on 64-bit)
 #endif
+    int32_t         ai_target_x;              // 0x3FC
+    int32_t         ai_target_z;              // 0x400
+    int32_t         ai_tail[5];               // 0x404 - 0x418
 } object_t;
 
 // 10. Global Game Manager State (global)

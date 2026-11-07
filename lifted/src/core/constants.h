@@ -111,7 +111,10 @@ constexpr uint32_t STATE_ICE            = 13;
 constexpr uint32_t STATE_LYING          = 14;
 constexpr uint32_t STATE_INJURED_2      = 15;
 constexpr uint32_t STATE_FIRE           = 16;
-constexpr uint32_t STATE_BURN_RUN       = 17;
+constexpr uint32_t STATE_DRINKING       = 17;
+constexpr uint32_t STATE_BURNING        = 18;
+constexpr uint32_t STATE_BURN_RUN       = 18; // Legacy alias for STATE_BURNING
+constexpr uint32_t STATE_BROKEN_WEAPON  = 999;
 
 // Teleport Targets
 constexpr uint32_t TELEPORT_TO_ENEMY    = 1;
@@ -123,19 +126,30 @@ constexpr uint32_t ITR_CATCH_INJURED    = 1;
 constexpr uint32_t ITR_PICK_UP_WEAPON   = 2;
 constexpr uint32_t ITR_CATCH            = 3;
 constexpr uint32_t ITR_THROWN           = 4;
+constexpr uint32_t ITR_WEAPON_STRENGTH  = 5;
 constexpr uint32_t ITR_SUPER_PUNCH      = 6;
+constexpr uint32_t ITR_ROWING_PICK      = 7;
 constexpr uint32_t ITR_HEAL             = 8;
 constexpr uint32_t ITR_FORCEFIELD       = 9;
+constexpr uint32_t ITR_FLUTE            = 10;
+constexpr uint32_t ITR_FLOAT            = 11;
 constexpr uint32_t ITR_FREEZE           = 14;
+constexpr uint32_t ITR_WHIRLWIND_ICE    = 15;
+constexpr uint32_t ITR_WHIRLWIND_WIND   = 16;
 
 // Attack Effects
 constexpr uint32_t EFFECT_PUNCH            = 0;
 constexpr uint32_t EFFECT_BLEED            = 1;
 constexpr uint32_t EFFECT_FIRE             = 2;
-constexpr uint32_t EFFECT_BURN             = 3;
-constexpr uint32_t EFFECT_FLAME            = 4;
-constexpr uint32_t EFFECT_FIREN_EXPLOSION  = 20;
-constexpr uint32_t EFFECT_JULIAN_EXPLOSION = 21;
+constexpr uint32_t EFFECT_ICE              = 3;
+constexpr uint32_t EFFECT_SHINING          = 4;
+constexpr uint32_t EFFECT_BURN             = 3;  // Legacy alias
+constexpr uint32_t EFFECT_FLAME            = 4;  // Legacy alias
+constexpr uint32_t EFFECT_FIRE_NO_SOUND    = 20;
+constexpr uint32_t EFFECT_FIRE_JULIAN      = 21;
+constexpr uint32_t EFFECT_FIRE_EXPLODE     = 22;
+constexpr uint32_t EFFECT_FIREN_EXPLOSION  = 20; // Legacy alias
+constexpr uint32_t EFFECT_JULIAN_EXPLOSION = 21; // Legacy alias
 constexpr uint32_t EFFECT_FREEZE           = 30;
 
 } // namespace lf2

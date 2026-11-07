@@ -18,6 +18,9 @@ struct control_config_t {
     std::array<std::string, MAX_CONTROL_PLAYERS> player_names{};
     int32_t demo_mode = 0;
     int32_t replay_mode = 0;
+    std::string profile_name;
+    std::string profile_email;
+    std::string profile_info;
 
     bool load_from_file(const std::string& filepath);
     bool save_to_file(const std::string& filepath) const;

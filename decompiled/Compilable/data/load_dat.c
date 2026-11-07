@@ -42,7 +42,8 @@ void FUN_0040ef70(undefined4 param_1,undefined4 param_2,char *param_3,int param_
 
   FILE *pFVar13;
 
-  int in_ECX = (int)(intptr_t)in_ECX;
+  int in_ecx_val = (int)(intptr_t)in_ECX;
+#define in_ECX in_ecx_val
 
   byte *pbVar14;
 

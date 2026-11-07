@@ -1,6 +1,7 @@
 #include "cipher.h"
 #include <fstream>
 #include <iostream>
+#include <cstdlib>
 
 namespace lf2 {
 
@@ -40,12 +41,15 @@ std::vector<uint8_t> cipher_t::encrypt(const std::string_view plaintext) {
     std::vector<uint8_t> result;
     result.reserve(CIPHER_HEADER_SIZE + plaintext.size());
 
-    // Write authentic 123-byte header (spaces/padding)
+    // Write authentic 123-byte obfuscated header matching FUN_004146b0
+    size_t key_idx = 0;
     for (size_t i = 0; i < CIPHER_HEADER_SIZE; ++i) {
-        result.push_back(static_cast<uint8_t>(' '));
+        int hdr_byte = ((std::rand() % 0x19) + 'A' + static_cast<uint8_t>(CIPHER_KEY[key_idx])) & 0xFF;
+        result.push_back(static_cast<uint8_t>(hdr_byte));
+        key_idx = (key_idx + 1) % key_len;
     }
 
-    size_t key_idx = CIPHER_HEADER_SIZE % key_len;
+    // key_idx is now 123 % 37 == 12
     for (char c : plaintext) {
         int enc = (static_cast<uint8_t>(c) + static_cast<uint8_t>(CIPHER_KEY[key_idx])) % 256;
         result.push_back(static_cast<uint8_t>(enc));

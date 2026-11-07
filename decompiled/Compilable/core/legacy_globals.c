@@ -157,6 +157,7 @@ int   DAT_00451314 = 0;
 int   DAT_00451318 = 0;
 int   DAT_0045131c = 0;
 int   DAT_00451320 = 0;
+int   DAT_00451320_buf[7] = {0};
 int   DAT_00451340 = 0;
 int   DAT_00451344 = 0;
 int   DAT_00451348 = 0;
@@ -342,6 +343,7 @@ char  DAT_00455388 = 'u';
 int   DAT_0044d010 = 1;
 int   DAT_0044d000 = 80;
 int   DAT_0044f18c = 0;
+int   DAT_0044f190 = 0;
 char  DAT_0044ef04[260] = {0};
 char  DAT_0044eed0[260] = {0};
 char  DAT_0044f128[64] = "Random";
@@ -350,3 +352,26 @@ void* DAT_0044f040 = NULL;
 void* DAT_0044f044 = NULL;
 void* DAT_0044f048 = NULL;
 void* DAT_0044f04c = NULL;
+int   DAT_00450be8 = 0;
+int   DAT_00450bfc = 0;
+char  DAT_004553f2 = 'u';
+char  DAT_004553f3 = 'u';
+int   DAT_00457588[400] = {0};
+int   DAT_00457bc8[400] = {0};
+int   DAT_00452170[400] = {0};
+int   DAT_00453e10[400] = {0};
+int   DAT_004527e8[400] = {0};
+int   DAT_004554c8[400] = {0};
+
+// AI Difficulty & Decision Globals
+int   DAT_0044f604 = 0;
+int   DAT_0044f608 = 0;
+int   DAT_0044f60c = 0;
+int   DAT_0044f610 = 0;
+int   DAT_0044f614 = 0;
+int   DAT_0044f618 = 0;
+int   DAT_0044f61c = 0;
+
+void FUN_00401290(const char *msg) {
+    (void)msg;
+}

@@ -236,6 +236,34 @@ void apply_archetype_preset(battle_army_t& army, battle_archetype_t archetype,
     }
 }
 
+void apply_authentic_battle_preset(battle_army_t& army, int32_t preset_id, int32_t scale_factor) {
+    // 1:1 with FUN_00438b40 (0x00438B40): 10 unit slots, 500 HP per soldier
+    army.slots.clear();
+    army.slots.resize(10);
+    for (int32_t i = 0; i < 10; ++i) {
+        army.slots[i].unit_id = i;
+        army.slots[i].unit_hp = 500;
+        int32_t base_active = 0;
+        int32_t base_total = 0;
+        if (preset_id == 1) { // Preset 1: Bandit/Hunter heavy
+            base_active = (i < 2) ? 3 : 0;
+            base_total = (i < 2) ? 15 : 0;
+        } else if (preset_id == 2) { // Preset 2: Balanced squad
+            base_active = 1;
+            base_total = 6;
+        } else if (preset_id == 3) { // Preset 3: Knight elite
+            base_active = (i == 3) ? 3 : 0;
+            base_total = (i == 3) ? 6 : 0;
+        } else if (preset_id == 4) { // Preset 4: Custom All-Out (FUN_00438b40 lines 1885-1927)
+            base_active = (i == 1) ? 1 : ((i == 3) ? 3 : 2);
+            base_total = (i == 1) ? 16 : ((i == 3) ? 6 : 32);
+        }
+        calculate_squad_quota(base_active, base_total, scale_factor,
+                              army.slots[i].active_count, army.slots[i].reserve_count);
+        army.slots[i].total_quota = army.slots[i].active_count + army.slots[i].reserve_count;
+    }
+}
+
 std::string format_battle_status_hud(int32_t man_count, int32_t hp, int32_t reserve_count) {
     char buf[128];
     if (reserve_count == 0) {

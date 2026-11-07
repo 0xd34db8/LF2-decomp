@@ -34,7 +34,7 @@ int main() {
     assert(sizeof(wpoint_t) == 0x24);
     assert(sizeof(frame_t) == 0x178);
     assert(sizeof(file_t) == 0x25360);
-    assert(sizeof(object_t) == 0x370);
+    assert(sizeof(object_t) == 0x418);
 #if INTPTR_MAX == INT32_MAX
     assert(sizeof(global_t) == 0x8D8);
     assert(offsetof(global_t, files) == 0x7D4);

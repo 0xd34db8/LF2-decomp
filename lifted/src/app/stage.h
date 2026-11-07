@@ -14,11 +14,17 @@ struct stage_enemy_spawn_t {
     uint32_t times = 1;
     double   ratio = 1.0;
     bool     is_boss = false;
+    bool     is_soldier = false;
     int32_t  spawn_x = 0;
+    int32_t  act = 0;
+    int32_t  reserve = 0;
+    int32_t  join = 0;
+    int32_t  join_reserve = 0;
 };
 
 struct stage_phase_t {
     uint32_t bound = 1500;
+    int32_t  when_clear_goto_phase = -1;
     std::string music;
     std::vector<stage_enemy_spawn_t> enemies;
 };
