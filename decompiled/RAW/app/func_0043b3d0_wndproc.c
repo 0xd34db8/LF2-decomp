@@ -1,16 +1,10 @@
 /*
- * Procedure: FUN_0043b3d0 (LF2_WindowProc)
+ * Procedure: FUN_0043b3d0 (FUN_0043b3d0)
  * Address: 0x0043b3d0 - 0x0043bdcf (Length: 2560 bytes)
  * Purpose: LF2 Main Window Procedure (WndProc) - handles window messages, palette, joysticks, keyboard, mouse, and cheats
  */
 
-#include <windows.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-
-
-LRESULT LF2_WindowProc(HWND param_1,uint param_2,HWND param_3,uint param_4)
+LRESULT FUN_0043b3d0(HWND param_1,uint param_2,HWND param_3,uint param_4)
 
 {
   int iVar1;
@@ -424,4 +418,3 @@ switchD_0043b417_caseD_4:
   LVar2 = DefWindowProcA(param_1,param_2,(WPARAM)param_3,param_4);
   return LVar2;
 }
-

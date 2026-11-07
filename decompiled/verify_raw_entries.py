@@ -50,10 +50,28 @@ def main():
         else:
             seen_addresses[addr_str] = filename
 
-        # Check file non-empty
+        # Check file non-empty and validate content integrity
         size = os.path.getsize(full_path)
         if size == 0:
             errors.append(f"{filename}: File is empty (0 bytes)")
+            continue
+
+        with open(full_path, 'r', encoding='utf-8', errors='ignore') as f:
+            content = f.read()
+
+        # Strip C comments before checking for #include, extern, or FUN_00XXXXXX definition
+        code_no_comments = re.sub(r'/\*.*?\*/', '', content, flags=re.DOTALL)
+        code_no_comments = re.sub(r'//.*', '', code_no_comments)
+
+        if re.search(r'^\s*#\s*include\b', code_no_comments, re.MULTILINE):
+            errors.append(f"{filename}: Contains hand-edited #include directive (not pure Ghidra RAW output)")
+
+        if re.search(r'\bextern\b', code_no_comments):
+            errors.append(f"{filename}: Contains hand-edited extern declaration (not pure Ghidra RAW output)")
+
+        expected_func = f"FUN_00{match.group(1).lower()}"
+        if not re.search(rf'\b{expected_func}\s*\(', code_no_comments, re.IGNORECASE):
+            errors.append(f"{filename}: Missing genuine Ghidra procedure definition '{expected_func}(...)'")
 
     if errors:
         print(f"[FAIL] Archive integrity verification FAILED with {len(errors)} error(s):", file=sys.stderr)

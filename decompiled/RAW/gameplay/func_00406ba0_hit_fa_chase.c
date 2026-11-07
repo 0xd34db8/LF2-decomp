@@ -1,15 +1,5 @@
-/*
- * Procedure: FUN_00406ba0
- * Address: 0x00406ba0 - 0x00407a16 (Length: 3699 bytes)
- * Purpose: AI decision tree, targeting, retreat logic, jump/attack execution, combat state response
- */
-
-#include <windows.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-
-
+/* Function: FUN_00406ba0 */
+/* Address: 0x00406ba0 */
 
 void FUN_00406ba0(int param_1)
 
@@ -1024,4 +1014,3 @@ LAB_00408594:
   *(undefined4 *)(iVar8 + 0x70) = 5;
   return;
 }
-

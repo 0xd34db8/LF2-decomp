@@ -1,15 +1,5 @@
-/*
- * Procedure: FUN_004246b0
- * Address: 0x004246b0 - 0x00426d17 (Length: 9832 bytes)
- * Purpose: Options screen UI, control configuration mapping, key binding persistence
- */
-
-#include <windows.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-
-
+/* Function: FUN_004246b0 */
+/* Address: 0x004246b0 */
 
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
@@ -2001,4 +1991,3 @@ code_r0x00428af5:
   if (3 < iVar4) goto LAB_00428b0f;
   goto LAB_00428af0;
 }
-

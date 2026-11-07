@@ -1,15 +1,5 @@
-/*
- * Procedure: FUN_0041a250
- * Address: 0x0041a250 - 0x0041a58b (Length: 828 bytes)
- * Purpose: Background update, parallax scrolling layer calculation and camera bounds clamping
- */
-
-#include <windows.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-
-
+/* Function: FUN_0041a250 */
+/* Address: 0x0041a250 */
 
 void FUN_0041a250(undefined4 param_1)
 
@@ -116,4 +106,3 @@ LAB_0041a56a:
   }
   return;
 }
-

@@ -1,12 +1,5 @@
-/*
- * Procedure: FUN_004025b0
- * Address: 0x004025b0 - 0x004025c4 (Length: 21 bytes)
- * Purpose: BGM Play Staged Current Track (0x0044EED0)
- */
-
-#include <windows.h>
-#include <stdio.h>
-#include <stdint.h>
+/* Function: FUN_004025b0 */
+/* Address: 0x004025b0 */
 
 void FUN_004025b0(void)
 

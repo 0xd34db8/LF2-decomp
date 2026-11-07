@@ -1,15 +1,5 @@
-/*
- * Procedure: FUN_00408cb0
- * Address: 0x00408cb0 - 0x0040949f (Length: 2032 bytes)
- * Purpose: Weapon behavior, holding, throw processing, ground bounce physics
- */
-
-#include <windows.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-
-
+/* Function: FUN_00408cb0 */
+/* Address: 0x00408cb0 */
 
 undefined4 FUN_00408cb0(int param_1,int *param_2,int param_3,int param_4,int param_5,int param_6)
 
@@ -262,4 +252,3 @@ LAB_004091c7:
   }
   return 0;
 }
-

@@ -1,12 +1,5 @@
-/*
- * Procedure: FUN_00402020
- * Address: 0x00402020 - 0x004020f6 (Length: 215 bytes)
- * Purpose: Master BGM Track Playback Dispatcher with Cache Check & Error Dialogs
- */
-
-#include <windows.h>
-#include <stdio.h>
-#include <stdint.h>
+/* Function: FUN_00402020 */
+/* Address: 0x00402020 */
 
 void FUN_00402020(byte *param_1)
 

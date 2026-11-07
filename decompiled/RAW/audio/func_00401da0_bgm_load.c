@@ -1,12 +1,5 @@
-/*
- * Procedure: FUN_00401da0
- * Address: 0x00401da0 - 0x00401e85 (Length: 230 bytes)
- * Purpose: DirectShow BGM RenderFile & Graph Log Writer (%s\graph.log)
- */
-
-#include <windows.h>
-#include <stdio.h>
-#include <stdint.h>
+/* Function: FUN_00401da0 */
+/* Address: 0x00401da0 */
 
 void FUN_00401da0(LPCSTR param_1)
 

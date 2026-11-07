@@ -1,12 +1,5 @@
-/*
- * Procedure: FUN_00402130
- * Address: 0x00402130 - 0x004025a5 (Length: 1142 bytes)
- * Purpose: In-Game & Menu BGM Selector, HUD String Renderer & Track Cycler (Music: %s)
- */
-
-#include <windows.h>
-#include <stdio.h>
-#include <stdint.h>
+/* Function: FUN_00402130 */
+/* Address: 0x00402130 */
 
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 

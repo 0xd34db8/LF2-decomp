@@ -1,15 +1,5 @@
-/*
- * Procedure: FUN_00402b60
- * Address: 0x00402b60 - 0x00402d63 (Length: 516 bytes)
- * Purpose: Network winsock initialization, gethostname, gethostbyname, socket creation, WSAAsyncSelect
- */
-
-#include <windows.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-
-
+/* Function: FUN_00402b60 */
+/* Address: 0x00402b60 */
 
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
@@ -66,4 +56,3 @@ void FUN_00402b60(HWND param_1)
   __security_check_cookie(local_4 ^ (uint)&local_294);
   return;
 }
-

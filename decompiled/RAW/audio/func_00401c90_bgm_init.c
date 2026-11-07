@@ -1,12 +1,5 @@
-/*
- * Procedure: FUN_00401c90
- * Address: 0x00401c90 - 0x00401d26 (Length: 151 bytes)
- * Purpose: DirectShow COM Filter Graph & Interface Initialization (IGraphBuilder, IMediaControl, IMediaEventEx, IMediaSeeking)
- */
-
-#include <windows.h>
-#include <stdio.h>
-#include <stdint.h>
+/* Function: FUN_00401c90 */
+/* Address: 0x00401c90 */
 
 undefined4 FUN_00401c90(void)
 

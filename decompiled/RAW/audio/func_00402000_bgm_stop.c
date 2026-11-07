@@ -1,12 +1,5 @@
-/*
- * Procedure: FUN_00402000
- * Address: 0x00402000 - 0x00402011 (Length: 18 bytes)
- * Purpose: DirectShow BGM Stream Playback Stop (IMediaControl::Stop)
- */
-
-#include <windows.h>
-#include <stdio.h>
-#include <stdint.h>
+/* Function: FUN_00402000 */
+/* Address: 0x00402000 */
 
 void FUN_00402000(void)
 

@@ -1,15 +1,5 @@
-/*
- * Procedure: FUN_004028a0
- * Address: 0x004028a0 - 0x00402a5f (Length: 448 bytes)
- * Purpose: Volume adjustment HUD and recording notify messages ("Start recording...", "Recording file saved!", "Recording canceled!")
- */
-
-#include <windows.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-
-
+/* Function: FUN_004028a0 */
+/* Address: 0x004028a0 */
 
 void FUN_004028a0(void)
 
@@ -63,4 +53,3 @@ LAB_00402947:
   __security_check_cookie(local_4 ^ (uint)local_20c);
   return;
 }
-

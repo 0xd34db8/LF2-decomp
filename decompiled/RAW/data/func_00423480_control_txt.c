@@ -1,15 +1,5 @@
-/*
- * Procedure: FUN_00423480
- * Address: 0x00423480 - 0x00423984 (Length: 1285 bytes)
- * Purpose: Control configuration parser (system/control.txt), player key mappings loader
- */
-
-#include <windows.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-
-
+/* Function: FUN_00423480 */
+/* Address: 0x00423480 */
 
 void FUN_00423480(void)
 
@@ -147,4 +137,3 @@ void FUN_00423480(void)
   __security_check_cookie(local_4 ^ (uint)local_200);
   return;
 }
-

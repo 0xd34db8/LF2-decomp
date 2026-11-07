@@ -1,12 +1,5 @@
-/*
- * Procedure: FUN_00401f30
- * Address: 0x00401f30 - 0x00401fff (Length: 208 bytes)
- * Purpose: DirectShow Basic Audio Volume Level Configurator (IBasicAudio)
- */
-
-#include <windows.h>
-#include <stdio.h>
-#include <stdint.h>
+/* Function: FUN_00401f30 */
+/* Address: 0x00401f30 */
 
 /* WARNING: Restarted to delay deadcode elimination for space: stack */
 

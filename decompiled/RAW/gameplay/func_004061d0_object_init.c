@@ -1,15 +1,5 @@
-/*
- * Procedure: FUN_004061d0
- * Address: 0x004061d0 - 0x004064ce (Length: 767 bytes)
- * Purpose: Global object array initialization, slot allocation, state reset
- */
-
-#include <windows.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-
-
+/* Function: FUN_004061d0 */
+/* Address: 0x004061d0 */
 
 void FUN_004061d0(void)
 
@@ -153,4 +143,3 @@ void FUN_004061d0(void)
   in_ECX[0xd1] = 0;
   return;
 }
-

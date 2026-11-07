@@ -1,12 +1,5 @@
-/*
- * Procedure: FUN_00401d30
- * Address: 0x00401d30 - 0x00401d90 (Length: 97 bytes)
- * Purpose: DirectShow COM Interfaces Release & Graph Teardown
- */
-
-#include <windows.h>
-#include <stdio.h>
-#include <stdint.h>
+/* Function: FUN_00401d30 */
+/* Address: 0x00401d30 */
 
 void FUN_00401d30(void)
 

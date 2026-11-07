@@ -1,15 +1,5 @@
-/*
- * Procedure: FUN_004151d0
- * Address: 0x004151d0 - 0x00416c50 (Length: 6785 bytes)
- * Purpose: Frame debugger HUD, sprite rendering dispatch, bounding box overlay visualization
- */
-
-#include <windows.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-
-
+/* Function: FUN_004151d0 */
+/* Address: 0x004151d0 */
 
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
@@ -810,4 +800,3 @@ LAB_0041662e:
   __security_check_cookie(local_10 ^ (uint)&local_150);
   return;
 }
-

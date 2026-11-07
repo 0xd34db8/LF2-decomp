@@ -1,15 +1,5 @@
-/*
- * Procedure: FUN_00429730
- * Address: 0x00429730 - 0x0042e0c6 (Length: 18839 bytes)
- * Purpose: Character select menu flow, replay filename formatting, mode initialization and game loop transitions
- */
-
-#include <windows.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-
-
+/* Function: FUN_00429730 */
+/* Address: 0x00429730 */
 
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
@@ -2386,4 +2376,3 @@ LAB_0042e0d2:
   __security_check_cookie(local_10 ^ (uint)&local_a90);
   return;
 }
-

@@ -1,28 +1,16 @@
-/*
- * Virtual Address: 0x00401970
- * Function: sound_init
- * Class / Subsystem: Audio Engine / DirectSound
- *
- * Description:
- *   Initializes the DirectSound subsystem by calling DirectSoundCreate (ordinal 1
- *   from DSOUND.dll), sets the cooperative level to DSSCL_PRIORITY on the main
- *   application window (HWND), and initializes global sound buffer arrays.
- */
+/* Function: FUN_00401970 */
+/* Address: 0x00401970 */
 
-#include <stdint.h>
+undefined4 FUN_00401970(undefined4 param_1)
 
-int func_00401970_sound_init(void* hwnd)
 {
-    /*
-     * In LF2 binary:
-     * 1. Calls DirectSoundCreate(NULL, &pDirectSound, NULL).
-     * 2. If creation fails (non-zero HRESULT):
-     *    - Clears global IDirectSound* pointer at 0x0044EECC to 0.
-     *    - Returns 0 (audio disabled / fallback).
-     * 3. Sets cooperative level:
-     *    - pDirectSound->SetCooperativeLevel(hwnd, DSSCL_PRIORITY).
-     * 4. Returns 1 (success).
-     */
+  int iVar1;
+  
+  iVar1 = DirectSoundCreate(0,&DAT_0044eecc,0);
+  if (iVar1 == 0) {
+    (**(code **)(*DAT_0044eecc + 0x18))(DAT_0044eecc,param_1,1);
     return 1;
+  }
+  DAT_0044eecc = (int *)0x0;
+  return 0;
 }
-

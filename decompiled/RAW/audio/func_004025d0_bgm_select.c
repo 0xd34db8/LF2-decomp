@@ -1,12 +1,5 @@
-/*
- * Procedure: FUN_004025d0
- * Address: 0x004025d0 - 0x0040280d (Length: 574 bytes)
- * Purpose: BGM Track Selector & Stage Randomizer (in_ECX Track ID 1..8)
- */
-
-#include <windows.h>
-#include <stdio.h>
-#include <stdint.h>
+/* Function: FUN_004025d0 */
+/* Address: 0x004025d0 */
 
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 

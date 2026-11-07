@@ -1,15 +1,5 @@
-/*
- * Procedure: FUN_004064d0
- * Address: 0x004064d0 - 0x00406a1f (Length: 1360 bytes)
- * Purpose: Grapple/caught handling, object holder synchronization and position updating
- */
-
-#include <windows.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-
-
+/* Function: FUN_004064d0 */
+/* Address: 0x004064d0 */
 
 void FUN_004064d0(void)
 
@@ -188,4 +178,3 @@ void FUN_004064d0(void)
     }
   } while( true );
 }
-

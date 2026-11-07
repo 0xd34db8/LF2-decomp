@@ -1,15 +1,5 @@
-/*
- * Procedure: FUN_0043f010
- * Address: 0x0043f010 - 0x0043f1dd (Length: 462 bytes)
- * Purpose: DirectDraw surface blit wrapper, clipping rect calculation, color-key blitting
- */
-
-#include <windows.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-
-
+/* Function: FUN_0043f010 */
+/* Address: 0x0043f010 */
 
 void FUN_0043f010(int param_1,int param_2,int param_3,int param_4,int param_5,int *param_6)
 
@@ -119,4 +109,3 @@ void FUN_0043f010(int param_1,int param_2,int param_3,int param_4,int param_5,in
   }
   return;
 }
-

@@ -1,12 +1,5 @@
-/*
- * Procedure: FUN_00402100
- * Address: 0x00402100 - 0x0040212b (Length: 44 bytes)
- * Purpose: DirectShow BGM Playback Pause & Rewind to Origin (IMediaControl::Pause + SetPositions 0)
- */
-
-#include <windows.h>
-#include <stdio.h>
-#include <stdint.h>
+/* Function: FUN_00402100 */
+/* Address: 0x00402100 */
 
 void FUN_00402100(void)
 

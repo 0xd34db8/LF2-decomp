@@ -1,15 +1,5 @@
-/*
- * Procedure: FUN_004014e0
- * Address: 0x004014e0 - 0x00401968 (Length: 1161 bytes)
- * Purpose: DirectSound WAV loader, RIFF header parser, secondary buffer creation
- */
-
-#include <windows.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-
-
+/* Function: FUN_004014e0 */
+/* Address: 0x004014e0 */
 
 void FUN_004014e0(LPSTR param_1)
 
@@ -217,4 +207,3 @@ void FUN_004014e0(LPSTR param_1)
   __security_check_cookie(local_4 ^ (uint)&local_1b8);
   return;
 }
-

@@ -1,15 +1,5 @@
-/*
- * Procedure: FUN_0041bc90
- * Address: 0x0041bc90 - 0x00422a89 (Length: 28154 bytes)
- * Purpose: Master battle main loop, lockstep frame pacing, input sampling, scene update and rendering orchestrator
- */
-
-#include <windows.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-
-
+/* Function: FUN_0041bc90 */
+/* Address: 0x0041bc90 */
 
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
@@ -3661,4 +3651,3 @@ LAB_00422a95:
   __security_check_cookie(local_84 ^ (uint)auStack_634);
   return;
 }
-

@@ -1,14 +1,8 @@
-/*
- * Procedure: FUN_0043f4d0
- * Address: 0x0043f4d0 (zlib uncompress wrapper)
- * Calls: FUN_00440810 (inflateInit_ with version "1.1.4") and inflate
+/* Function: FUN_0043f4d0 */
+/* Address: 0x0043f4d0 */
 
- */
+int FUN_0043f4d0(undefined4 param_1,undefined4 *param_2,undefined4 param_3,undefined4 param_4)
 
-#include <stdio.h>
-#include <stdlib.h>
-
-int FUN_0043f4d0(undefined4 param_1, undefined4 *param_2, undefined4 param_3, undefined4 param_4)
 {
   int iVar1;
   int iVar2;
@@ -26,9 +20,9 @@ int FUN_0043f4d0(undefined4 param_1, undefined4 *param_2, undefined4 param_3, un
   local_2c = param_1;
   local_18 = 0;
   local_14 = 0;
-  iVar1 = FUN_00440810(&local_38, "1.1.4", 0x38);
+  iVar1 = FUN_00440810(&local_38,"1.1.4",0x38);
   if (iVar1 == 0) {
-    iVar2 = FUN_00440830(&local_38, 4);
+    iVar2 = FUN_00440830(&local_38,4);
     if (iVar2 == 1) {
       *param_2 = local_24;
       iVar1 = FUN_004406c0(&local_38);
@@ -43,4 +37,3 @@ int FUN_0043f4d0(undefined4 param_1, undefined4 *param_2, undefined4 param_3, un
   }
   return iVar1;
 }
-

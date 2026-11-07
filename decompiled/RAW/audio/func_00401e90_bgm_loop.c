@@ -1,12 +1,5 @@
-/*
- * Procedure: FUN_00401e90
- * Address: 0x00401e90 - 0x00401f20 (Length: 145 bytes)
- * Purpose: DirectShow Media Event Loop & Track Rewind (EC_COMPLETE SetPositions to 0)
- */
-
-#include <windows.h>
-#include <stdio.h>
-#include <stdint.h>
+/* Function: FUN_00401e90 */
+/* Address: 0x00401e90 */
 
 void FUN_00401e90(void)
 

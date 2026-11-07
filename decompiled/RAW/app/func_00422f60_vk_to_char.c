@@ -1,32 +1,14 @@
-/*
- * Function: Virtual Key to ASCII Character Converter
- * Virtual Address: 0x00422F60
- * Calling Convention: __cdecl
- *
- * Parameters:
- *   param_1: Virtual key code (int)
- *
- * Return:
- *   char: ASCII decoded character, or '\0' if non-printable
- *
- * Description:
- *   Converts virtual key codes to ASCII characters for text input (player names,
- *   profile information, IP addresses). Checks Shift key status (DAT_00455388 == 'd')
- *   and CapsLock state (GetKeyState(VK_CAPITAL) / 0x14) for capitalization and
- *   shifted punctuation symbols. Also maps numpad navigation keys to numbers.
- */
-
-#include <windows.h>
-
-extern char DAT_00455388; // Shift key state: 'd' for down, 'u' for up
+/* Function: FUN_00422f60 */
+/* Address: 0x00422f60 */
 
 char FUN_00422f60(int param_1)
+
 {
   char cVar1;
   SHORT SVar2;
   short sVar3;
   char cVar4;
-
+  
   cVar1 = '\0';
   cVar4 = (char)param_1;
   if (param_1 == 0x20) {
@@ -207,4 +189,3 @@ LAB_00422fa9:
   }
   return cVar1;
 }
-
