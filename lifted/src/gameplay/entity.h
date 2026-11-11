@@ -9,6 +9,21 @@ namespace lf2 {
 // 1:1 Lift of 0x004061d0: Initializes/resets an object_t instance
 void object_init(object_t* obj);
 
+// 1:1 Lift of 0x004061A0: 1D interval betweenness test (checks if b is strictly between a and c)
+inline bool is_between(int32_t a, int32_t b, int32_t c) {
+    return ((a < b && b < c) || (c < b && b < a));
+}
+
+// 1:1 Lift of 0x004196F0: Physics velocity/impulse averaging pass across all active objects
+void world_average_velocities(global_t* world);
+
+// 1:1 Lift of 0x004197A0: Network / remote input bit unpacking and holding state latching
+void slot_unpack_network_inputs(global_t* world, const uint8_t* packet_bytes, int32_t clear_mode);
+
+// 1:1 Lift of 0x004198F0: Local player input latching & replay recording
+void slot_latch_local_inputs(global_t* world, const int32_t* slot_types, const uint8_t* input_bytes,
+                             int32_t clear_mode, bool record_replay = false, uint8_t* replay_out = nullptr, size_t replay_idx = 0);
+
 // 1:1 Lift of 0x00406a20: Spawns an opoint object/projectile in world->objects[50..399]
 int32_t object_spawn_opoint(global_t* world, int32_t file_id, int32_t owner, int32_t frame_id,
                             int32_t team, int32_t x, int32_t y, int32_t z,

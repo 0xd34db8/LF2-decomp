@@ -492,4 +492,113 @@ finish_input:
     }
 }
 
+// 1:1 Lift of 0x004196F0: Physics velocity/impulse averaging pass across active objects
+void world_average_velocities(global_t* world)
+{
+    if (!world) return;
+
+    for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
+        if (!world->is_object_exists[i]) continue;
+        object_t* obj = world->objects[i];
+        if (!obj) continue;
+
+        if (obj->shaking == 0) {
+            if (obj->attacks != 0) {
+                double factor = 2.0 / static_cast<double>(obj->attacks + 1);
+                obj->x_velocity = obj->pic_x_gain * factor;
+                obj->y_velocity = obj->y_accl * factor;
+                obj->z_velocity = obj->z_accl * factor;
+                obj->attacks = 0;
+            }
+            obj->pic_x_gain = 0.0;
+            obj->y_accl = 0.0;
+            obj->z_accl = 0.0;
+        }
+    }
+}
+
+// 1:1 Lift of 0x004197A0: Network / remote input bit unpacking and holding state latching
+void slot_unpack_network_inputs(global_t* world, const uint8_t* packet_bytes, int32_t clear_mode)
+{
+    if (!world) return;
+
+    for (uint32_t i = 0; i < 8; ++i) {
+        object_t* obj = world->objects[i];
+        if (!obj) continue;
+
+        // Shift current input into previous/holding input
+        obj->holding_up     = obj->click_up;
+        obj->holding_down   = obj->click_down;
+        obj->holding_left   = obj->click_left;
+        obj->holding_right  = obj->click_right;
+        obj->holding_attack = obj->click_attack;
+        obj->holding_jump   = obj->click_jump;
+        obj->holding_defend = obj->click_defend;
+
+        if (clear_mode == 0 && packet_bytes) {
+            obj->click_up     = 0;
+            obj->click_down   = 0;
+            obj->click_left   = 0;
+            obj->click_right  = 0;
+            obj->click_attack = 0;
+            obj->click_jump   = 0;
+            obj->click_defend = 0;
+
+            uint8_t b = packet_bytes[i];
+            if (b & 0x80) obj->click_up     = 1;
+            if (b & 0x40) obj->click_down   = 1;
+            if (b & 0x20) obj->click_left   = 1;
+            if (b & 0x10) obj->click_right  = 1;
+            if (b & 0x08) obj->click_attack = 1;
+            if (b & 0x04) obj->click_jump   = 1;
+            if (b & 0x02) obj->click_defend = 1;
+        }
+    }
+}
+
+// 1:1 Lift of 0x004198F0: Local player input latching & replay recording
+void slot_latch_local_inputs(global_t* world, const int32_t* slot_types, const uint8_t* input_bytes,
+                             int32_t clear_mode, bool record_replay, uint8_t* replay_out, size_t replay_idx)
+{
+    if (!world || !slot_types || !input_bytes) return;
+
+    for (uint32_t i = 0; i < 8; ++i) {
+        if (slot_types[i] == -1) { // Local player slot
+            object_t* obj = world->objects[i];
+            if (!obj) continue;
+
+            obj->holding_up     = obj->click_up;
+            obj->holding_down   = obj->click_down;
+            obj->holding_left   = obj->click_left;
+            obj->holding_right  = obj->click_right;
+            obj->holding_attack = obj->click_attack;
+            obj->holding_jump   = obj->click_jump;
+            obj->holding_defend = obj->click_defend;
+
+            if (clear_mode == 0) {
+                obj->click_up     = 0;
+                obj->click_down   = 0;
+                obj->click_left   = 0;
+                obj->click_right  = 0;
+                obj->click_attack = 0;
+                obj->click_jump   = 0;
+                obj->click_defend = 0;
+
+                uint8_t b = input_bytes[i];
+                if (b & 0x80) obj->click_up     = 1;
+                if (b & 0x40) obj->click_down   = 1;
+                if (b & 0x20) obj->click_left   = 1;
+                if (b & 0x10) obj->click_right  = 1;
+                if (b & 0x08) obj->click_attack = 1;
+                if (b & 0x04) obj->click_jump   = 1;
+                if (b & 0x02) obj->click_defend = 1;
+
+                if (record_replay && replay_out) {
+                    replay_out[replay_idx] = b;
+                }
+            }
+        }
+    }
+}
+
 } // namespace lf2

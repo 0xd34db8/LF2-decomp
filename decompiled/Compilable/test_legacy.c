@@ -260,6 +260,76 @@ int main() {
     assert(strcmp(DAT_0044ef04, "") == 0);
     printf("    [PASS] BGM track dispatch, cache check, and menu picker passed with 100%% parity.\n");
 
+    // 13. Test Phase 20: Per-Object Update Core & Slot Input Latching (0x004061a0, 0x004196f0, 0x004197a0, 0x004198f0, 0x004034f0)
+    printf("[+] Testing Phase 20: Per-Object Core & Slot Input Latching...\n");
+    // Test 1D interval betweenness (0x004061A0)
+    assert(FUN_004061a0(10, 20, 30) == 1);
+    assert(FUN_004061a0(30, 20, 10) == 1);
+    assert(FUN_004061a0(10, 30, 20) == 0);
+    assert(FUN_004061a0(10, 10, 30) == 0);
+
+    // Test Velocity Averaging Pass (0x004196F0)
+    static global_t test_game;
+    memset(&test_game, 0, sizeof(global_t));
+    static object_t test_obj;
+    lf2_object_init(&test_obj);
+    test_obj.attacks = 3; // 3 samples
+    test_obj.pic_x_gain = 12.0;
+    test_obj.y_accl = 8.0;
+    test_obj.z_accl = 4.0;
+    test_game.is_object_exists[0] = 1;
+    test_game.objects[0] = &test_obj;
+    in_ECX = &test_game;
+    FUN_004196f0();
+    // Factor = 2.0 / (3 + 1) = 0.5
+    // x_velocity = 12.0 * 0.5 = 6.0
+    // y_velocity = 8.0 * 0.5 = 4.0
+    // z_velocity = 4.0 * 0.5 = 2.0
+    assert(test_obj.x_velocity == 6.0);
+    assert(test_obj.y_velocity == 4.0);
+    assert(test_obj.z_velocity == 2.0);
+    assert(test_obj.attacks == 0);
+
+    // Test Network Input Bit Unpacking & Latching (0x004197A0)
+    uint8_t packet_bits[8] = {0};
+    packet_bits[0] = 0x80 | 0x08; // UP + ATTACK
+    FUN_004197a0(packet_bits, 0);
+    assert(test_obj.click_up == 1);
+    assert(test_obj.click_attack == 1);
+    assert(test_obj.click_jump == 0);
+    assert(test_obj.click_defend == 0);
+
+    // Next frame shift: previous frame click should shift to holding
+    packet_bits[0] = 0x04; // JUMP only
+    FUN_004197a0(packet_bits, 0);
+    assert(test_obj.holding_up == 1);
+    assert(test_obj.holding_attack == 1);
+    assert(test_obj.click_up == 0);
+    assert(test_obj.click_attack == 0);
+    assert(test_obj.click_jump == 1);
+
+    // Test AI Combat Dodge Maneuver (0x004034F0)
+    static object_t enemy_obj;
+    lf2_object_init(&enemy_obj);
+    static file_t enemy_file;
+    memset(&enemy_file, 0, sizeof(enemy_file));
+    enemy_file.id = ID_DAVIS_DAT;
+    enemy_obj.file = &enemy_file;
+    enemy_obj.x = 200;
+    enemy_obj.z = 200;
+    test_game.objects[1] = &enemy_obj;
+    test_game.is_object_exists[1] = 1;
+
+    test_obj.file = &enemy_file;
+    test_obj.x = 150;
+    test_obj.z = 200;
+    test_obj.facing = FACING_RIGHT;
+    test_obj.frame_id1 = 110; // defend/roll frame
+    DAT_0044f61c = 0; // CRAZY difficulty for 100% deterministic rolls
+    int dodge_res = FUN_004034f0(1, 0, 0, 0, 0, 0, 0);
+    assert(dodge_res == 1);
+    printf("    [PASS] 1D betweenness, velocity averaging, input unpacking, and AI dodge verified!\n");
+
     printf("\n[SUCCESS] All Decompiled Compilable Suite Tests Passed with 100%% Parity!\n");
     return 0;
 }

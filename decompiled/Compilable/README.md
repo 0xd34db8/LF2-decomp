@@ -62,7 +62,7 @@ Any individual file or the entire suite can be compiled into object files using 
 # Compile a single routine
 gcc -c -Iinclude gameplay/func_0042e100_attack_process.c -o attack_process.o
 
-# Verify all 47 C translation units compile cleanly
+# Verify all 55 C translation units compile cleanly
 Get-ChildItem -Recurse -Filter *.c | ForEach-Object {
     gcc -c -Iinclude $_.FullName -o ($_.BaseName + ".o")
 }
@@ -93,6 +93,8 @@ Remove-Item *.o
 | `0x00402b60` | [`net/net_init.c`](net/net_init.c) | Network | WinSock initialization & socket setup |
 | `0x00403270` | [`gameplay/teleport.c`](gameplay/teleport.c) | Gameplay | Rudolf teleportation targeting logic |
 | `0x004034e0` | [`core/abs.c`](core/abs.c) | Core | Fast integer absolute value computation |
+| `0x004034f0` | [`gameplay/ai_process.c`](gameplay/ai_process.c) | Gameplay | AI combat dodge / evasive roll maneuver & defense |
+| `0x004061a0` | [`gameplay/object_init.c`](gameplay/object_init.c) | Gameplay | 1D interval coordinate betweenness test |
 | `0x004061d0` | [`gameplay/object_init.c`](gameplay/object_init.c) | Gameplay | Entity constructor & default state initialization |
 | `0x004064d0` | [`gameplay/grapple_sync.c`](gameplay/grapple_sync.c) | Gameplay | Grapple caught-target coordinate sync & throw release |
 | `0x00406ba0` | [`gameplay/ai_process.c`](gameplay/ai_process.c) | Gameplay | AI combat decision tree & virtual key input synthesis |
@@ -107,6 +109,10 @@ Remove-Item *.o
 | `0x00417170` | [`core/random.c`](core/random.c) | Core | 3,000-byte precomputed circular PRNG lookup |
 | `0x004171c0` | [`core/overlap.c`](core/overlap.c) | Core | 1D coordinate interval overlap detector |
 | `0x00417400` | [`gameplay/does_attack_success.c`](gameplay/does_attack_success.c) | Gameplay | 3D AABB hitbox intersection testing (`itr` vs `bdy`) |
+| `0x004196f0` | [`gameplay/slot_input.c`](gameplay/slot_input.c) | Gameplay | Physics velocity/impulse averaging pass across 400 objects |
+| `0x004197a0` | [`gameplay/slot_input.c`](gameplay/slot_input.c) | Gameplay | Remote/network input bits unpacking & flag latching |
+| `0x004198f0` | [`gameplay/slot_input.c`](gameplay/slot_input.c) | Gameplay | Local player input bits latching & replay recording |
+| `0x00419a60` | [`gameplay/slot_input.c`](gameplay/slot_input.c) | Gameplay | Master per-slot controller / AI input dispatch & loop |
 | `0x0041a250` | [`graphics/parallax_calc.c`](graphics/parallax_calc.c) | Graphics | Background update, parallax scrolling layer calculation & camera bounds |
 | `0x0041bc90` | [`net/net_lockstep.c`](net/net_lockstep.c) | Network | Master battle main loop, lockstep frame pacing & input sampling |
 | `0x00422b00` | [`app/key_name.c`](app/key_name.c) | App | Virtual Key to text name translation & font width adjustment |

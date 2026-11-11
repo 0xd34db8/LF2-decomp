@@ -150,12 +150,57 @@ void test_ai_melee_engagement()
     std::cout << "    AI successfully triggered melee attack and transitioned to punch frame 60!" << std::endl;
 }
 
+void test_ai_combat_dodge()
+{
+    std::cout << "[+] Testing AI combat dodge & evasive roll (0x004034F0)..." << std::endl;
+    global_t world;
+    std::memset(&world, 0, sizeof(world));
+
+    file_t char_file;
+    std::memset(&char_file, 0, sizeof(char_file));
+    char_file.type = TYPE_CHARACTER;
+    char_file.id = DAVIS_DAT;
+
+    object_t ai_bot;
+    object_init(&ai_bot);
+    ai_bot.file = &char_file;
+    ai_bot.x = 100;
+    ai_bot.y = 0;
+    ai_bot.z = 200;
+    ai_bot.team = 1;
+    ai_bot.facing = FACING_RIGHT;
+    ai_bot.frame_id1 = 110; // Guard / defend stance
+
+    object_t enemy;
+    object_init(&enemy);
+    enemy.file = &char_file;
+    enemy.x = 250; // Approaching enemy at range dx = 150
+    enemy.y = 0;
+    enemy.z = 200;
+    enemy.team = 2;
+
+    world.objects[0] = &ai_bot;
+    world.is_object_exists[0] = 1;
+    world.objects[1] = &enemy;
+    world.is_object_exists[1] = 1;
+
+    input_state_t input;
+    bool dodged = ai_evaluate_dodge(&world, 0, 1, input, AI_CRAZY);
+    assert(dodged == true);
+    assert(input.defend == true);
+    assert(input.right == true);
+    assert(input.attack == true);
+
+    std::cout << "    AI successfully evaluated dodge roll maneuver towards oncoming target!" << std::endl;
+}
+
 int main()
 {
     std::cout << "=== Little Fighter 2 Artificial Intelligence Controller Tests ===" << std::endl;
     test_ai_target_selection();
     test_ai_approach_movement();
     test_ai_melee_engagement();
+    test_ai_combat_dodge();
     std::cout << "[SUCCESS] All AI Controller tests passed with 100% precision!" << std::endl;
     return 0;
 }

@@ -22,6 +22,9 @@ bool ai_evaluate_character_special(object_t* self, const object_t* target, input
 // 1:1 Lift of 0x00408CB0: Held weapon / drink AI decision
 bool ai_evaluate_weapon_decision(const global_t* world, uint32_t ai_id, uint32_t target_id, input_state_t& out_input);
 
+// 1:1 Lift of 0x004034F0: AI Combat Dodge / Evasive Maneuver & Roll
+bool ai_evaluate_dodge(const global_t* world, uint32_t ai_id, uint32_t target_id, input_state_t& out_input, ai_difficulty_t difficulty);
+
 // Evaluates tactical combat situation and synthesizes virtual key inputs (0x004094B0)
 input_state_t ai_evaluate_behavior(const global_t* world, uint32_t ai_id, ai_difficulty_t difficulty);
 

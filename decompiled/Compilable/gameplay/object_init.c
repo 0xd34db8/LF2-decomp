@@ -62,6 +62,15 @@ void lf2_object_init(object_t *obj)
     obj->ai_target_z = -1000;
 }
 
+// Virtual Address: 0x004061A0 - 1D interval betweenness test
+int FUN_004061a0(int a, int b, int c)
+{
+    if (((a < b) && (b < c)) || ((c < b) && (b < a))) {
+        return 1;
+    }
+    return 0;
+}
+
 // MSVC __thiscall bridge for FUN_004061d0
 void FUN_004061d0(void)
 {

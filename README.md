@@ -40,7 +40,7 @@ LF2/
 │   │   ├── gameplay/           # Raw combat dispatcher, hitboxes, AI & weapon attachment
 │   │   ├── graphics/           # Raw DirectDraw blitters, clipping & parallax math
 │   │   └── net/                # Raw lockstep network exchange & packet verifiers
-│   ├── Compilable/             # Self-contained, compilable legacy C suite (48 translation units, 59 routines)
+│   ├── Compilable/             # Self-contained, compilable legacy C suite (55 translation units, 65+ routines)
 │   │   ├── include/            # legacy_types.h (typed structs), legacy_signatures.h, legacy_globals.h
 │   │   ├── app/                # Clean C routines: winmain.c, wndproc.c, battle_mode.c, etc.
 │   │   ├── audio/              # Clean C routines: sound_init.c, sound_load_wav.c, sound_play.c, bgm_manager.c

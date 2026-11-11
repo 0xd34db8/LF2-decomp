@@ -110,6 +110,80 @@ bool ai_evaluate_weapon_decision(const global_t* world, uint32_t ai_id, uint32_t
     return false;
 }
 
+bool ai_evaluate_dodge(const global_t* world, uint32_t ai_id, uint32_t target_id, input_state_t& out_input, ai_difficulty_t difficulty)
+{
+    if (!world || ai_id >= MAX_OBJECTS || target_id >= MAX_OBJECTS) return false;
+    object_t* self = world->objects[ai_id];
+    const object_t* target = world->objects[target_id];
+    if (!self || !target || !self->file || !target->file) return false;
+
+    int32_t cid = static_cast<int32_t>(self->file->id);
+    int32_t dx = std::abs(target->x - self->x);
+    int32_t dz = std::abs(target->z - self->z);
+
+    // Counter-attack check (0x004034F0)
+    if (cid != FIREN_DAT && cid != FREEZE_DAT && cid != JULIAN_DAT && cid != FIRZEN_DAT) {
+        if (dx < 80 && dz < 5 && lf2_random(0x37, (difficulty == AI_CRAZY ? 3 : 6)) == 0) {
+            out_input.attack = true;
+        }
+    }
+
+    uint32_t diff_mod = (difficulty == AI_CRAZY) ? 1 : ((difficulty == AI_NORMAL) ? 4 : 8);
+    if (lf2_random(0x38, diff_mod) != 0) return false;
+
+    // Guard defense against standard roster attacks
+    if (cid == DEEP_DAT || cid == FIREN_DAT || cid == DENNIS_DAT ||
+        cid == MARK_DAT || cid == JAN_DAT || cid == MONK_DAT ||
+        cid == DAVIS_DAT || cid == WOODY_DAT || cid == BAT_DAT || cid == LOUISE_EX_DAT) {
+        if (dx > 100 && dx < 900 && dz < 5 && lf2_random(0x39, diff_mod + 9) == 0) {
+            out_input.defend = true;
+        }
+        // Roll / dodge check
+        if (dx > 90) {
+            bool facing_ok = (self->facing == FACING_RIGHT && self->x < target->x) ||
+                             (self->facing == FACING_LEFT && target->x < self->x);
+            int32_t frame = static_cast<int32_t>(self->frame_id1);
+            if (facing_ok && (frame == 110 || frame > 234) && dz < 13) {
+                out_input.left = false;
+                out_input.right = false;
+                if (self->x < target->x) out_input.right = true;
+                else out_input.left = true;
+
+                if (cid == LOUISE_EX_DAT && lf2_random(0x3A, 2) == 0) {
+                    out_input.jump = true;
+                } else {
+                    out_input.attack = true;
+                }
+                out_input.defend = true;
+                return true;
+            }
+        }
+    }
+
+    // John specific shield / heal defense
+    if (cid == JOHN_DAT) {
+        if (dx > 100 && dx < 300 && dz < 5 && lf2_random(0x3B, diff_mod + 9) == 0) {
+            out_input.defend = true;
+        }
+        if (dx > 90) {
+            bool facing_ok = (self->facing == FACING_RIGHT && self->x < target->x) ||
+                             (self->facing == FACING_LEFT && target->x < self->x);
+            int32_t frame = static_cast<int32_t>(self->frame_id1);
+            if (facing_ok && (frame == 110 || frame > 234) && dz < 7) {
+                out_input.left = false;
+                out_input.right = false;
+                if (self->x < target->x) out_input.right = true;
+                else out_input.left = true;
+                out_input.attack = true;
+                out_input.defend = true;
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 input_state_t ai_evaluate_behavior(const global_t* world, uint32_t ai_id, ai_difficulty_t difficulty)
 {
     input_state_t input{};
@@ -152,6 +226,9 @@ input_state_t ai_evaluate_behavior(const global_t* world, uint32_t ai_id, ai_dif
     if (t_frame_id < MAX_FRAMES && target->file) {
         const frame_t* t_frame = &target->file->frames[t_frame_id];
         if (t_frame->state == STATE_ATTACKING && abs_dx <= 80 && abs_dz <= 20) {
+            if (ai_evaluate_dodge(world, ai_id, target_id, input, difficulty)) {
+                return input;
+            }
             uint32_t roll = lf2_random(0x99, 100);
             uint32_t defense_threshold = (difficulty == AI_CRAZY) ? 90 :
                                          (difficulty == AI_NORMAL) ? 60 : 25;

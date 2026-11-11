@@ -270,6 +270,86 @@ int FUN_00403a40(int target_id, int self_id, int self_state, int target_state,
     return 0;
 }
 
+// AI combat dodge / roll and shield defense maneuver (0x004034F0)
+int FUN_004034f0(int target_id, int self_id, int param_3, int param_4, int param_5, int param_6, int param_7)
+{
+    global_t *global = (global_t *)in_ECX;
+    if (!global || target_id < 0 || target_id >= MAX_OBJECTS || self_id < 0 || self_id >= MAX_OBJECTS) {
+        return 0;
+    }
+    object_t *self = global->objects[self_id];
+    object_t *target = global->objects[target_id];
+    if (!self || !target || !self->file || !target->file) return 0;
+
+    int32_t cid = (int32_t)self->file->id;
+    int32_t dx = FUN_004034e0(target->x - self->x);
+    int32_t dz = FUN_004034e0(target->z - self->z);
+
+    if (cid != ID_FIREN_DAT && cid != ID_FREEZE_DAT && cid != ID_JULIAN_DAT && cid != ID_FIRZEN_DAT) {
+        if (dx < 80 && dz < 5 && FUN_00417170(0x37, DAT_0044f61c + 3) == 0 && param_4 != 0xe) {
+            self->click_attack = 1;
+        }
+    }
+
+    if (param_6 != 0 && self->x < target->x) return 0;
+    if (param_7 != 0 && target->x < self->x) return 0;
+    if (FUN_00417170(0x38, DAT_0044f61c + 1) != 0) return 0;
+
+    // Guard defense against standard roster attacks
+    if (cid == ID_DEEP_DAT || cid == ID_FIREN_DAT || cid == ID_DENNIS_DAT ||
+        cid == ID_MARK_DAT || cid == ID_JAN_DAT || cid == ID_MONK_DAT ||
+        cid == ID_DAVIS_DAT || cid == ID_WOODY_DAT || cid == ID_BAT_DAT || cid == ID_LOUISE_EX_DAT) {
+        if (100 < dx && dx < 900 && dz < 5 &&
+            FUN_00417170(0x39, DAT_0044f61c + 10) == 0 && param_4 != 0xe) {
+            self->click_defend = 1;
+        }
+        // Roll / dodge check
+        if (dx > 90) {
+            int32_t facing_ok = (self->facing == FACING_RIGHT && self->x < target->x) ||
+                                (self->facing == FACING_LEFT && target->x < self->x);
+            int32_t frame = (int32_t)self->frame_id1;
+            if (facing_ok && (frame == 110 || frame > 234) && dz < 13 && param_4 != 0xe) {
+                self->click_left = 0;
+                self->click_right = 0;
+                self->holding_left = 0;
+                self->holding_right = 0;
+                if (self->x < target->x) self->click_right = 1;
+                else self->click_left = 1;
+                if (cid == ID_LOUISE_EX_DAT && FUN_00417170(0x3a, 2) == 0) {
+                    self->click_jump = 1;
+                } else {
+                    self->click_attack = 1;
+                }
+            }
+        }
+    }
+
+    // John specific shield / heal defense
+    if (cid == ID_JOHN_DAT) {
+        if (100 < dx && dx < 300 && dz < 5 &&
+            FUN_00417170(0x3b, DAT_0044f618 + 10) == 0 && param_4 != 0xe) {
+            self->click_defend = 1;
+        }
+        if (dx > 90) {
+            int32_t facing_ok = (self->facing == FACING_RIGHT && self->x < target->x) ||
+                                (self->facing == FACING_LEFT && target->x < self->x);
+            int32_t frame = (int32_t)self->frame_id1;
+            if (facing_ok && (frame == 110 || frame > 234) && dz < 7 && param_4 != 0xe) {
+                self->click_left = 0;
+                self->click_right = 0;
+                self->holding_left = 0;
+                self->holding_right = 0;
+                if (self->x < target->x) self->click_right = 1;
+                else self->click_left = 1;
+                self->click_attack = 1;
+            }
+        }
+    }
+    (void)param_3;
+    (void)param_5;
+    return 1;
+}
+
 // Primary AI Controller (0x004094B0)
 void FUN_004094b0(int obj_id, int mode)
 {
@@ -381,6 +461,7 @@ void FUN_004094b0(int obj_id, int mode)
     if (FUN_00403a40(target_id, obj_id, self_state, target_state, 0, best_dist, z_close) != 0) {
         return;
     }
+    FUN_004034f0(target_id, obj_id, 0, self_state, 0, 0, 0);
     if (self->weapon_type > 0 &&
         FUN_00408cb0(target_id, obj_id, self_state, target_state, z_close, 0) == 0) {
         return;

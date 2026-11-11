@@ -37,11 +37,11 @@ decompiled/
 ## Suite Summary & Documentation
 
 - **[`decompiled/RAW/`](RAW/README.md):**
-  Houses the 72 pristine decompiler exports directly as emitted by Ghidra, verified 1:1 against genuine function entry points in `lf2.exe` via `verify_raw_entries.py`. Preserves raw `DAT_` pointers, synthetic registers (`in_ECX`), and original formatting without hand-written shortcuts. Serves as immutable forensic evidence for mathematical validation.
+  Houses the 106 pristine decompiler exports directly as emitted by Ghidra, verified 1:1 against genuine function entry points in `lf2.exe` via `verify_raw_entries.py`. Preserves raw `DAT_` pointers, synthetic registers (`in_ECX`), and original formatting without hand-written shortcuts. Serves as immutable forensic evidence for mathematical validation.
   *Read the full guide: [RAW/README.md](RAW/README.md)*
 
 - **[`decompiled/Compilable/`](Compilable/README.md):**
-  Houses the complete 59-routine compilable suite with synthetic types (`legacy_types.h`), calling convention bridges, external global memory declarations (`legacy_globals.h`), and zeroed static allocations (`legacy_globals.c`). Compiles with 0 syntax or symbol errors under GCC and Clang.
+  Houses the complete compilable legacy suite (55 translation units) with synthetic types (`legacy_types.h`), calling convention bridges, external global memory declarations (`legacy_globals.h`), and zeroed static allocations (`legacy_globals.c`). Compiles with 0 syntax or symbol errors under GCC and Clang.
   *Read the full guide: [Compilable/README.md](Compilable/README.md)*
 
 - **[`decompiled/resources/`](resources/):**
@@ -77,6 +77,8 @@ decompiled/
 | `0x00402b60` | Network | WinSock init, socket setup & WSAAsyncSelect | [`RAW/net`](RAW/net/func_00402b60_net_init.c) | [`Compilable/net`](Compilable/net/net_init.c) |
 | `0x00403270` | Gameplay | Rudolf team teleportation targeting | [`RAW/gameplay`](RAW/gameplay/func_00403270_teleport.c) | [`Compilable/gameplay`](Compilable/gameplay/teleport.c) |
 | `0x004034e0` | Core | Fast integer absolute value computation | [`RAW/core`](RAW/core/func_004034e0_abs.c) | [`Compilable/core`](Compilable/core/abs.c) |
+| `0x004034f0` | Gameplay | AI combat dodge & evasive roll maneuver | [`RAW/gameplay`](RAW/gameplay/func_004034f0_ai_dodge.c) | [`Compilable/gameplay`](Compilable/gameplay/ai_process.c) |
+| `0x004061a0` | Gameplay | 1D interval betweenness test | [`RAW/gameplay`](RAW/gameplay/func_004061a0_is_between.c) | [`Compilable/gameplay`](Compilable/gameplay/object_init.c) |
 | `0x004061d0` | Gameplay | Entity constructor & default state init | [`RAW/gameplay`](RAW/gameplay/func_004061d0_object_init.c) | [`Compilable/gameplay`](Compilable/gameplay/object_init.c) |
 | `0x004064d0` | Gameplay | Grapple caught-target coordinate sync | [`RAW/gameplay`](RAW/gameplay/func_004064d0_grapple_catch.c) | [`Compilable/gameplay`](Compilable/gameplay/grapple_sync.c) |
 | `0x00406ba0` | Gameplay | AI combat decision tree & input synthesis | [`RAW/gameplay`](RAW/gameplay/func_00406ba0_ai_process.c) | [`Compilable/gameplay`](Compilable/gameplay/ai_process.c) |
@@ -91,6 +93,10 @@ decompiled/
 | `0x00417170` | Core | 3,000-byte precomputed circular PRNG | [`RAW/core`](RAW/core/func_00417170_random.c) | [`Compilable/core`](Compilable/core/random.c) |
 | `0x004171c0` | Core | 1D coordinate interval overlap check | [`RAW/core`](RAW/core/func_004171c0_overlap.c) | [`Compilable/core`](Compilable/core/overlap.c) |
 | `0x00417400` | Gameplay | 3D AABB hitbox intersection testing | [`RAW/gameplay`](RAW/gameplay/func_00417400_does_attack_success.c) | [`Compilable/gameplay`](Compilable/gameplay/does_attack_success.c) |
+| `0x004196f0` | Gameplay | 400-object velocity/impulse averaging pass | [`RAW/gameplay`](RAW/gameplay/func_004196f0_velocity_average.c) | [`Compilable/gameplay`](Compilable/gameplay/slot_input.c) |
+| `0x004197a0` | Gameplay | Remote/network input unpacking & latching | [`RAW/gameplay`](RAW/gameplay/func_004197a0_input_unpack_net.c) | [`Compilable/gameplay`](Compilable/gameplay/slot_input.c) |
+| `0x004198f0` | Gameplay | Local player input latching & replay recording | [`RAW/gameplay`](RAW/gameplay/func_004198f0_input_latch_local.c) | [`Compilable/gameplay`](Compilable/gameplay/slot_input.c) |
+| `0x00419a60` | Gameplay | Master per-slot controller / AI input loop | [`RAW/gameplay`](RAW/gameplay/func_00419a60_input_ai_dispatch.c) | [`Compilable/gameplay`](Compilable/gameplay/slot_input.c) |
 | `0x0041a250` | Graphics | Background update, parallax scrolling layer calculation & camera bounds | [`RAW/graphics`](RAW/graphics/func_0041a250_background_update.c) | [`Compilable/graphics`](Compilable/graphics/parallax_calc.c) |
 | `0x0041bc90` | Network | Master battle main loop, lockstep frame pacing & input sampling | [`RAW/net`](RAW/net/func_0041bc90_battle_main_loop.c) | [`Compilable/net`](Compilable/net/net_lockstep.c) |
 | `0x00422ac0` | Core | PRNG lookup table re-seed & linear congruential init | [`RAW/core`](RAW/core/func_00422ac0_prng_seed.c) | [`Compilable/core`](Compilable/core/random.c) |

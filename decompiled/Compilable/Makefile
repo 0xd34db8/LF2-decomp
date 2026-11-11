@@ -83,7 +83,7 @@ test: $(TEST_TARGET)
 	@echo ======================================================================
 	@echo  Running Decompiled Compilable Test Suite...
 	@echo ======================================================================
-	@$(TEST_TARGET)
+	./$(TEST_TARGET)
 
 clean:
 	@echo [CLEAN] Removing $(BUILD_DIR)...

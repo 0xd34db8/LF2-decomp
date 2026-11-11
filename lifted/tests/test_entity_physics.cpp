@@ -235,6 +235,69 @@ void test_input_state_machine()
     std::cout << "    Input state machine transitions verified 100%!" << std::endl;
 }
 
+void test_phase20_entity_core()
+{
+    std::cout << "[+] Testing Phase 20 entity core (Betweenness, Velocity Averaging, Input Latching)..." << std::endl;
+
+    // 1. Betweenness check (0x004061A0)
+    assert(is_between(10, 15, 20) == true);
+    assert(is_between(20, 15, 10) == true);
+    assert(is_between(10, 25, 20) == false);
+    assert(is_between(10, 10, 20) == false);
+
+    // 2. Velocity averaging pass (0x004196F0)
+    global_t world;
+    std::memset(&world, 0, sizeof(world));
+    object_t obj;
+    object_init(&obj);
+    obj.attacks = 3;
+    obj.pic_x_gain = 12.0;
+    obj.y_accl = 8.0;
+    obj.z_accl = 4.0;
+    world.objects[0] = &obj;
+    world.is_object_exists[0] = 1;
+
+    world_average_velocities(&world);
+    assert(obj.x_velocity == 6.0);
+    assert(obj.y_velocity == 4.0);
+    assert(obj.z_velocity == 2.0);
+    assert(obj.attacks == 0);
+    assert(obj.pic_x_gain == 0.0);
+    assert(obj.y_accl == 0.0);
+    assert(obj.z_accl == 0.0);
+
+    // 3. Network input unpacking & latching (0x004197A0)
+    uint8_t pkt[8] = {0};
+    pkt[0] = 0x80 | 0x08; // UP + ATTACK
+    slot_unpack_network_inputs(&world, pkt, 0);
+    assert(obj.click_up == 1);
+    assert(obj.click_attack == 1);
+    assert(obj.click_jump == 0);
+    assert(obj.click_defend == 0);
+
+    // Next frame shift: previous frame click should shift to holding
+    pkt[0] = 0x04; // JUMP only
+    slot_unpack_network_inputs(&world, pkt, 0);
+    assert(obj.holding_up == 1);
+    assert(obj.holding_attack == 1);
+    assert(obj.click_up == 0);
+    assert(obj.click_attack == 0);
+    assert(obj.click_jump == 1);
+
+    // 4. Local slot latching & replay recording (0x004198F0)
+    int32_t slot_types[8] = {-1, 0, 0, 0, 0, 0, 0, 0};
+    uint8_t local_in[8] = {0x40 | 0x02, 0, 0, 0, 0, 0, 0, 0}; // DOWN + DEFEND
+    uint8_t replay_tape[16] = {0};
+    slot_latch_local_inputs(&world, slot_types, local_in, 0, true, replay_tape, 5);
+    assert(obj.holding_jump == 1);
+    assert(obj.click_down == 1);
+    assert(obj.click_defend == 1);
+    assert(obj.click_jump == 0);
+    assert(replay_tape[5] == (0x40 | 0x02));
+
+    std::cout << "    Betweenness, velocity averaging, and slot input latching verified 100%!" << std::endl;
+}
+
 int main()
 {
     std::cout << "=== Little Fighter 2 Entity Physics & State Machine Tests ===" << std::endl;
@@ -244,6 +307,7 @@ int main()
     test_ground_friction();
     test_frame_progression();
     test_input_state_machine();
+    test_phase20_entity_core();
     std::cout << "[SUCCESS] All Entity Physics & Lifecycle tests passed with 100% precision!" << std::endl;
     return 0;
 }
