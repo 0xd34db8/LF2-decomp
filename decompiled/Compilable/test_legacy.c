@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include <assert.h>
 #include "legacy_types.h"
 #include "legacy_globals.h"
@@ -329,6 +330,189 @@ int main() {
     int dodge_res = FUN_004034f0(1, 0, 0, 0, 0, 0, 0);
     assert(dodge_res == 1);
     printf("    [PASS] 1D betweenness, velocity averaging, input unpacking, and AI dodge verified!\n");
+
+    // 14. Test Phase 21 & 22 Frame Advance, Combo Recognizers, Input State Machine, and Physics (0x0040D960, 0x0040E170, 0x0040E2D0, 0x0040E450, 0x0040E490, 0x00412800..0x00412F40, 0x00413080)
+    printf("[*] Testing Phase 21 & 22 Frame Advance, Combo Recognizers, Input & Physics...\n");
+    {
+        file_t *p21_file = (file_t *)calloc(1, sizeof(file_t));
+        assert(p21_file != NULL);
+        p21_file->id = ID_DAVIS_DAT;
+        p21_file->type = TYPE_CHARACTER;
+        p21_file->walking_frame_rate = 3;
+        p21_file->walking_speed = 4.0;
+        p21_file->walking_speedz = 2.0;
+        p21_file->running_frame_rate = 3;
+        p21_file->running_speed = 8.0;
+        p21_file->running_speedz = 3.0;
+        p21_file->jump_height = -16.0;
+        p21_file->jump_distance = 5.0;
+        p21_file->jump_distancez = 2.5;
+        p21_file->dash_height = -12.0;
+        p21_file->dash_distance = 12.0;
+        p21_file->dash_distancez = 3.0;
+
+        // Configure standing (0), jumping takeoff (210->212), airborne (212), landing (215), special (235)
+        p21_file->frames[0].present = 1;
+        p21_file->frames[0].state = STATE_STANDING;
+        p21_file->frames[0].wait = 4;
+        p21_file->frames[0].next = 1;
+        p21_file->frames[0].hit_Fa = 235;
+        p21_file->frames[1].present = 1;
+        p21_file->frames[1].state = STATE_STANDING;
+        p21_file->frames[1].wait = 4;
+        p21_file->frames[1].next = 999;
+
+        p21_file->frames[5].present = 1;
+        p21_file->frames[5].state = STATE_WALKING;
+        p21_file->frames[9].present = 1;
+        p21_file->frames[9].state = STATE_RUNNING;
+
+        p21_file->frames[60].present = 1;
+        p21_file->frames[60].state = STATE_ATTACKING;
+        p21_file->frames[65].present = 1;
+        p21_file->frames[65].state = STATE_ATTACKING;
+
+        p21_file->frames[110].present = 1;
+        p21_file->frames[110].state = STATE_DEFENDING;
+        p21_file->frames[110].hit_Fa = 235;
+
+        p21_file->frames[210].present = 1;
+        p21_file->frames[210].state = STATE_OTHER;
+        p21_file->frames[210].wait = 0;
+        p21_file->frames[210].next = 212;
+        p21_file->frames[212].present = 1;
+        p21_file->frames[212].state = STATE_JUMPING;
+        p21_file->frames[212].wait = 10;
+        p21_file->frames[212].next = 999;
+        p21_file->frames[215].present = 1;
+        p21_file->frames[215].state = STATE_OTHER;
+        p21_file->frames[215].wait = 2;
+        p21_file->frames[215].next = 999;
+
+        p21_file->frames[235].present = 1;
+        p21_file->frames[235].state = STATE_ATTACKING;
+        p21_file->frames[235].mp = 150;
+        p21_file->frames[235].dvx = 556; // 556 - 550 = 6 (signed override)
+        p21_file->frames[235].dvy = 548; // 548 - 550 = -2
+        p21_file->frames[235].dvz = 553; // 553 - 550 = 3
+
+        object_t p21_obj;
+        memset(&p21_obj, 0, sizeof(p21_obj));
+        p21_obj.file = p21_file;
+        p21_obj.hp = 500;
+        p21_obj.max_hp = 500;
+        p21_obj.mp = 500;
+        p21_obj.uid = -1;
+        p21_obj.facing = FACING_RIGHT;
+
+        // 0x0040E450: 5-entry input history shift register
+        lf2_input_history_push(&p21_obj, 9);
+        lf2_input_history_push(&p21_obj, 6);
+        lf2_input_history_push(&p21_obj, 5);
+        assert(p21_obj.input_history[2] == 9 && p21_obj.input_history[3] == 6 && p21_obj.input_history[4] == 5);
+
+        // 0x0040E170: combo interruption helper
+        p21_obj.attack_press = 5;
+        assert(lf2_combo_interrupted(&p21_obj, 'd', 0) == 1);
+        assert(lf2_combo_interrupted(&p21_obj, 'R', 1) == 1);
+        p21_obj.attack_press = 0;
+        p21_obj.defend_press = 5;
+        assert(lf2_combo_interrupted(&p21_obj, 'd', 1) == 0);
+        p21_obj.defend_press = 0;
+
+        // 0x0040E2D0: frame transition & MP/HP cost
+        DAT_0044d034 = 1;
+        int prev_mp = p21_obj.mp;
+        lf2_frame_transition(&p21_obj, 235);
+        assert(p21_obj.frame_id1 == 235);
+        assert(p21_obj.mp == prev_mp - 150);
+
+        // 0x00413080: dvx/dvy/dvz 550-offset override + 9 combo recognizers (D > R > A)
+        p21_obj.frame_id1 = 235;
+        lf2_object_input_tick(&p21_obj);
+        assert(p21_obj.x_velocity == 6.0);
+        assert(p21_obj.y_velocity == -2.0);
+        assert(p21_obj.z_velocity == 3.0);
+
+        // Execute D -> R -> A combo across 3 ticks from frame 0
+        p21_obj.frame_id1 = 0;
+        p21_obj.frame_id2 = 0;
+        p21_obj.x_velocity = p21_obj.y_velocity = p21_obj.z_velocity = 0.0;
+        p21_obj.facing = FACING_LEFT;
+        // Tick 1: press Defend
+        p21_obj.holding_defend = 0; p21_obj.click_defend = 1;
+        lf2_object_input_tick(&p21_obj);
+        p21_obj.holding_defend = 1; p21_obj.click_defend = 0;
+        // Tick 2: press Right
+        p21_obj.holding_right = 0; p21_obj.click_right = 1;
+        lf2_object_input_tick(&p21_obj);
+        p21_obj.holding_right = 1; p21_obj.click_right = 0;
+        // Tick 3: press Attack -> D > R > A fires hit_Fa (235) and faces RIGHT
+        p21_obj.holding_attack = 0; p21_obj.click_attack = 1;
+        lf2_object_input_tick(&p21_obj);
+        assert(p21_obj.frame_id1 == 235);
+        assert(p21_obj.facing == FACING_RIGHT);
+
+        // Clear all presses for walk / double-tap run test
+        memset(p21_obj.key_state, 0, sizeof(p21_obj.key_state));
+        p21_obj.holding_right = p21_obj.click_right = 0;
+        p21_obj.holding_attack = p21_obj.click_attack = 0;
+        p21_obj.click_DRA = 0;
+        p21_obj.frame_id1 = 0;
+        p21_obj.frame_id2 = 0;
+        p21_obj.wait_counter = 0;
+        p21_obj.click_right = 1;
+        lf2_object_input_tick(&p21_obj);
+        assert(p21_obj.frame_id1 >= 5 && p21_obj.frame_id1 <= 8); // walking
+        // Double-tap Right -> Run
+        p21_obj.frame_id1 = 0;
+        p21_obj.holding_right = 0; p21_obj.click_right = 1;
+        p21_obj.dash_counter = 4; // within double-tap run window
+        lf2_object_input_tick(&p21_obj);
+        assert(p21_obj.frame_id1 >= 9 && p21_obj.frame_id1 <= 11); // running
+
+        // Jump press -> frame 210 -> 0x0040D960 launch to 212
+        p21_obj.frame_id1 = 0;
+        p21_obj.frame_id2 = 0;
+        p21_obj.y = 0;
+        p21_obj.y_position = 0.0;
+        p21_obj.x_velocity = p21_obj.y_velocity = p21_obj.z_velocity = 0.0;
+        p21_obj.holding_right = 1; p21_obj.click_right = 1;
+        p21_obj.holding_jump = 0; p21_obj.click_jump = 1;
+        lf2_object_input_tick(&p21_obj);
+        assert(p21_obj.frame_id1 == 210);
+        lf2_object_frame_advance(&p21_obj, 0, 0);
+        assert(p21_obj.frame_id1 == 212);
+        assert(p21_obj.y_velocity == p21_file->jump_height);
+        assert(p21_obj.x_velocity == p21_file->jump_distance);
+
+        // 0x0040E490: Airborne gravity (+1.7) & ground landing -> 215 + (-1.0) friction
+        p21_obj.y_position = -10.0;
+        p21_obj.y = -10;
+        p21_obj.y_velocity = 0.0;
+        lf2_object_physics_tick(&p21_obj);
+        assert(p21_obj.y_position == -10.0);
+        assert(p21_obj.y_velocity == 1.7);
+        lf2_object_physics_tick(&p21_obj);
+        assert(fabs(p21_obj.y_position - (-8.3)) < 1e-9);
+        assert(fabs(p21_obj.y_velocity - 3.4) < 1e-9);
+
+        p21_obj.y_position = -1.0;
+        p21_obj.y = -1;
+        p21_obj.y_velocity = 5.0;
+        lf2_object_physics_tick(&p21_obj);
+        assert(p21_obj.y == 0);
+        assert(p21_obj.y_position == 0.0);
+        assert(p21_obj.y_velocity == 0.0);
+        assert(p21_obj.frame_id1 == 215);
+
+        p21_obj.x_velocity = 3.0;
+        lf2_object_physics_tick(&p21_obj);
+        assert(p21_obj.x_velocity == 2.0); // -1.0 ground friction
+
+        free(p21_file);
+        printf("    [PASS] Phase 21 & 22 Frame Advance, Combo Recognizers, Input & Physics verified!\n");
+    }
 
     printf("\n[SUCCESS] All Decompiled Compilable Suite Tests Passed with 100%% Parity!\n");
     return 0;

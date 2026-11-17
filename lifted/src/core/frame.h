@@ -138,7 +138,10 @@ struct frame_t {
     uint32_t       continue3;      // 0x168
     uint32_t       continue4;      // 0x16C
     uint32_t       sound;          // 0x170
-    uint32_t       _unknown6;      // 0x174
+    union {
+        int32_t    sound_id;       // 0x174 (signed sound index in .exe, -1 if none)
+        uint32_t   _unknown6;      // 0x174
+    };
 };
 
 #pragma pack(pop)

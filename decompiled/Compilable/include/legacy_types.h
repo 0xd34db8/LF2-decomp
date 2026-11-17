@@ -375,7 +375,10 @@ typedef struct frame {
     uint32_t       continue3;      // 0x168
     uint32_t       continue4;      // 0x16C
     uint32_t       sound;          // 0x170
-    uint32_t       _unknown6;      // 0x174
+    union {
+        uint32_t   _unknown6;      // 0x174
+        int32_t    sound_id;       // 0x174
+    };
 } frame_t;
 
 // 8. Character / Weapon / Item Definition (.dat file)
@@ -435,8 +438,14 @@ typedef struct file {
 // Total Size: 0x418 (1048 bytes)
 typedef struct object {
     uint32_t        move_counter;             // 0x000
-    uint32_t        run_counter;              // 0x004
-    uint32_t        invincible_time;          // 0x008
+    union {
+        uint32_t    run_counter;              // 0x004
+        int32_t     dash_counter;             // 0x004 (signed alias)
+    };
+    union {
+        uint32_t    invincible_time;          // 0x008
+        int32_t     blink_time;               // 0x008 (signed alias)
+    };
     uint32_t        _unknown1;                // 0x00C
     int32_t         x;                        // 0x010
     int32_t         y;                        // 0x014
@@ -484,6 +493,17 @@ typedef struct object {
     union {
         uint8_t     key_state[10];            // 0x0BC - 0x0C6 (0..6: up, down, left, right, attack, jump, defend)
         uint8_t     _unknown12[10];           // 0x0BC - 0x0C6
+        struct {
+            uint8_t _pad_bc[2];               // 0x0BC - 0x0BD
+            uint8_t attack_press;             // 0x0BE
+            uint8_t jump_press;               // 0x0BF
+            uint8_t defend_press;             // 0x0C0
+            uint8_t defend_lock;              // 0x0C1
+            uint8_t right_press;              // 0x0C2
+            uint8_t left_press;               // 0x0C3
+            uint8_t up_press;                 // 0x0C4
+            uint8_t down_press;               // 0x0C5
+        };
     };
     uint8_t         holding_up;               // 0x0C6
     uint8_t         holding_down;             // 0x0C7
@@ -499,15 +519,32 @@ typedef struct object {
     uint8_t         click_attack;             // 0x0D1
     uint8_t         click_jump;               // 0x0D2
     uint8_t         click_defend;             // 0x0D3
-    int32_t         defense_breaking;         // 0x0D4
     union {
         struct {
-            int32_t reserve;                  // 0x0D8
-            int32_t curing_speed;             // 0x0DC
-            int32_t curing_hp;                // 0x0E0
-            int32_t additional_y;             // 0x0E4
+            int32_t defense_breaking;         // 0x0D4
+            union {
+                struct {
+                    int32_t reserve;          // 0x0D8
+                    int32_t curing_speed;     // 0x0DC
+                    int32_t curing_hp;        // 0x0E0
+                    int32_t additional_y;     // 0x0E4
+                };
+                uint32_t    _unknown15[4];    // 0x0D8 - 0x0E8
+            };
         };
-        uint32_t    _unknown15[4];            // 0x0D8 - 0x0E8
+        struct {
+            uint8_t click_DRA;                // 0x0D4 (D > R > A)
+            uint8_t click_DLA;                // 0x0D5 (D > L > A)
+            uint8_t click_DUA;                // 0x0D6 (D > U > A)
+            uint8_t click_DDA;                // 0x0D7 (D > D > A)
+            uint8_t click_DRJ;                // 0x0D8 (D > R > J)
+            uint8_t click_DLJ;                // 0x0D9 (D > L > J)
+            uint8_t click_DUJ;                // 0x0DA (D > U > J)
+            uint8_t click_DDJ;                // 0x0DB (D > D > J)
+            uint8_t click_DJA;                // 0x0DC (D > J > A)
+            uint8_t _pad_dd[3];               // 0x0DD - 0x0DF
+        };
+        uint8_t     combo_state[9];           // 0x0D4 - 0x0DC
     };
     union {
         struct {
@@ -563,13 +600,21 @@ typedef struct object {
     int32_t         team;                     // 0x364
     file_t*         file;                     // 0x368
 #if INTPTR_MAX == INT32_MAX
-    int32_t         ai_vars[36];              // 0x36C - 0x3FC
+    int32_t         ai_vars[31];              // 0x36C - 0x3E8
 #else
-    int32_t         ai_vars[35];              // 0x370 - 0x3FC (8-byte pointer on 64-bit)
+    int32_t         ai_vars[30];              // 0x370 - 0x3E8 (8-byte pointer on 64-bit)
 #endif
+    int32_t         blocked_up;               // 0x3E8
+    int32_t         blocked_down;             // 0x3EC
+    int32_t         blocked_left;             // 0x3F0
+    int32_t         blocked_right;            // 0x3F4
+    int32_t         chase_target;             // 0x3F8
     int32_t         ai_target_x;              // 0x3FC
     int32_t         ai_target_z;              // 0x400
-    int32_t         ai_tail[5];               // 0x404 - 0x418
+    union {
+        int32_t     ai_tail[5];               // 0x404 - 0x418
+        int32_t     input_history[5];         // 0x404 - 0x418
+    };
 } object_t;
 
 // 10. Global Game Manager State (global)

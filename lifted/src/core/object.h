@@ -14,8 +14,14 @@ namespace lf2 {
 // Total Size: 0x418 (1048 bytes)
 struct object_t {
     uint32_t        move_counter;             // 0x000
-    uint32_t        run_counter;              // 0x004
-    uint32_t        invincible_time;          // 0x008
+    union {
+        uint32_t    run_counter;              // 0x004
+        int32_t     dash_counter;             // 0x004 (signed double-tap run timer)
+    };
+    union {
+        uint32_t    invincible_time;          // 0x008
+        int32_t     blink_time;               // 0x008 (signed blink timer)
+    };
     uint32_t        _unknown1;                // 0x00C
     int32_t         x;                        // 0x010
     int32_t         y;                        // 0x014
@@ -63,6 +69,17 @@ struct object_t {
     union {
         uint8_t     key_state[10];            // 0x0BC - 0x0C6 (0..6: up, down, left, right, attack, jump, defend)
         uint8_t     _unknown12[10];           // 0x0BC - 0x0C6
+        struct {
+            uint8_t _pad_bc[2];               // 0x0BC - 0x0BD
+            uint8_t attack_press;             // 0x0BE
+            uint8_t jump_press;               // 0x0BF
+            uint8_t defend_press;             // 0x0C0
+            uint8_t defend_lock;              // 0x0C1
+            uint8_t right_press;              // 0x0C2
+            uint8_t left_press;               // 0x0C3
+            uint8_t up_press;                 // 0x0C4
+            uint8_t down_press;               // 0x0C5
+        };
     };
     uint8_t         holding_up;               // 0x0C6
     uint8_t         holding_down;             // 0x0C7
@@ -80,15 +97,32 @@ struct object_t {
     uint8_t         click_defend;             // 0x0D3
     union {
         struct {
-            uint8_t  run_left_right;          // 0x0D4
-            uint8_t  run_up_down;             // 0x0D5
-            uint8_t  last_dir_x;              // 0x0D6
-            uint8_t  _pad_d7;                 // 0x0D7
+            union {
+                struct {
+                    uint8_t  run_left_right;  // 0x0D4
+                    uint8_t  run_up_down;     // 0x0D5
+                    uint8_t  last_dir_x;      // 0x0D6
+                    uint8_t  _pad_d7;         // 0x0D7
+                };
+                uint32_t     defense_breaking;// 0x0D4
+            };
+            int32_t          row_timer1;      // 0x0D8
+            int32_t          row_timer2;      // 0x0DC
         };
-        uint32_t     defense_breaking;        // 0x0D4
+        struct {
+            uint8_t click_DRA;                // 0x0D4 (D > R > A)
+            uint8_t click_DLA;                // 0x0D5 (D > L > A)
+            uint8_t click_DUA;                // 0x0D6 (D > U > A)
+            uint8_t click_DDA;                // 0x0D7 (D > D > A)
+            uint8_t click_DRJ;                // 0x0D8 (D > R > J)
+            uint8_t click_DLJ;                // 0x0D9 (D > L > J)
+            uint8_t click_DUJ;                // 0x0DA (D > U > J)
+            uint8_t click_DDJ;                // 0x0DB (D > D > J)
+            uint8_t click_DJA;                // 0x0DC (D > J > A)
+            uint8_t _pad_dd[3];               // 0x0DD - 0x0DF
+        };
+        uint8_t     combo_state[9];           // 0x0D4 - 0x0DC
     };
-    int32_t         row_timer1;               // 0x0D8
-    int32_t         row_timer2;               // 0x0DC
     union {
         int32_t     curing_hp;                // 0x0E0
         uint32_t    _unknown15_2;             // 0x0E0
@@ -148,14 +182,37 @@ struct object_t {
     uint32_t        team;                     // 0x364
 #if INTPTR_MAX == INT32_MAX
     file_t*         file;                     // 0x368
-    uint32_t        ai_vars[36];              // 0x36C - 0x3FC
+    union {
+        uint32_t    ai_vars[36];              // 0x36C - 0x3FC
+        struct {
+            uint32_t ai_vars_body[31];        // 0x36C - 0x3E8
+            int32_t  blocked_up;              // 0x3E8
+            int32_t  blocked_down;            // 0x3EC
+            int32_t  blocked_left;            // 0x3F0
+            int32_t  blocked_right;           // 0x3F4
+            int32_t  chase_target;            // 0x3F8
+        };
+    };
 #else
     file_t*         file;                     // 0x368 - 0x370 (8-byte pointer on 64-bit)
-    uint32_t        ai_vars[35];              // 0x370 - 0x3FC
+    union {
+        uint32_t    ai_vars[35];              // 0x370 - 0x3FC
+        struct {
+            uint32_t ai_vars_body[30];        // 0x370 - 0x3E8
+            int32_t  blocked_up;              // 0x3E8
+            int32_t  blocked_down;            // 0x3EC
+            int32_t  blocked_left;            // 0x3F0
+            int32_t  blocked_right;           // 0x3F4
+            int32_t  chase_target;            // 0x3F8
+        };
+    };
 #endif
     int32_t         ai_target_x;              // 0x3FC
     int32_t         ai_target_z;              // 0x400
-    uint32_t        ai_vars_tail[5];          // 0x404 - 0x418
+    union {
+        uint32_t    ai_vars_tail[5];          // 0x404 - 0x418
+        int32_t     input_history[5];         // 0x404 - 0x418 (5-entry input ring shift register)
+    };
 };
 
 #pragma pack(pop)

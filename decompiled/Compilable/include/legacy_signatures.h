@@ -22,6 +22,12 @@ int  lf2_file_ctor(file_t *file, undefined4 param_1, undefined4 param_2, const c
 void lf2_menu_check_player_join_input(global_t *global);
 void lf2_menu_reset_input_and_keys(global_t *global);
 int *lf2_stage_advance(global_t *global);
+void lf2_object_frame_advance(object_t *obj, int mode, int obj_idx);
+int  lf2_combo_interrupted(const object_t *obj, char expected_key, int advanced);
+int  lf2_frame_transition(object_t *obj, int target_frame);
+void lf2_input_history_push(object_t *obj, uint32_t key_code);
+void lf2_object_physics_tick(object_t *obj);
+void lf2_object_input_tick(object_t *obj);
 
 // Comprehensive inventory of all decompiled function signatures
 int  FUN_00401000();
@@ -65,8 +71,23 @@ void FUN_0040bd90();
 void FUN_0040be70();
 int  FUN_0040bf30(int frame_id);
 void FUN_0040d0a0();
+void FUN_0040d960(int param_1, int param_2);
 void FUN_0040de30(int camera_x, void *dest_surface, int shake_dir);
+int  FUN_0040e170(char param_1, int param_2);
+int  FUN_0040e2d0(int param_1);
+void FUN_0040e450(undefined4 param_1);
+void FUN_0040e490(void);
 void FUN_0040ef70();
+void FUN_00412800(void);
+void FUN_004128f0(void);
+void FUN_004129e0(void);
+void FUN_00412ac0(void);
+void FUN_00412ba0(void);
+void FUN_00412c90(void);
+void FUN_00412d80(void);
+void FUN_00412e60(void);
+void FUN_00412f40(void);
+void FUN_00413080(undefined4 param_1, undefined4 param_2);
 int  FUN_004143d0();
 void FUN_004146b0();
 void FUN_004148a0();

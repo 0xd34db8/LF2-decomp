@@ -1235,6 +1235,8 @@ void app_t::update_battle() {
         break;
     }
 
+    int32_t unlock_chars = (m_cheat_lf2net == 'd') ? 1 : 0;
+
     // Process inputs for all active fighters (Players 0..3 read their control.txt mappings)
     for (uint32_t i = 0; i < m_num_fighters; ++i) {
         object_t* fighter = &m_fighters[i];
@@ -1251,7 +1253,7 @@ void app_t::update_battle() {
             input.jump   = is_player_key_down(slot, ctrl_action_t::JUMP);
             input.defend = is_player_key_down(slot, ctrl_action_t::DEFEND);
 
-            object_handle_input(fighter, input);
+            object_handle_input(fighter, input, true, unlock_chars);
         } else {
             ai_tick(&m_world, i, AI_NORMAL);
         }
@@ -1262,13 +1264,32 @@ void app_t::update_battle() {
     int32_t stage_w = m_stage_loaded ? m_background.width : 2000;
 
     for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
+        if (!m_world.is_object_exists[i]) continue;
         object_t* obj = m_world.objects[i];
         if (!obj || !obj->file) continue;
 
-        object_update_physics(obj);
-        object_update_motion(obj, z_min, z_max, stage_w);
-        object_apply_ground_friction(obj, 0.6);
-        object_tick_frame(obj);
+        if (obj->x_position <= 0.0) obj->blocked_left = 1;
+        if (obj->x_position >= static_cast<double>(stage_w)) obj->blocked_right = 1;
+        if (obj->z_position <= static_cast<double>(z_min)) obj->blocked_up = 1;
+        if (obj->z_position >= static_cast<double>(z_max)) obj->blocked_down = 1;
+
+        obj->frame_id4 = obj->frame_id3;
+        obj->frame_id3 = obj->frame_id2;
+        object_frame_advance(obj, static_cast<int32_t>(m_selected_mode), static_cast<int32_t>(i), 1, true);
+        object_physics_tick(obj, static_cast<int32_t>(m_frame_counter % 12));
+
+        if (obj->x_position < 0.0) {
+            obj->x_position = 0.0;
+        } else if (obj->x_position > static_cast<double>(stage_w)) {
+            obj->x_position = static_cast<double>(stage_w);
+        }
+        if (obj->z_position < static_cast<double>(z_min)) {
+            obj->z_position = static_cast<double>(z_min);
+        } else if (obj->z_position > static_cast<double>(z_max)) {
+            obj->z_position = static_cast<double>(z_max);
+        }
+        obj->x = static_cast<int32_t>(obj->x_position);
+        obj->z = static_cast<int32_t>(obj->z_position);
     }
 
     // Hitbox interactions & attacks

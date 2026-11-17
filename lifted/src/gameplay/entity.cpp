@@ -1,6 +1,7 @@
 #include "entity.h"
 #include "audio/audio.h"
 #include "core/overlap.h"
+#include "core/random.h"
 #include "gameplay/grapple.h"
 #include <cmath>
 #include <cstring>
@@ -15,8 +16,7 @@ void object_init(object_t* obj)
     std::memset(obj, 0, sizeof(object_t));
 
     // Exact ground-truth initializations from FUN_004061d0 (0x004061D0)
-    obj->in_sky = 1; // 0x088
-    std::memset(obj->key_state, 'u', sizeof(obj->key_state)); // 0x0BC - 0x0C5
+    obj->in_sky = 1; // 0x088 (overwritten on first wait_counter sync)
 
     obj->attackable_distance = 1000;   // 0x2E8
     obj->vulnerable_distance = 1000;   // 0x2EC
@@ -29,6 +29,8 @@ void object_init(object_t* obj)
     obj->mp = 500;                     // 0x308
 
     obj->weapon_hp = 1000;             // 0x31C
+    obj->uid = -1;                     // 0x324
+    obj->_unknown34[0] = static_cast<uint32_t>(-1); // 0x328
     obj->owner = -1;                   // 0x354
     obj->enemy = -1;                   // 0x360
 
@@ -123,375 +125,1393 @@ void object_process_hit_fa(global_t* world, int32_t obj_idx)
     }
 }
 
+namespace {
+
+constexpr uint32_t BINARY_STATE_FIRE = 19; // Binary 0x13 (legacy_types STATE_FIRE)
+constexpr int32_t  HEAVY_WEAPON_TYPE = static_cast<int32_t>(TYPE_HEAVY_WEAPON);
+
+inline void sync_wait_counter(object_t* obj, int32_t val)
+{
+    obj->wait_counter = val;
+    obj->cpoint_hurt = val;
+}
+
+void trigger_frame_sound(const object_t* obj, uint32_t fid)
+{
+    if (!obj || !obj->file || fid >= MAX_FRAMES) return;
+    const frame_t& f = obj->file->frames[fid];
+    if (f.sound != 0) {
+        get_audio_system().on_frame_sound(f.sound);
+    } else if (f.sound_id > 0) {
+        get_audio_system().on_frame_sound(static_cast<uint32_t>(f.sound_id));
+    }
+}
+
+void deduct_frame_mp(object_t* obj, int32_t fid, bool match_running)
+{
+    if (!match_running || fid < 0 || fid >= static_cast<int32_t>(MAX_FRAMES)) return;
+    int32_t cost = obj->file->frames[fid].mp;
+    obj->mp -= cost;
+    if (obj->mp < 0) {
+        obj->mp = 0;
+    } else {
+        obj->mp_used += static_cast<uint32_t>(cost);
+    }
+}
+
+void run_standard_combo(object_t* obj, uint8_t& combo_stage,
+                        uint8_t mid_press, char mid_key,
+                        uint8_t final_press, char final_key,
+                        uint32_t frame_t::* target_field,
+                        int32_t override_facing, bool match_running)
+{
+    if (!obj || !obj->file) return;
+
+    int32_t advanced = 0;
+    if (combo_stage == 0 && obj->defend_press == 5) {
+        combo_stage = 1;
+        advanced = 1;
+    }
+    if (combo_stage == 1) {
+        if (mid_press == 5) {
+            combo_stage = 2;
+            advanced = 1;
+        } else if (object_combo_interrupted(obj, 'd', advanced) != 0) {
+            combo_stage = 0;
+        }
+    }
+    if (combo_stage == 2) {
+        if (final_press == 5) {
+            combo_stage = 3;
+            advanced = 1;
+        } else if (object_combo_interrupted(obj, mid_key, advanced) != 0) {
+            combo_stage = 0;
+        }
+    }
+    if (combo_stage == 3) {
+        if (obj->frame_id1 < MAX_FRAMES) {
+            int32_t target = static_cast<int32_t>(obj->file->frames[obj->frame_id1].*target_field);
+            if (target != 0 && obj->weapon_type != HEAVY_WEAPON_TYPE) {
+                object_frame_transition(obj, target, match_running);
+                if (override_facing >= 0) {
+                    obj->facing = static_cast<uint8_t>(override_facing);
+                }
+                combo_stage = 0;
+                return;
+            }
+        }
+        if (object_combo_interrupted(obj, final_key, advanced) != 0) {
+            combo_stage = 0;
+        }
+    }
+}
+
+void step_grid_walk_cycle(object_t* obj, int32_t frame_rate, uint32_t base_frame, uint32_t peak_offset)
+{
+    int32_t mc = (static_cast<int32_t>(obj->move_counter) + 1) % (frame_rate * 6);
+    obj->move_counter = static_cast<uint32_t>(mc);
+    obj->frame_id1 = (mc < frame_rate * 4)
+        ? (static_cast<uint32_t>(mc / frame_rate) + base_frame)
+        : (base_frame + peak_offset - static_cast<uint32_t>(mc / frame_rate));
+}
+
+void step_grid_run_cycle(object_t* obj, int32_t frame_rate, uint32_t base_frame)
+{
+    int32_t mc = (static_cast<int32_t>(obj->move_counter) + 1) % (frame_rate * 4);
+    obj->move_counter = static_cast<uint32_t>(mc);
+    obj->frame_id1 = (mc < frame_rate * 3)
+        ? (static_cast<uint32_t>(mc / frame_rate) + base_frame)
+        : (base_frame + 1U);
+}
+
+void apply_ground_drag(double& vel, double friction)
+{
+    if (0.0001 < vel) {
+        double nv = vel - friction;
+        vel = (nv < 0.0001) ? 0.0 : nv;
+    } else if (vel < -0.0001) {
+        double nv = vel + friction;
+        vel = (0.0001 < nv) ? 0.0 : nv;
+    }
+}
+
+} // namespace
+
+// 1:1 Lift of 0x0040E450: 5-entry input history shift register
+void object_input_history_push(object_t* obj, uint32_t key_code)
+{
+    if (!obj) return;
+    obj->input_history[0] = obj->input_history[1];
+    obj->input_history[1] = obj->input_history[2];
+    obj->input_history[2] = obj->input_history[3];
+    obj->input_history[3] = obj->input_history[4];
+    obj->input_history[4] = static_cast<int32_t>(key_code);
+}
+
+// 1:1 Lift of 0x0040E170: Combo timer == 5 interruption check helper
+int32_t object_combo_interrupted(const object_t* obj, char expected_key, int32_t advanced)
+{
+    if (!obj) return 0;
+
+    if (advanced == 0) {
+        if (obj->attack_press == 5 || obj->jump_press == 5 || obj->defend_press == 5 ||
+            obj->left_press == 5 || obj->up_press == 5 || obj->down_press == 5 ||
+            obj->right_press == 5) {
+            return 1;
+        }
+        return 0;
+    }
+
+    if (advanced != 1) {
+        return 0;
+    }
+
+    switch (expected_key) {
+    case 'U':
+        return (obj->attack_press == 5 || obj->jump_press == 5 || obj->defend_press == 5 ||
+                obj->left_press == 5 || obj->down_press == 5 || obj->right_press == 5) ? 1 : 0;
+    case 'D':
+        return (obj->attack_press == 5 || obj->jump_press == 5 || obj->defend_press == 5 ||
+                obj->left_press == 5 || obj->up_press == 5 || obj->right_press == 5) ? 1 : 0;
+    case 'L':
+        return (obj->attack_press == 5 || obj->jump_press == 5 || obj->defend_press == 5 ||
+                obj->up_press == 5 || obj->down_press == 5 || obj->right_press == 5) ? 1 : 0;
+    case 'R':
+        return (obj->attack_press == 5 || obj->jump_press == 5 || obj->defend_press == 5 ||
+                obj->left_press == 5 || obj->up_press == 5 || obj->down_press == 5) ? 1 : 0;
+    case 'd':
+        return (obj->attack_press == 5 || obj->jump_press == 5 || obj->left_press == 5 ||
+                obj->up_press == 5 || obj->down_press == 5 || obj->right_press == 5) ? 1 : 0;
+    case 'j':
+        return (obj->attack_press == 5 || obj->defend_press == 5 || obj->left_press == 5 ||
+                obj->up_press == 5 || obj->down_press == 5 || obj->right_press == 5) ? 1 : 0;
+    case 'a':
+        return (obj->jump_press == 5 || obj->defend_press == 5 || obj->left_press == 5 ||
+                obj->up_press == 5 || obj->down_press == 5 || obj->right_press == 5) ? 1 : 0;
+    default:
+        return 0;
+    }
+}
+
+// 1:1 Lift of 0x0040E2D0: Frame transition & HP/MP cost helper
+int32_t object_frame_transition(object_t* obj, int32_t target_frame, bool match_running)
+{
+    if (!obj || !obj->file) return 0;
+
+    bool flip_facing = (target_frame < 0);
+    if (flip_facing) {
+        target_frame = -target_frame;
+    }
+    if (target_frame == 999) {
+        target_frame = 0;
+    }
+    if (target_frame < 0 || target_frame >= static_cast<int32_t>(MAX_FRAMES)) {
+        return 0;
+    }
+
+    int32_t frame_byte_off = target_frame * static_cast<int32_t>(sizeof(frame_t));
+    const frame_t& target = obj->file->frames[target_frame];
+    if (target.present != 0) {
+        if (!match_running) {
+            obj->frame_id1 = static_cast<uint32_t>(target_frame);
+            obj->jump_press = 0;
+            obj->attack_press = 0;
+            obj->defend_press = 0;
+            obj->down_press = 0;
+            obj->up_press = 0;
+            obj->left_press = 0;
+            obj->right_press = 0;
+            return frame_byte_off;
+        }
+        int32_t hp_div = target.mp / 1000;
+        if (target.mp % 1000 <= obj->mp) {
+            int32_t hp_cost = hp_div * 10;
+            if (hp_cost < obj->hp) {
+                obj->hp += hp_div * -10;
+                obj->mp -= target.mp % 1000;
+                obj->hp_lost += static_cast<uint32_t>(hp_cost);
+                int32_t raw_mp = target.mp;
+                frame_byte_off = raw_mp / 1000;
+                obj->frame_id1 = static_cast<uint32_t>(target_frame);
+                obj->mp_used += static_cast<uint32_t>(raw_mp % 1000);
+                if (flip_facing) {
+                    obj->facing = static_cast<uint8_t>(1U - obj->facing);
+                }
+                obj->jump_press = 0;
+                obj->attack_press = 0;
+                obj->defend_press = 0;
+                obj->down_press = 0;
+                obj->up_press = 0;
+                obj->left_press = 0;
+                obj->right_press = 0;
+            }
+        }
+        return frame_byte_off;
+    }
+    return frame_byte_off;
+}
+
+// 1:1 Lifts of 0x00412800..0x00412F40: 9 special-move combo recognizers
+void object_combo_dra(object_t* obj, bool match_running)
+{
+    run_standard_combo(obj, obj->click_DRA, obj->right_press, 'R', obj->attack_press, 'a',
+                       &frame_t::hit_Fa, FACING_RIGHT, match_running);
+}
+
+void object_combo_dla(object_t* obj, bool match_running)
+{
+    run_standard_combo(obj, obj->click_DLA, obj->left_press, 'L', obj->attack_press, 'a',
+                       &frame_t::hit_Fa, FACING_LEFT, match_running);
+}
+
+void object_combo_dua(object_t* obj, bool match_running)
+{
+    run_standard_combo(obj, obj->click_DUA, obj->up_press, 'U', obj->attack_press, 'a',
+                       &frame_t::hit_Ua, -1, match_running);
+}
+
+void object_combo_dda(object_t* obj, bool match_running)
+{
+    run_standard_combo(obj, obj->click_DDA, obj->down_press, 'D', obj->attack_press, 'a',
+                       &frame_t::hit_Da, -1, match_running);
+}
+
+void object_combo_drj(object_t* obj, bool match_running)
+{
+    run_standard_combo(obj, obj->click_DRJ, obj->right_press, 'R', obj->jump_press, 'j',
+                       &frame_t::hit_Fj, FACING_RIGHT, match_running);
+}
+
+void object_combo_dlj(object_t* obj, bool match_running)
+{
+    run_standard_combo(obj, obj->click_DLJ, obj->left_press, 'L', obj->jump_press, 'j',
+                       &frame_t::hit_Fj, FACING_LEFT, match_running);
+}
+
+void object_combo_duj(object_t* obj, bool match_running)
+{
+    run_standard_combo(obj, obj->click_DUJ, obj->up_press, 'U', obj->jump_press, 'j',
+                       &frame_t::hit_Uj, -1, match_running);
+}
+
+void object_combo_ddj(object_t* obj, bool match_running)
+{
+    run_standard_combo(obj, obj->click_DDJ, obj->down_press, 'D', obj->jump_press, 'j',
+                       &frame_t::hit_Dj, -1, match_running);
+}
+
+void object_combo_dja(object_t* obj, bool match_running, int32_t unlock_chars)
+{
+    if (!obj || !obj->file) return;
+
+    int32_t advanced = 0;
+    if (obj->click_DJA == 0 && obj->defend_press == 5) {
+        obj->click_DJA = 1;
+        advanced = 1;
+    }
+    if (obj->click_DJA == 1) {
+        if (obj->jump_press == 5) {
+            obj->click_DJA = 2;
+            advanced = 1;
+        } else if (object_combo_interrupted(obj, 'd', advanced) != 0) {
+            obj->click_DJA = 0;
+        }
+    }
+    if (obj->click_DJA == 2) {
+        if (obj->attack_press == 5) {
+            obj->click_DJA = 3;
+            advanced = 1;
+        } else if (object_combo_interrupted(obj, 'j', advanced) != 0) {
+            obj->click_DJA = 0;
+        }
+    }
+    if (obj->click_DJA == 3 && obj->frame_id1 < MAX_FRAMES) {
+        int32_t target = static_cast<int32_t>(obj->file->frames[obj->frame_id1].hit_ja);
+        if (obj->file->id != LOUIS_DAT || target != 300 || obj->hp < 178 || unlock_chars != 0) {
+            if (target != 0 && obj->uid == -1 && obj->weapon_type != HEAVY_WEAPON_TYPE) {
+                object_frame_transition(obj, target, match_running);
+                obj->click_DJA = 0;
+                return;
+            }
+            if (static_cast<int32_t>(obj->_unknown34[0]) == 1) {
+                obj->firen_counter = 0;
+                return;
+            }
+            if (object_combo_interrupted(obj, 'a', advanced) != 0) {
+                obj->click_DJA = 0;
+            }
+        }
+    }
+}
+
+// 1:1 Lift of 0x0040D960: Per-object frame timer, sound trigger & frame.next advancement
+void object_frame_advance(object_t* obj, int32_t mode, int32_t obj_idx, int32_t difficulty, bool match_running)
+{
+    if (!obj || !obj->file) return;
+
+    if (obj->shaking != 0 && obj->file->type != TYPE_ATTACK) {
+        return;
+    }
+    if (obj->arest > 0) {
+        obj->arest--;
+    }
+    if (obj->weapon_type < 0) {
+        return;
+    }
+    if (obj->frame_id1 >= MAX_FRAMES) {
+        return;
+    }
+
+    file_t* file = obj->file;
+    const frame_t& cur = file->frames[obj->frame_id1];
+    if (cur.cpoint.kind == 2) {
+        return;
+    }
+
+    if (file->type == TYPE_ATTACK && static_cast<int32_t>(cur.hit_a) > 0) {
+        obj->hp -= static_cast<int32_t>(cur.hit_a);
+        if (obj->hp < 1) {
+            obj->hp = 0;
+            obj->frame_id1 = cur.hit_d;
+        }
+    }
+
+    if (obj->blink_time > 0) {
+        obj->blink_time--;
+    }
+    if (obj->blink_time < 0) {
+        obj->blink_time++;
+    }
+    if (obj->fall > 0) {
+        obj->fall--;
+    }
+    if (obj->bdefend > 0) {
+        obj->bdefend--;
+    }
+    if (static_cast<int8_t>(obj->can_hit_flag) > 0) {
+        obj->can_hit_flag--;
+    }
+
+    if (obj->frame_id1 != obj->frame_id2 && obj->frame_id1 < MAX_FRAMES) {
+        trigger_frame_sound(obj, obj->frame_id1);
+        sync_wait_counter(obj, 0);
+    }
+
+    sync_wait_counter(obj, obj->wait_counter + 1);
+
+    if (static_cast<int32_t>(file->type) >= 0 && obj->frame_id1 < MAX_FRAMES &&
+        file->frames[obj->frame_id1].state == STATE_STANDING && obj->y < 0) {
+        obj->frame_id1 = 212;
+    }
+    if (file->type == TYPE_HEAVY_WEAPON && obj->frame_id1 < MAX_FRAMES &&
+        file->frames[obj->frame_id1].state == 2000 && obj->y == 0 &&
+        obj->x_velocity < 0.1 && -0.1 < obj->x_velocity) {
+        obj->frame_id1 = 20;
+    }
+    if (obj->frame_id1 < MAX_FRAMES &&
+        file->frames[obj->frame_id1].state == STATE_LYING && obj->hp < 1) {
+        if ((obj->clone >= 0 || obj->team == 5 || obj_idx > 19) && obj->blink_time < 1) {
+            obj->blink_time = 30;
+        }
+        sync_wait_counter(obj, 0);
+    }
+    if (obj->frame_id1 < MAX_FRAMES && file->frames[obj->frame_id1].state == 2000) {
+        obj->facing = (obj->x_velocity <= 0.0) ? FACING_LEFT : FACING_RIGHT;
+    }
+
+    if (obj->frame_id1 < MAX_FRAMES &&
+        obj->wait_counter > static_cast<int32_t>(file->frames[obj->frame_id1].wait)) {
+        sync_wait_counter(obj, 0);
+        int32_t next_frame = file->frames[obj->frame_id1].next;
+        if (next_frame != 0) {
+            obj->frame_id1 = static_cast<uint32_t>(next_frame);
+            if (static_cast<int32_t>(obj->frame_id1) < 0) {
+                obj->facing = static_cast<uint8_t>(1U - obj->facing);
+                obj->frame_id1 = static_cast<uint32_t>(-static_cast<int32_t>(obj->frame_id1));
+            }
+            bool airborne_from_999 = false;
+            if (obj->frame_id1 == 999) {
+                if (obj->y == 0 || file->type != TYPE_CHARACTER) {
+                    obj->frame_id1 = 0;
+                } else {
+                    airborne_from_999 = true;
+                    obj->frame_id1 = 212;
+                }
+            }
+            if (static_cast<int32_t>(obj->frame_id1) < 0 || static_cast<int32_t>(obj->frame_id1) > 399) {
+                return;
+            }
+
+            if (obj->frame_id2 < MAX_FRAMES &&
+                file->frames[obj->frame_id2].state == STATE_LYING &&
+                file->frames[obj->frame_id1].state != STATE_ICE &&
+                (((obj->team != 5 && obj->player_index == 0) || difficulty != 2) &&
+                 (((mode != 1 && mode != 4) ||
+                   (obj->team != 5 && obj->player_index == 0)) ||
+                  (static_cast<int32_t>(file->id) / 10 != 3 || file->id == BAT_DAT)))) {
+                obj->blink_time = 15;
+            }
+
+            if (obj->frame_id1 == 212 && !airborne_from_999) {
+                obj->y_velocity = file->jump_height;
+                if (obj->click_right == 1 && obj->click_left == 0) {
+                    obj->x_velocity = file->jump_distance;
+                } else if (obj->click_left == 1 && obj->click_right == 0) {
+                    obj->x_velocity = -file->jump_distance;
+                }
+                if (obj->click_up == 0) {
+                    if (obj->click_down != 0) {
+                        obj->z_velocity = file->jump_distancez;
+                    }
+                } else if (obj->click_down == 0) {
+                    obj->z_velocity = -file->jump_distancez;
+                }
+            }
+
+            if (obj->frame_id1 < MAX_FRAMES) {
+                trigger_frame_sound(obj, obj->frame_id1);
+                int32_t fmp = file->frames[obj->frame_id1].mp;
+                if (fmp < 0 && match_running) {
+                    if (obj->mp < fmp) {
+                        obj->frame_id1 = file->frames[obj->frame_id1].hit_d;
+                    } else {
+                        obj->mp += fmp;
+                        obj->mp_used -= static_cast<uint32_t>(fmp);
+                    }
+                    if (obj->frame_id1 < MAX_FRAMES) {
+                        int32_t hd = static_cast<int32_t>(file->frames[obj->frame_id1].hit_d);
+                        if (hd > 0) {
+                            if (obj->click_left == 1 && obj->click_right == 0 &&
+                                obj->y == 0 && obj->facing == FACING_RIGHT) {
+                                obj->frame_id1 = static_cast<uint32_t>(hd);
+                            }
+                            if (obj->click_left == 0 && obj->click_right == 1 &&
+                                obj->y == 0 && obj->facing == FACING_LEFT) {
+                                obj->frame_id1 = static_cast<uint32_t>(hd);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (obj->frame_id1 == 110 || obj->frame_id1 == 114) {
+        obj->defend_lock = 3;
+    }
+    if (obj->frame_id1 == 202) {
+        obj->blink_time = 20;
+    }
+    obj->frame_id2 = obj->frame_id1;
+}
+
+// 1:1 Lift of 0x0040E490: Per-object physics, velocity integration, gravity & ground landing
+void object_physics_tick(object_t* obj, int32_t counter_12)
+{
+    if (!obj) return;
+
+    if (obj->shaking != 0) {
+        if (obj->shaking > 0) {
+            obj->shaking--;
+        }
+        if (obj->shaking < 0) {
+            obj->shaking++;
+            return;
+        }
+        return;
+    }
+
+    if (obj->weapon_type < 0) {
+        return;
+    }
+    if (!obj->file || obj->frame_id1 >= MAX_FRAMES) {
+        return;
+    }
+
+    file_t* file = obj->file;
+    const frame_t* cur = &file->frames[obj->frame_id1];
+    if (cur->cpoint.kind == 2) {
+        return;
+    }
+
+    if ((obj->x_velocity <= 0.0 || obj->blocked_right != 1) &&
+        (0.0 <= obj->x_velocity || obj->blocked_left != 1)) {
+        obj->x_position += obj->x_velocity;
+    }
+    if (file->type == TYPE_THROW_WEAPON || file->id == KNIFE_DAT) {
+        obj->x_position += obj->x_velocity * 0.2;
+    }
+    if (file->id == HOE_DAT) {
+        obj->x_position -= obj->x_velocity * 0.2;
+    }
+
+    if ((obj->z_velocity <= 0.0 || obj->blocked_down != 1) &&
+        (0.0 <= obj->z_velocity || obj->blocked_up != 1)) {
+        obj->z_position += obj->z_velocity;
+    }
+    obj->blocked_down = 0;
+    obj->blocked_up = 0;
+    obj->blocked_left = 0;
+    obj->blocked_right = 0;
+
+    if (file->type == TYPE_ATTACK && static_cast<int32_t>(cur->hit_j) > 0) {
+        obj->z_position += static_cast<double>(static_cast<int32_t>(cur->hit_j) - 50);
+    }
+
+    if (obj->y >= 0) {
+        apply_ground_drag(obj->x_velocity, 1.0);
+        apply_ground_drag(obj->z_velocity, 1.0);
+    }
+
+    if ((file->type == TYPE_THROW_WEAPON || file->type == TYPE_DRINK) &&
+        cur->state == 1000 &&
+        (9.0 < obj->x_velocity || obj->x_velocity < -9.0)) {
+        obj->frame_id1 = 40;
+    }
+
+    double new_y = obj->y_position + obj->y_velocity;
+    obj->y_position = new_y;
+
+    if (new_y < -0.0001) {
+        uint32_t ftype = file->type;
+        if (ftype != TYPE_ATTACK) {
+            if (ftype == TYPE_DRINK) {
+                obj->y_velocity += 1.1333333333333333;
+            } else if (ftype == TYPE_THROW_WEAPON) {
+                obj->y_velocity += 0.85;
+            } else if (obj->frame_id1 < MAX_FRAMES && file->frames[obj->frame_id1].state == 1002) {
+                if (file->id == BOOMERANG_DAT) {
+                    obj->y_velocity += 0.16999999999999998;
+                } else if (file->id == KNIFE_DAT) {
+                    obj->y_velocity += 0.425;
+                } else if (file->id == HOE_DAT) {
+                    obj->y_velocity += 1.1333333333333333;
+                } else {
+                    obj->y_velocity += 0.5666666666666667;
+                }
+            } else {
+                obj->y_velocity += 1.7;
+            }
+        }
+
+        if (file->type == TYPE_CHARACTER && obj->frame_id1 < MAX_FRAMES) {
+            int32_t fid = static_cast<int32_t>(obj->frame_id1);
+            if (file->frames[fid].state == STATE_FALLING) {
+                if (fid < 185) {
+                    if (obj->y_velocity >= -8.0) {
+                        if (obj->y_velocity >= 1.0) {
+                            obj->frame_id1 = (obj->y_velocity >= 8.0) ? 183 : 182;
+                        } else {
+                            obj->frame_id1 = 181;
+                        }
+                    } else {
+                        obj->frame_id1 = 180;
+                    }
+                    if (static_cast<int32_t>(obj->thrown_injury) < 0) {
+                        obj->frame_id1 = (obj->y_velocity < 12.0 && counter_12 > 5) ? 182 : 181;
+                    }
+                } else if (fid > 185 && fid < 191) {
+                    if (obj->y_velocity >= -8.0) {
+                        if (obj->y_velocity >= 1.0) {
+                            obj->frame_id1 = (obj->y_velocity >= 8.0) ? 189 : 188;
+                        } else {
+                            obj->frame_id1 = 187;
+                        }
+                    } else {
+                        obj->frame_id1 = 186;
+                    }
+                }
+            }
+            if (obj->frame_id1 < MAX_FRAMES &&
+                file->frames[obj->frame_id1].state == STATE_BURNING &&
+                obj->frame_id1 < 205 && obj->y_velocity > 1.0) {
+                obj->frame_id1 = 205;
+            }
+        }
+    } else if (obj->frame_id1 < MAX_FRAMES) {
+        cur = &file->frames[obj->frame_id1];
+        if (cur->cpoint.kind != 2) {
+            uint32_t ftype = file->type;
+            if (ftype == TYPE_CHARACTER) {
+                if (0.0001 < new_y && 0.0001 < obj->y_velocity && cur->state == STATE_ICE) {
+                    if (17.0 < obj->y_velocity || 9.0 < obj->x_velocity || obj->x_velocity < -9.0) {
+                        if (obj->armor_multiplier == 0) {
+                            obj->hp -= 10;
+                        } else {
+                            obj->hp += static_cast<int32_t>(-1000LL / static_cast<long long>(obj->armor_multiplier));
+                        }
+                        obj->y_position = 0.0;
+                        obj->y_velocity = -3.5;
+                        if (7.0 < obj->x_velocity) obj->x_velocity = 7.0;
+                        if (obj->x_velocity < -7.0) obj->x_velocity = -7.0;
+                        obj->frame_id1 = 185;
+                    } else {
+                        obj->y_position = 0.0;
+                        obj->y_velocity = 0.0;
+                        obj->x_velocity /= 3.0;
+                    }
+                }
+
+                bool crouch_land = false;
+                uint32_t land_frame = obj->frame_id1;
+                if (obj->y_position > 0.0 && obj->y_velocity == 0.0 && obj->frame_id1 == 212) {
+                    land_frame = 212;
+                    crouch_land = true;
+                } else if (0.0001 < obj->y_position && 0.0001 < obj->y_velocity) {
+                    uint32_t st = file->frames[obj->frame_id1].state;
+                    if (st != STATE_FALLING && st != STATE_BURNING) {
+                        land_frame = obj->frame_id1;
+                        crouch_land = true;
+                    }
+                }
+
+                if (crouch_land) {
+                    obj->y_position = 0.0;
+                    obj->y_velocity = 0.0;
+                    obj->x_velocity /= 3.0;
+                    uint32_t st = file->frames[land_frame].state;
+                    if (st == 100) {
+                        obj->frame_id1 = 94;
+                    } else if (land_frame == 212 || st == STATE_ROWING) {
+                        obj->frame_id1 = 215;
+                    } else {
+                        obj->frame_id1 = 219;
+                    }
+                    sync_wait_counter(obj, 0);
+                } else if (0.0001 < obj->y_position && 0.0001 < obj->y_velocity &&
+                           (file->frames[obj->frame_id1].state == STATE_FALLING ||
+                            file->frames[obj->frame_id1].state == STATE_BURNING)) {
+                    int32_t dmg = static_cast<int32_t>(obj->thrown_injury);
+                    if (dmg != 0) {
+                        if (dmg < 0) {
+                            dmg = -dmg;
+                            obj->thrown_injury = static_cast<uint32_t>(dmg);
+                        }
+                        if (obj->armor_multiplier > 0) {
+                            dmg = (dmg * 100) / static_cast<int32_t>(obj->armor_multiplier);
+                        }
+                        obj->hp -= dmg;
+                        obj->dark_hp -= dmg;
+                        obj->thrown_injury = 0;
+                    }
+                    if (11.0 < obj->y_velocity || 9.0 < obj->x_velocity || obj->x_velocity < -9.0 ||
+                        file->frames[obj->frame_id1].state == STATE_BURNING) {
+                        obj->y_position = 0.0;
+                        obj->y_velocity = -3.5;
+                        if (7.0 < obj->x_velocity) obj->x_velocity = 7.0;
+                        if (obj->x_velocity < -7.0) obj->x_velocity = -7.0;
+                        if (obj->frame_id1 < 186 ||
+                            file->frames[obj->frame_id1].state == STATE_BURNING) {
+                            obj->frame_id1 = 185;
+                        } else {
+                            obj->frame_id1 = 191;
+                        }
+                    } else {
+                        obj->y_position = 0.0;
+                        obj->y_velocity = 0.0;
+                        sync_wait_counter(obj, 0);
+                        obj->frame_id1 = (obj->frame_id1 > 185) ? 231 : 230;
+                        obj->x_velocity /= 3.0;
+                    }
+                }
+            } else if (ftype == TYPE_LIGHT_WEAPON) {
+                if (0.0001 < new_y && 0.0001 < obj->y_velocity) {
+                    obj->y_position = 0.0;
+                    obj->weapon_hp -= file->weapon_drop_hurt;
+                    if (obj->y_velocity <= 9.9) {
+                        obj->frame_id1 = (cur->state == 1002) ? 70 : 60;
+                        obj->y_velocity = 0.0;
+                        sync_wait_counter(obj, 0);
+                        obj->x_velocity *= 0.5;
+                    } else if (cur->state == 1002) {
+                        obj->frame_id1 = 7;
+                        obj->y_velocity = -8.0;
+                        obj->facing = static_cast<uint8_t>(1U - obj->facing);
+                        obj->x_velocity *= 0.5;
+                        if (file->weapon_drop_sound != 0) {
+                            get_audio_system().on_frame_sound(file->weapon_drop_sound);
+                        } else if (file->weapon_drop_sound_id > 0) {
+                            get_audio_system().on_frame_sound(static_cast<uint32_t>(file->weapon_drop_sound_id));
+                        }
+                    } else {
+                        obj->frame_id1 = 60;
+                        obj->y_velocity = 0.0;
+                        sync_wait_counter(obj, 0);
+                        obj->x_velocity *= 0.5;
+                    }
+                }
+            } else if (ftype == TYPE_THROW_WEAPON || ftype == TYPE_DRINK) {
+                if (0.0001 < new_y && 0.0001 < obj->y_velocity) {
+                    obj->weapon_hp -= file->weapon_drop_hurt;
+                    if (file->type == TYPE_DRINK && obj->hp < 1) {
+                        obj->weapon_hp = -1;
+                    }
+                    obj->y_position = 0.0;
+                    if ((obj->y_velocity <= 8.5 && -10.0 <= obj->x_velocity && obj->x_velocity <= 10.0) ||
+                        (cur->state != 1002 && cur->state != 1000)) {
+                        obj->y_velocity = 0.0;
+                        sync_wait_counter(obj, 0);
+                        obj->x_velocity *= 0.7;
+                        obj->frame_id1 = (cur->state == 1002) ? 70 : 60;
+                    } else {
+                        obj->frame_id1 = 0;
+                        obj->y_velocity *= -0.7;
+                        if (obj->y_velocity < -10.0) {
+                            obj->y_velocity = -10.0;
+                        }
+                        obj->x_velocity *= 0.7;
+                        if (file->weapon_drop_sound != 0) {
+                            get_audio_system().on_frame_sound(file->weapon_drop_sound);
+                        } else if (file->weapon_drop_sound_id > 0) {
+                            get_audio_system().on_frame_sound(static_cast<uint32_t>(file->weapon_drop_sound_id));
+                        }
+                    }
+                }
+            } else if (ftype == TYPE_HEAVY_WEAPON) {
+                if (0.0001 < new_y) {
+                    obj->weapon_hp -= 1;
+                    obj->y_position = 0.0;
+                    if (9.0 < obj->y_velocity) {
+                        if (file->weapon_drop_sound != 0) {
+                            get_audio_system().on_frame_sound(file->weapon_drop_sound);
+                        } else if (file->weapon_drop_sound_id > 0) {
+                            get_audio_system().on_frame_sound(static_cast<uint32_t>(file->weapon_drop_sound_id));
+                        }
+                        obj->y_velocity = -5.0;
+                        obj->facing = static_cast<uint8_t>(1U - obj->facing);
+                        obj->x_velocity *= 0.5;
+                    } else {
+                        obj->weapon_hp -= file->weapon_drop_hurt;
+                        if (obj->weapon_hp < 0) {
+                            obj->weapon_hp = 0;
+                        }
+                        obj->frame_id1 = 20;
+                        obj->y_velocity = 0.0;
+                        sync_wait_counter(obj, 0);
+                        obj->x_velocity *= 0.5;
+                    }
+                }
+            } else if (file->id == BROKEN_WEAPON_DAT && -0.0001 < new_y) {
+                obj->y_position = 0.0;
+                obj->frame_id1 = 101;
+                obj->y_velocity = 0.0;
+                sync_wait_counter(obj, 0);
+                obj->x_velocity = 0.0;
+            }
+        }
+    }
+
+    obj->x = static_cast<int32_t>(obj->x_position);
+    obj->y = static_cast<int32_t>(obj->y_position);
+    obj->z = static_cast<int32_t>(obj->z_position);
+    if (obj->frame_id1 < MAX_FRAMES &&
+        obj->file->frames[obj->frame_id1].state != STATE_FALLING) {
+        obj->thrown_injury = 0;
+    }
+}
+
+// 1:1 Lift of 0x00413080: Master per-object input/state tick & combo dispatcher
+void object_input_tick(object_t* obj, bool match_running, int32_t unlock_chars)
+{
+    if (!obj || !obj->file || obj->frame_id1 >= MAX_FRAMES) return;
+
+    if (static_cast<int8_t>(obj->right_press) > 0) obj->right_press--;
+    if (static_cast<int8_t>(obj->left_press) > 0) obj->left_press--;
+    if (static_cast<int8_t>(obj->up_press) > 0) obj->up_press--;
+    if (static_cast<int8_t>(obj->down_press) > 0) obj->down_press--;
+    if (static_cast<int8_t>(obj->jump_press) > 0) obj->jump_press--;
+    if (static_cast<int8_t>(obj->attack_press) > 0) obj->attack_press--;
+    if (static_cast<int8_t>(obj->defend_press) > 0) obj->defend_press--;
+    if (static_cast<int8_t>(obj->defend_lock) > 0) obj->defend_lock--;
+
+    if (obj->holding_right == 0 && obj->click_right == 1) {
+        obj->right_press = 5;
+        object_input_history_push(obj, 6);
+    }
+    if (obj->holding_left == 0 && obj->click_left == 1) {
+        obj->left_press = 5;
+        object_input_history_push(obj, 4);
+    }
+    if (obj->holding_up == 0 && obj->click_up == 1) {
+        obj->up_press = 5;
+        object_input_history_push(obj, 8);
+    }
+    if (obj->holding_down == 0 && obj->click_down == 1) {
+        obj->down_press = 5;
+        object_input_history_push(obj, 2);
+    }
+    if (obj->holding_defend == 0 && obj->click_defend == 1) {
+        obj->defend_press = 5;
+        object_input_history_push(obj, 9);
+    }
+    if (obj->holding_jump == 0 && obj->click_jump == 1) {
+        obj->jump_press = 5;
+        object_input_history_push(obj, 0);
+    }
+    if (obj->holding_attack == 0 && obj->click_attack == 1) {
+        obj->attack_press = 5;
+        object_input_history_push(obj, 5);
+    }
+
+    object_combo_dra(obj, match_running);
+    object_combo_dla(obj, match_running);
+    object_combo_dua(obj, match_running);
+    object_combo_dda(obj, match_running);
+    object_combo_drj(obj, match_running);
+    object_combo_dlj(obj, match_running);
+    object_combo_duj(obj, match_running);
+    object_combo_ddj(obj, match_running);
+    object_combo_dja(obj, match_running, unlock_chars);
+
+    file_t* file = obj->file;
+    if (obj->frame_id1 < MAX_FRAMES) {
+        const frame_t& cur = file->frames[obj->frame_id1];
+        if (cur.hit_a == 0 || static_cast<int8_t>(obj->attack_press) <= static_cast<int8_t>(obj->defend_press) ||
+            static_cast<int8_t>(obj->attack_press) <= static_cast<int8_t>(obj->jump_press)) {
+            if (cur.hit_d == 0 || static_cast<int8_t>(obj->defend_press) <= static_cast<int8_t>(obj->attack_press) ||
+                static_cast<int8_t>(obj->defend_press) <= static_cast<int8_t>(obj->jump_press)) {
+                if (cur.hit_j != 0 && static_cast<int8_t>(obj->attack_press) < static_cast<int8_t>(obj->jump_press) &&
+                    static_cast<int8_t>(obj->defend_press) < static_cast<int8_t>(obj->jump_press)) {
+                    object_frame_transition(obj, static_cast<int32_t>(cur.hit_j), match_running);
+                    obj->jump_press = 0;
+                }
+            } else {
+                object_frame_transition(obj, static_cast<int32_t>(cur.hit_d), match_running);
+                obj->defend_press = 0;
+            }
+        } else {
+            object_frame_transition(obj, static_cast<int32_t>(cur.hit_a), match_running);
+            obj->attack_press = 0;
+        }
+    }
+
+    if (obj->frame_id1 == 110) {
+        if (obj->click_right == 1) obj->facing = FACING_RIGHT;
+        if (obj->click_left == 1) obj->facing = FACING_LEFT;
+    }
+
+    if (obj->frame_id1 < MAX_FRAMES) {
+        uint32_t st = file->frames[obj->frame_id1].state;
+        if (st == 301 || st == BINARY_STATE_FIRE) {
+            if (obj->click_up == 1 && obj->click_down == 0 && obj->y == 0) {
+                obj->z_velocity = -file->running_speedz;
+            }
+            if (obj->click_down == 1 && obj->click_up == 0 && obj->y == 0) {
+                obj->z_velocity = file->running_speedz;
+            }
+        }
+    }
+
+    int32_t wtype = obj->weapon_type;
+    if (wtype != HEAVY_WEAPON_TYPE && obj->frame_id1 < MAX_FRAMES &&
+        (file->frames[obj->frame_id1].state == STATE_STANDING ||
+         file->frames[obj->frame_id1].state == STATE_WALKING)) {
+        if (obj->dash_counter > 0) obj->dash_counter--;
+        if (obj->dash_counter < 0) obj->dash_counter++;
+
+        int32_t wfr = (file->walking_frame_rate > 0) ? static_cast<int32_t>(file->walking_frame_rate) : 1;
+
+        if (obj->click_right == 1 && obj->click_left == 0 && obj->y == 0) {
+            if (obj->facing == FACING_LEFT) obj->dash_counter = 0;
+            obj->facing = FACING_RIGHT;
+            step_grid_walk_cycle(obj, wfr, 5, 6);
+            obj->x_velocity = file->walking_speed;
+            if (obj->holding_right == 0) obj->dash_counter += 10;
+            if (obj->dash_counter > 10) {
+                obj->frame_id1 = 9;
+                obj->move_counter = 0;
+                obj->dash_counter = 0;
+            }
+        }
+        if (obj->click_right == 0 && obj->click_left == 1 && obj->y == 0) {
+            if (obj->facing == FACING_RIGHT) obj->dash_counter = 0;
+            obj->facing = FACING_LEFT;
+            step_grid_walk_cycle(obj, wfr, 5, 6);
+            obj->x_velocity = -file->walking_speed;
+            if (obj->holding_left == 0) obj->dash_counter -= 10;
+            if (obj->dash_counter < -10) {
+                obj->frame_id1 = 9;
+                obj->move_counter = 0;
+                obj->dash_counter = 0;
+            }
+        }
+        if (obj->click_up == 1 && obj->click_down == 0 && obj->y == 0) {
+            if ((obj->click_left == 0 && obj->click_right == 0) ||
+                (obj->click_left != 0 && obj->click_right != 0)) {
+                step_grid_walk_cycle(obj, wfr, 5, 6);
+            }
+            obj->z_velocity = -file->walking_speedz;
+            obj->x_velocity /= 1.4;
+        }
+        if (obj->click_down == 1 && obj->click_up == 0 && obj->y == 0) {
+            if ((obj->click_left == 0 && obj->click_right == 0) ||
+                (obj->click_left != 0 && obj->click_right != 0)) {
+                step_grid_walk_cycle(obj, wfr, 5, 6);
+            }
+            obj->z_velocity = file->walking_speedz;
+            obj->x_velocity /= 1.4;
+        }
+
+        if (obj->click_attack == 1 && static_cast<int8_t>(obj->attack_press) > 0) {
+            obj->dash_counter = 0;
+            sync_wait_counter(obj, 0);
+            if (wtype == 0) {
+                if (static_cast<int8_t>(obj->can_hit_flag) < 1) {
+                    int32_t r = lf2_random(0x82, 2);
+                    int32_t fid = (r + 12) * 5;
+                    obj->frame_id1 = static_cast<uint32_t>(fid);
+                    deduct_frame_mp(obj, fid, match_running);
+                } else {
+                    obj->frame_id1 = 70;
+                }
+            } else if (wtype % 100 == 1) {
+                if (wtype == 101 &&
+                    (obj->click_right != 0 || obj->click_left != 0 ||
+                     obj->click_up != 0 || obj->click_down != 0)) {
+                    obj->frame_id1 = 45;
+                } else if (wtype == 101) {
+                    obj->frame_id1 = static_cast<uint32_t>((lf2_random(0x83, 2) + 4) * 5);
+                } else {
+                    obj->frame_id1 = static_cast<uint32_t>((lf2_random(0x84, 2) + 4) * 5);
+                }
+            } else if (wtype == static_cast<int32_t>(TYPE_THROW_WEAPON)) {
+                obj->frame_id1 = 45;
+            } else if (wtype == static_cast<int32_t>(TYPE_DRINK)) {
+                obj->frame_id1 = 55;
+            }
+        }
+        if (obj->click_jump == 1 && static_cast<int8_t>(obj->jump_press) > 0) {
+            sync_wait_counter(obj, 0);
+            obj->dash_counter = 0;
+            obj->frame_id1 = 210;
+        }
+        if (obj->click_defend == 1 && obj->defend_lock == 0 && static_cast<int8_t>(obj->defend_press) > 0) {
+            obj->dash_counter = 0;
+            sync_wait_counter(obj, 0);
+            obj->frame_id1 = 110;
+        }
+    }
+
+    wtype = obj->weapon_type;
+    if (wtype == HEAVY_WEAPON_TYPE && obj->frame_id1 < MAX_FRAMES &&
+        (file->frames[obj->frame_id1].state == STATE_STANDING ||
+         file->frames[obj->frame_id1].state == STATE_WALKING)) {
+        if (obj->dash_counter > 0) obj->dash_counter--;
+        if (obj->dash_counter < 0) obj->dash_counter++;
+        if (obj->frame_id1 < 12) obj->frame_id1 = 12;
+
+        int32_t wfr = (file->walking_frame_rate > 0) ? static_cast<int32_t>(file->walking_frame_rate) : 1;
+
+        if (obj->click_right == 1 && obj->click_left == 0 && obj->y == 0) {
+            if (obj->facing == FACING_LEFT) obj->dash_counter = 0;
+            obj->facing = FACING_RIGHT;
+            step_grid_walk_cycle(obj, wfr, 12, 6);
+            obj->x_velocity = file->heavy_walking_speed;
+            if (obj->holding_right == 0) obj->dash_counter += 10;
+            if (obj->dash_counter > 10) {
+                obj->frame_id1 = 16;
+                obj->move_counter = 0;
+                obj->dash_counter = 0;
+            }
+        }
+        if (obj->click_right == 0 && obj->click_left == 1 && obj->y == 0) {
+            if (obj->facing == FACING_RIGHT) obj->dash_counter = 0;
+            obj->facing = FACING_LEFT;
+            step_grid_walk_cycle(obj, wfr, 12, 6);
+            obj->x_velocity = -file->heavy_walking_speed;
+            if (obj->holding_left == 0) obj->dash_counter -= 10;
+            if (obj->dash_counter < -10) {
+                obj->frame_id1 = 16;
+                obj->move_counter = 0;
+                obj->dash_counter = 0;
+            }
+        }
+        if (obj->click_up == 1 && obj->click_down == 0 && obj->y == 0) {
+            if ((obj->click_left == 0 && obj->click_right == 0) ||
+                (obj->click_left != 0 && obj->click_right != 0)) {
+                step_grid_walk_cycle(obj, wfr, 12, 6);
+            }
+            obj->z_velocity = -file->heavy_walking_speedz;
+            obj->x_velocity /= 1.4;
+        }
+        if (obj->click_down == 1 && obj->click_up == 0 && obj->y == 0) {
+            if ((obj->click_left == 0 && obj->click_right == 0) ||
+                (obj->click_left != 0 && obj->click_right != 0)) {
+                step_grid_walk_cycle(obj, wfr, 12, 6);
+            }
+            obj->z_velocity = file->heavy_walking_speedz;
+            obj->x_velocity /= 1.4;
+        }
+        if (obj->click_attack == 1 && static_cast<int8_t>(obj->attack_press) > 0) {
+            obj->dash_counter = 0;
+            sync_wait_counter(obj, 0);
+            obj->frame_id1 = 50;
+        }
+    }
+
+    if (obj->frame_id1 < MAX_FRAMES &&
+        file->frames[obj->frame_id1].state == STATE_JUMPING && obj->y < 0) {
+        if (obj->click_right == 1 && obj->click_left == 0) obj->facing = FACING_RIGHT;
+        if (obj->click_left == 1 && obj->click_right == 0) obj->facing = FACING_LEFT;
+        if (obj->click_attack != 0) {
+            if (wtype == 0) {
+                sync_wait_counter(obj, 0);
+                obj->frame_id1 = 80;
+                deduct_frame_mp(obj, 80, match_running);
+            } else if (wtype % 100 == 1) {
+                sync_wait_counter(obj, 0);
+                if (obj->click_left == 0 && obj->click_right == 0 &&
+                    obj->click_up == 0 && obj->click_down == 0) {
+                    obj->frame_id1 = 30;
+                } else {
+                    obj->frame_id1 = 52;
+                }
+            } else if (wtype == static_cast<int32_t>(TYPE_THROW_WEAPON) ||
+                       wtype == static_cast<int32_t>(TYPE_DRINK)) {
+                obj->frame_id1 = 52;
+            }
+        }
+    }
+
+    if (obj->frame_id1 < MAX_FRAMES &&
+        file->frames[obj->frame_id1].state == STATE_RUNNING && wtype != HEAVY_WEAPON_TYPE) {
+        sync_wait_counter(obj, 0);
+        int32_t rfr = (file->running_frame_rate > 0) ? static_cast<int32_t>(file->running_frame_rate) : 1;
+        step_grid_run_cycle(obj, rfr, 9);
+
+        if (obj->facing == FACING_RIGHT) {
+            obj->x_velocity = file->running_speed;
+            if (obj->click_left == 1) obj->frame_id1 = 218;
+        }
+        if (obj->facing == FACING_LEFT) {
+            obj->x_velocity = -file->running_speed;
+            if (obj->click_right == 1) obj->frame_id1 = 218;
+        }
+        if (obj->click_up == 1 && obj->click_down == 0 && obj->y == 0) {
+            obj->z_velocity = -file->running_speedz;
+            obj->x_velocity /= 1.2;
+        }
+        if (obj->click_up == 0 && obj->click_down == 1 && obj->y == 0) {
+            obj->z_velocity = file->running_speedz;
+            obj->x_velocity /= 1.2;
+        }
+
+        if (obj->click_attack == 1 && static_cast<int8_t>(obj->attack_press) > 0) {
+            if (wtype == 0) {
+                if (!match_running) {
+                    obj->frame_id1 = 85;
+                } else if (file->frames[85].mp <= obj->mp) {
+                    obj->mp -= file->frames[85].mp;
+                    obj->mp_used += static_cast<uint32_t>(file->frames[85].mp);
+                    obj->frame_id1 = 85;
+                }
+            } else if (wtype % 100 == 1) {
+                if (obj->click_left == 0 && obj->click_right == 0 &&
+                    obj->click_up == 0 && obj->click_down == 0) {
+                    obj->frame_id1 = 35;
+                } else {
+                    obj->frame_id1 = 45;
+                }
+            } else if (obj->weapon_type == static_cast<int32_t>(TYPE_THROW_WEAPON)) {
+                obj->frame_id1 = 45;
+            } else if (obj->weapon_type == static_cast<int32_t>(TYPE_DRINK)) {
+                if (obj->click_left == 0 && obj->click_right == 0 &&
+                    obj->click_up == 0 && obj->click_down == 0) {
+                    obj->frame_id1 = 55;
+                } else {
+                    obj->frame_id1 = 45;
+                }
+            }
+        }
+        if (obj->click_defend == 1 && static_cast<int8_t>(obj->defend_press) > 0) {
+            obj->frame_id1 = 102;
+        }
+        if (obj->click_jump == 1 && static_cast<int8_t>(obj->jump_press) > 0) {
+            obj->dash_counter = 0;
+            obj->frame_id1 = 213;
+            obj->x_velocity = static_cast<double>(static_cast<int32_t>(obj->facing) * -2 + 1) * file->dash_distance;
+            obj->y_velocity = file->dash_height;
+            if (obj->click_up == 0) {
+                if (obj->click_down != 0) {
+                    obj->z_velocity = file->dash_distancez;
+                }
+            } else if (obj->click_down == 0) {
+                obj->z_velocity = -file->dash_distancez;
+            }
+        }
+    }
+
+    if (obj->frame_id1 < MAX_FRAMES &&
+        file->frames[obj->frame_id1].state == STATE_RUNNING &&
+        obj->weapon_type == HEAVY_WEAPON_TYPE) {
+        sync_wait_counter(obj, 0);
+        int32_t rfr = (file->running_frame_rate > 0) ? static_cast<int32_t>(file->running_frame_rate) : 1;
+        step_grid_run_cycle(obj, rfr, 16);
+
+        if (obj->facing == FACING_RIGHT) {
+            obj->x_velocity = file->heavy_running_speed;
+            if (obj->click_left == 1) obj->frame_id1 = 19;
+        }
+        if (obj->facing == FACING_LEFT) {
+            obj->x_velocity = -file->heavy_running_speed;
+            if (obj->click_right == 1) obj->frame_id1 = 19;
+        }
+        if (obj->click_up == 1 && obj->click_down == 0 && obj->y == 0) {
+            obj->z_velocity = -file->heavy_running_speedz;
+            obj->x_velocity /= 1.2;
+        }
+        if (obj->click_up == 0 && obj->click_down == 1 && obj->y == 0) {
+            obj->z_velocity = file->heavy_running_speedz;
+            obj->x_velocity /= 1.2;
+        }
+        if (obj->click_attack == 1 && static_cast<int8_t>(obj->attack_press) > 0) {
+            obj->frame_id1 = 50;
+        }
+    }
+
+    if (obj->frame_id1 == 215) {
+        if (obj->click_defend == 1 && static_cast<int8_t>(obj->defend_press) > 0) {
+            obj->frame_id1 = 102;
+        }
+        if (obj->click_jump != 0) {
+            if ((obj->click_right != 0 || 0.001 < obj->x_velocity) &&
+                static_cast<int8_t>(obj->jump_press) > 0) {
+                obj->frame_id1 = static_cast<uint32_t>(obj->facing) + 213U;
+                obj->dash_counter = 0;
+                obj->x_velocity = file->dash_distance;
+                obj->y_velocity = file->dash_height;
+            }
+            if (obj->click_jump != 0 &&
+                (obj->click_left != 0 || obj->x_velocity < -0.001) &&
+                static_cast<int8_t>(obj->jump_press) > 0) {
+                obj->frame_id1 = 214U - static_cast<uint32_t>(obj->facing);
+                obj->dash_counter = 0;
+                obj->x_velocity = -file->dash_distance;
+                obj->y_velocity = file->dash_height;
+            }
+        }
+        if (obj->click_up == 0) {
+            if (obj->click_down != 0) {
+                obj->z_velocity = file->dash_distancez;
+            }
+        } else if (obj->click_down == 0) {
+            obj->z_velocity = -file->dash_distancez;
+        }
+    }
+
+    if ((obj->frame_id1 == 182 || obj->frame_id1 == 188) &&
+        static_cast<int32_t>(obj->thrown_injury) >= 0 && obj->click_jump == 1 &&
+        static_cast<int8_t>(obj->jump_press) > 0 && obj->hp > 0) {
+        if ((obj->facing == FACING_RIGHT && obj->x_velocity <= 0.0) ||
+            (obj->facing == FACING_LEFT && obj->x_velocity >= 0.0)) {
+            obj->frame_id1 = 100;
+        } else {
+            obj->frame_id1 = 108;
+        }
+        sync_wait_counter(obj, 0);
+        if (file->rowing_height < obj->y_velocity) {
+            obj->y_velocity = file->rowing_height;
+        }
+        if (1.0 <= obj->x_velocity || obj->x_velocity <= -1.0) {
+            obj->x_velocity = (obj->x_velocity <= 0.0) ? -file->rowing_distance : file->rowing_distance;
+        } else {
+            obj->x_velocity = (obj->facing == FACING_LEFT) ? file->rowing_distance : -file->rowing_distance;
+        }
+    }
+
+    if (obj->frame_id1 < MAX_FRAMES && file->frames[obj->frame_id1].state == STATE_DASHING) {
+        if (obj->click_right == 1 && obj->click_left == 0) {
+            obj->facing = FACING_RIGHT;
+        }
+        if (obj->facing == FACING_RIGHT && obj->frame_id1 != 217 && obj->x_velocity < 0.0) {
+            obj->frame_id1 = 214;
+        }
+        if (obj->facing == FACING_RIGHT && obj->frame_id1 != 216 && 0.0 < obj->x_velocity) {
+            obj->frame_id1 = 213;
+        }
+        if (obj->click_left == 1 && obj->click_right == 0) {
+            obj->facing = FACING_LEFT;
+        }
+        if (obj->facing == FACING_LEFT) {
+            if (obj->frame_id1 != 217 && 0.0 < obj->x_velocity) {
+                obj->frame_id1 = 214;
+            }
+            if (obj->frame_id1 != 216 && obj->x_velocity < 0.0) {
+                obj->frame_id1 = 213;
+            }
+        }
+        if (((0.0 < obj->x_velocity && obj->facing == FACING_RIGHT) ||
+             (obj->x_velocity < 0.0 && obj->facing == FACING_LEFT)) &&
+            obj->click_attack != 0) {
+            int32_t wt = obj->weapon_type;
+            if (wt == 0) {
+                if (!match_running) {
+                    obj->frame_id1 = 90;
+                } else if (file->frames[90].mp <= obj->mp) {
+                    obj->mp -= file->frames[90].mp;
+                    obj->mp_used += static_cast<uint32_t>(file->frames[90].mp);
+                    obj->frame_id1 = 90;
+                }
+            } else if ((wt % 100 == 1) ||
+                       ((wt == static_cast<int32_t>(TYPE_THROW_WEAPON) ||
+                         wt == static_cast<int32_t>(TYPE_DRINK)) &&
+                        (obj->click_left != 0 || obj->click_right != 0 ||
+                         obj->click_up != 0 || obj->click_down != 0))) {
+                obj->frame_id1 = (wt == static_cast<int32_t>(TYPE_THROW_WEAPON) ||
+                                  wt == static_cast<int32_t>(TYPE_DRINK)) ? 52 : 40;
+                sync_wait_counter(obj, 0);
+                obj->y_velocity -= 1.0;
+            }
+        }
+    }
+
+    if (obj->frame_id1 < MAX_FRAMES) {
+        const frame_t& f = file->frames[obj->frame_id1];
+        if (f.dvx < 501) {
+            if (f.dvx > 0 && obj->x_velocity < static_cast<double>(f.dvx) && obj->facing == FACING_RIGHT) {
+                obj->x_velocity = static_cast<double>(f.dvx);
+            }
+            if (f.dvx > 0 && -obj->x_velocity < static_cast<double>(f.dvx) && obj->facing == FACING_LEFT) {
+                obj->x_velocity = -static_cast<double>(f.dvx);
+            }
+            if (f.dvx < 0 && static_cast<double>(f.dvx) < obj->x_velocity && obj->facing == FACING_RIGHT) {
+                obj->x_velocity = static_cast<double>(f.dvx);
+            }
+            if (f.dvx < 0 && static_cast<double>(f.dvx) < -obj->x_velocity && obj->facing == FACING_LEFT) {
+                obj->x_velocity = -static_cast<double>(f.dvx);
+            }
+        } else {
+            obj->x_velocity = static_cast<double>(f.dvx - 550);
+        }
+
+        if (f.dvy != 0) {
+            obj->y_velocity = (f.dvy < 501)
+                ? (static_cast<double>(f.dvy) + obj->y_velocity)
+                : static_cast<double>(f.dvy - 550);
+        }
+
+        if (f.dvz != 0) {
+            if (f.dvz > 500) {
+                obj->z_velocity = static_cast<double>(f.dvz - 550);
+                return;
+            }
+            if (obj->click_up == 1 && static_cast<int8_t>(obj->down_press) <= static_cast<int8_t>(obj->up_press)) {
+                obj->z_velocity = -static_cast<double>(f.dvz);
+            }
+            if (obj->click_down == 1 && static_cast<int8_t>(obj->up_press) <= static_cast<int8_t>(obj->down_press)) {
+                obj->z_velocity = static_cast<double>(f.dvz);
+            }
+        }
+    }
+}
+
 void object_update_motion(object_t* obj, int32_t stage_z_min, int32_t stage_z_max, int32_t stage_width)
 {
     if (!obj) return;
 
-    // Continuous 3D integration
     obj->x_position += obj->x_velocity;
     obj->y_position += obj->y_velocity;
     obj->z_position += obj->z_velocity;
 
-    // Stage boundary clamping
-    if (obj->z_position < static_cast<double>(stage_z_min)) {
+    obj->blocked_up = 0;
+    obj->blocked_down = 0;
+    obj->blocked_left = 0;
+    obj->blocked_right = 0;
+
+    if (obj->z_position <= static_cast<double>(stage_z_min)) {
         obj->z_position = static_cast<double>(stage_z_min);
-    } else if (obj->z_position > static_cast<double>(stage_z_max)) {
+        obj->blocked_up = 1;
+    } else if (obj->z_position >= static_cast<double>(stage_z_max)) {
         obj->z_position = static_cast<double>(stage_z_max);
+        obj->blocked_down = 1;
     }
 
-    if (obj->x_position < 0.0) {
+    if (obj->x_position <= 0.0) {
         obj->x_position = 0.0;
-    } else if (obj->x_position > static_cast<double>(stage_width)) {
+        obj->blocked_left = 1;
+    } else if (obj->x_position >= static_cast<double>(stage_width)) {
         obj->x_position = static_cast<double>(stage_width);
+        obj->blocked_right = 1;
     }
 
-    // Ground plane collision (y = 0 is ground surface in LF2)
     if (obj->y_position >= 0.0) {
         obj->y_position = 0.0;
-        obj->in_sky = 0;
         if (obj->y_velocity > 0.0) {
             obj->y_velocity = 0.0;
         }
-    } else {
-        obj->in_sky = 1;
     }
 
-    // Mathematical integer projection (0x00417F80 / 0x004450D0)
-    obj->x = static_cast<int32_t>(std::round(obj->x_position));
-    obj->y = static_cast<int32_t>(std::round(obj->y_position));
-    obj->z = static_cast<int32_t>(std::round(obj->z_position));
+    // Exact _ftol2_sse truncation
+    obj->x = static_cast<int32_t>(obj->x_position);
+    obj->y = static_cast<int32_t>(obj->y_position);
+    obj->z = static_cast<int32_t>(obj->z_position);
 }
 
 void object_update_physics(object_t* obj)
 {
     if (!obj) return;
-
-    // In LF2 coordinate conventions, negative Y represents elevation in the air
-    if (obj->y_position < 0.0) {
-        double grav = (obj->y_accl != 0.0) ? obj->y_accl : 1.0;
-        obj->y_velocity += grav;
-    } else if (obj->y_position >= 0.0) {
-        // Ground impact & landing resolution
-        obj->y_position = 0.0;
-        obj->y = 0;
-        obj->in_sky = 0;
-        if (obj->y_velocity > 0.0) {
-            obj->y_velocity = 0.0;
-        }
+    if (obj->file) {
+        object_physics_tick(obj, 0);
+        return;
     }
+
+    // Fallback when called in unit tests with null file_t
+    double new_y = obj->y_position + obj->y_velocity;
+    obj->y_position = new_y;
+    if (new_y < -0.0001) {
+        obj->y_velocity += 1.7;
+    } else {
+        obj->y_position = 0.0;
+        obj->y_velocity = 0.0;
+    }
+    obj->x = static_cast<int32_t>(obj->x_position);
+    obj->y = static_cast<int32_t>(obj->y_position);
+    obj->z = static_cast<int32_t>(obj->z_position);
 }
 
 void object_apply_ground_friction(object_t* obj, double friction)
 {
     if (!obj) return;
-
-    // Friction only decelerates movement while grounded (y == 0)
-    if (obj->y == 0 && obj->y_position == 0.0) {
-        if (obj->x_velocity > 0.0) {
-            obj->x_velocity = std::max(0.0, obj->x_velocity - friction);
-        } else if (obj->x_velocity < 0.0) {
-            obj->x_velocity = std::min(0.0, obj->x_velocity + friction);
-        }
-
-        if (obj->z_velocity > 0.0) {
-            obj->z_velocity = std::max(0.0, obj->z_velocity - friction);
-        } else if (obj->z_velocity < 0.0) {
-            obj->z_velocity = std::min(0.0, obj->z_velocity + friction);
-        }
+    if (obj->y >= 0) {
+        apply_ground_drag(obj->x_velocity, friction);
+        apply_ground_drag(obj->z_velocity, friction);
     }
 }
 
-static void apply_frame_dv(object_t* obj, const frame_t& f)
-{
-    if (f.dvx == 550) {
-        obj->x_velocity = 0.0;
-    } else if (f.dvx != 0) {
-        obj->x_velocity = (obj->facing == FACING_LEFT) ? -static_cast<double>(f.dvx) : static_cast<double>(f.dvx);
-    }
-    if (f.dvy == 550) {
-        obj->y_velocity = 0.0;
-    } else if (f.dvy != 0) {
-        obj->y_velocity += static_cast<double>(f.dvy);
-    }
-    if (f.dvz == 550) {
-        obj->z_velocity = 0.0;
-    } else if (f.dvz != 0) {
-        obj->z_velocity = static_cast<double>(f.dvz);
-    }
-}
-
-bool object_tick_frame(object_t* obj)
+bool object_tick_frame(object_t* obj, int32_t mode, int32_t obj_idx, int32_t difficulty, bool match_running)
 {
     if (!obj || !obj->file) return true;
-
     if (obj->frame_id1 >= MAX_FRAMES) {
         return false;
     }
 
-    const auto& cur_frame = obj->file->frames[obj->frame_id1];
-
-    obj->wait_counter++;
-
-    // When wait counter expires, advance frame
-    int32_t wait_threshold = std::max<int32_t>(1, static_cast<int32_t>(cur_frame.wait));
-    if (cur_frame.state == STATE_WALKING) {
-        wait_threshold = std::max<int32_t>(1, static_cast<int32_t>(obj->file->walking_frame_rate + 1));
-    }
-
-    if (obj->wait_counter >= wait_threshold) {
-        obj->wait_counter = 0;
-
-        // Shift frame history
-        obj->frame_id4 = obj->frame_id3;
-        obj->frame_id3 = obj->frame_id2;
-        obj->frame_id2 = obj->frame_id1;
-
-        uint32_t prev_frame = obj->frame_id1;
-
-        // Authentic LF2 walking frame cycling (State 1: 5 -> 6 -> 7 -> 8 -> 7 -> 6 -> 5...)
-        if (cur_frame.state == STATE_WALKING) {
-            static const uint32_t walk_sequence[6] = {5, 6, 7, 8, 7, 6};
-            obj->move_counter = (obj->move_counter + 1) % 6;
-            obj->frame_id1 = walk_sequence[obj->move_counter];
-        } else if (cur_frame.next == 1000) {
-            // Particle / effect disposal
-            return false;
-        } else if (cur_frame.next == 999) {
-            // Authentic LF2 behavior: next == 999 loops back to frame 0 (standing stance)
-            obj->frame_id1 = 0;
-        } else if (cur_frame.next < 0) {
-            obj->facing = (obj->facing == FACING_RIGHT) ? FACING_LEFT : FACING_RIGHT;
-            obj->frame_id1 = static_cast<uint32_t>(-cur_frame.next);
-        } else {
-            obj->frame_id1 = static_cast<uint32_t>(cur_frame.next);
-        }
-
-        // Apply frame dvx/dvy/dvz and sound on frame transition
-        if (obj->frame_id1 != prev_frame && obj->frame_id1 < MAX_FRAMES) {
-            const auto& next_frame = obj->file->frames[obj->frame_id1];
-            apply_frame_dv(obj, next_frame);
-            uint32_t snd = next_frame.sound;
-            if (snd != 0) {
-                get_audio_system().on_frame_sound(snd);
-            }
-        }
-        return true;
-    }
-
-    return true;
+    obj->frame_id4 = obj->frame_id3;
+    obj->frame_id3 = obj->frame_id2;
+    object_frame_advance(obj, mode, obj_idx, difficulty, match_running);
+    return obj->frame_id1 < MAX_FRAMES;
 }
 
-static bool try_special_move(object_t* obj, uint32_t target_frame_id)
+void object_handle_input(object_t* obj, const input_state_t& input, bool match_running, int32_t unlock_chars)
 {
-    if (target_frame_id == 0 || target_frame_id >= MAX_FRAMES) return false;
-    const auto& target_frame = obj->file->frames[target_frame_id];
-    int32_t mp_cost = target_frame.mp % 1000;
-    if (mp_cost > 0 && obj->mp < mp_cost) return false;
-    if (mp_cost > 0) {
-        obj->mp -= mp_cost;
-        obj->mp_used += static_cast<uint32_t>(mp_cost);
-    }
-    obj->frame_id1 = target_frame_id;
-    obj->wait_counter = 0;
-    apply_frame_dv(obj, target_frame);
-    return true;
-}
+    if (!obj || !obj->file || obj->frame_id1 >= MAX_FRAMES) return;
 
-void object_handle_input(object_t* obj, const input_state_t& input)
-{
-    if (!obj || !obj->file) return;
+    obj->holding_up     = obj->click_up;
+    obj->holding_down   = obj->click_down;
+    obj->holding_left   = obj->click_left;
+    obj->holding_right  = obj->click_right;
+    obj->holding_attack = obj->click_attack;
+    obj->holding_jump   = obj->click_jump;
+    obj->holding_defend = obj->click_defend;
 
-    if (obj->frame_id1 >= MAX_FRAMES) return;
+    obj->click_up     = input.up     ? 1 : 0;
+    obj->click_down   = input.down   ? 1 : 0;
+    obj->click_left   = input.left   ? 1 : 0;
+    obj->click_right  = input.right  ? 1 : 0;
+    obj->click_attack = input.attack ? 1 : 0;
+    obj->click_jump   = input.jump   ? 1 : 0;
+    obj->click_defend = input.defend ? 1 : 0;
 
-    uint32_t prev_frame = obj->frame_id1;
-    const auto& cur_frame = obj->file->frames[obj->frame_id1];
-    uint32_t state = cur_frame.state;
-
-    // Update holding & click states on object_t (0x0C6 - 0x0D3)
-    obj->click_up     = (input.up     && !obj->holding_up)     ? 1 : 0;
-    obj->click_down   = (input.down   && !obj->holding_down)   ? 1 : 0;
-    obj->click_left   = (input.left   && !obj->holding_left)   ? 1 : 0;
-    obj->click_right  = (input.right  && !obj->holding_right)  ? 1 : 0;
-    obj->click_attack = (input.attack && !obj->holding_attack) ? 1 : 0;
-    obj->click_jump   = (input.jump   && !obj->holding_jump)   ? 1 : 0;
-    obj->click_defend = (input.defend && !obj->holding_defend) ? 1 : 0;
-
-    obj->holding_up     = input.up     ? 1 : 0;
-    obj->holding_down   = input.down   ? 1 : 0;
-    obj->holding_left   = input.left   ? 1 : 0;
-    obj->holding_right  = input.right  ? 1 : 0;
-    obj->holding_jump   = input.jump   ? 1 : 0;
-    obj->holding_defend = input.defend ? 1 : 0;
-
-    // Check .dat-defined special move transitions (D>A, D^A, DvA, D>J, D^J, DvJ, J+A) from FUN_00419380
-    bool forward_held = (obj->facing == FACING_RIGHT && input.right) || (obj->facing == FACING_LEFT && input.left);
-    if (input.defend) {
-        if (forward_held && input.attack && try_special_move(obj, cur_frame.hit_Fa)) goto finish_input;
-        if (input.up     && input.attack && try_special_move(obj, cur_frame.hit_Ua)) goto finish_input;
-        if (input.down   && input.attack && try_special_move(obj, cur_frame.hit_Da)) goto finish_input;
-        if (forward_held && input.jump   && try_special_move(obj, cur_frame.hit_Fj)) goto finish_input;
-        if (input.up     && input.jump   && try_special_move(obj, cur_frame.hit_Uj)) goto finish_input;
-        if (input.down   && input.jump   && try_special_move(obj, cur_frame.hit_Dj)) goto finish_input;
-    }
-    if (input.jump && input.attack && try_special_move(obj, cur_frame.hit_ja)) goto finish_input;
-
-    // Handle jump landing frame transition (State 4 landing on ground)
-    if (state == STATE_JUMPING && obj->y == 0 && obj->y_position == 0.0) {
-        if (obj->frame_id1 >= 210 && obj->frame_id1 <= 214) {
-            obj->frame_id1 = 215; // Landing frame
-            obj->wait_counter = 0;
-            obj->x_velocity = 0.0;
-            obj->z_velocity = 0.0;
-            goto finish_input;
-        }
-    }
-
-    // State 0: Standing / Idle
-    if (state == STATE_STANDING) {
-        if (input.jump) {
-            double jh = (std::abs(obj->file->jump_height) > 0.0) ? std::abs(obj->file->jump_height) : 11.0;
-            obj->y_velocity = -jh;
-            obj->y_position = -1.0;
-            obj->in_sky = 1;
-            obj->frame_id1 = (cur_frame.hit_j != 0) ? cur_frame.hit_j : 210;
-            obj->wait_counter = 0;
-
-            double jd = (obj->file->jump_distance > 0.0) ? obj->file->jump_distance : 4.0;
-            double jdz = (obj->file->jump_distancez > 0.0) ? obj->file->jump_distancez : 2.0;
-
-            if (input.left) {
-                obj->facing = FACING_LEFT;
-                obj->x_velocity = -jd;
-            } else if (input.right) {
-                obj->facing = FACING_RIGHT;
-                obj->x_velocity = jd;
-            } else {
-                obj->x_velocity = 0.0;
-            }
-
-            if (input.up) {
-                obj->z_velocity = -jdz;
-            } else if (input.down) {
-                obj->z_velocity = jdz;
-            } else {
-                obj->z_velocity = 0.0;
-            }
-            goto finish_input;
-        }
-
-        if (input.attack) {
-            obj->frame_id1 = (cur_frame.hit_a != 0) ? cur_frame.hit_a : 60; // Punch 1
-            obj->wait_counter = 0;
-            obj->x_velocity = 0.0;
-            obj->z_velocity = 0.0;
-            goto finish_input;
-        }
-
-        if (input.defend) {
-            obj->frame_id1 = (cur_frame.hit_d != 0) ? cur_frame.hit_d : 110; // Guard
-            obj->wait_counter = 0;
-            obj->x_velocity = 0.0;
-            obj->z_velocity = 0.0;
-            goto finish_input;
-        }
-
-        if (input.left || input.right || input.up || input.down) {
-            obj->move_counter = 0;
-            obj->frame_id1 = 5; // Walk start
-            obj->wait_counter = 0;
-            if (input.left) obj->facing = FACING_LEFT;
-            else if (input.right) obj->facing = FACING_RIGHT;
-            goto finish_input;
-        }
-    }
-
-    // State 1: Walking
-    if (state == STATE_WALKING) {
-        if (input.jump) {
-            double jh = (std::abs(obj->file->jump_height) > 0.0) ? std::abs(obj->file->jump_height) : 11.0;
-            obj->y_velocity = -jh;
-            obj->y_position = -1.0;
-            obj->in_sky = 1;
-            obj->frame_id1 = (cur_frame.hit_j != 0) ? cur_frame.hit_j : 210;
-            obj->wait_counter = 0;
-
-            double jd = (obj->file->jump_distance > 0.0) ? obj->file->jump_distance : 4.0;
-            obj->x_velocity = (obj->facing == FACING_LEFT) ? -jd : jd;
-            goto finish_input;
-        }
-
-        if (input.attack) {
-            obj->frame_id1 = (cur_frame.hit_a != 0) ? cur_frame.hit_a : 60; // Punch 1
-            obj->wait_counter = 0;
-            obj->x_velocity = 0.0;
-            goto finish_input;
-        }
-
-        if (input.defend) {
-            obj->frame_id1 = (cur_frame.hit_d != 0) ? cur_frame.hit_d : 110;
-            obj->wait_counter = 0;
-            obj->x_velocity = 0.0;
-            goto finish_input;
-        }
-
-        if (!input.left && !input.right && !input.up && !input.down) {
-            obj->move_counter = 0;
-            obj->frame_id1 = 0; // Return to idle
-            obj->wait_counter = 0;
-            obj->x_velocity = 0.0;
-            obj->z_velocity = 0.0;
-            goto finish_input;
-        }
-
-        if (input.left) obj->facing = FACING_LEFT;
-        else if (input.right) obj->facing = FACING_RIGHT;
-
-        double ws = (obj->file->walking_speed > 0.0) ? obj->file->walking_speed : 4.0;
-        double wsz = (obj->file->walking_speedz > 0.0) ? obj->file->walking_speedz : 2.5;
-
-        if (input.left) obj->x_velocity = -ws;
-        else if (input.right) obj->x_velocity = ws;
-        else obj->x_velocity = 0.0;
-
-        if (input.up) obj->z_velocity = -wsz;
-        else if (input.down) obj->z_velocity = wsz;
-        else obj->z_velocity = 0.0;
-    }
-
-    // State 3: Attack / Punch combos
-    if (state == STATE_ATTACKING) {
-        if (input.attack && !obj->holding_attack) {
-            if (cur_frame.hit_a != 0) {
-                obj->frame_id1 = cur_frame.hit_a;
-                obj->wait_counter = 0;
-            } else if (obj->frame_id1 >= 60 && obj->frame_id1 <= 63) {
-                obj->frame_id1 = 65; // Punch 2 combo
-                obj->wait_counter = 0;
-            } else if (obj->frame_id1 >= 65 && obj->frame_id1 <= 68) {
-                obj->frame_id1 = 70; // Punch 3 / Finisher
-                obj->wait_counter = 0;
-            }
-        }
-    }
-
-    // State 7: Defending / Guard
-    if (state == STATE_DEFEND) {
-        if (!input.defend) {
-            obj->frame_id1 = 0; // Return to stance
-            obj->wait_counter = 0;
-        }
-    }
-
-finish_input:
-    obj->holding_attack = input.attack ? 1 : 0;
-
-    // Trigger authentic audio when input causes frame transition
-    if (obj->frame_id1 != prev_frame && obj->frame_id1 < MAX_FRAMES) {
-        uint32_t snd = obj->file->frames[obj->frame_id1].sound;
-        if (snd != 0) {
-            get_audio_system().on_frame_sound(snd);
-        }
-    }
+    object_input_tick(obj, match_running, unlock_chars);
 }
 
 // 1:1 Lift of 0x00417200: Broad-phase 2D bounding box overlap check between attacker and injured

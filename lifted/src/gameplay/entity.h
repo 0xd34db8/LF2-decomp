@@ -38,14 +38,43 @@ int32_t object_spawn_opoint(global_t* world, int32_t file_id, int32_t owner, int
 // 1:1 Lift of 0x00406ba0: Processes hit_Fa homing/chase/volcano projectile physics
 void object_process_hit_fa(global_t* world, int32_t obj_idx);
 
-// 1:1 Lift of 0x00417F80: Integrates continuous 3D velocity and rounds to integer coordinates
+// 1:1 Lift of 0x0040D960: Per-object frame timer, sound trigger & frame.next advancement
+void object_frame_advance(object_t* obj, int32_t mode = 0, int32_t obj_idx = 0, int32_t difficulty = 1, bool match_running = true);
+
+// 1:1 Lift of 0x0040E170: Combo timer == 5 interruption check helper
+int32_t object_combo_interrupted(const object_t* obj, char expected_key, int32_t advanced);
+
+// 1:1 Lift of 0x0040E2D0: Frame transition & HP/MP cost helper
+int32_t object_frame_transition(object_t* obj, int32_t target_frame, bool match_running = true);
+
+// 1:1 Lift of 0x0040E450: 5-entry input history shift register
+void object_input_history_push(object_t* obj, uint32_t key_code);
+
+// 1:1 Lift of 0x0040E490: Per-object physics, velocity integration, gravity & ground landing
+void object_physics_tick(object_t* obj, int32_t counter_12 = 0);
+
+// 1:1 Lifts of 0x00412800..0x00412F40: 9 special-move combo recognizers
+void object_combo_dra(object_t* obj, bool match_running = true);
+void object_combo_dla(object_t* obj, bool match_running = true);
+void object_combo_dua(object_t* obj, bool match_running = true);
+void object_combo_dda(object_t* obj, bool match_running = true);
+void object_combo_drj(object_t* obj, bool match_running = true);
+void object_combo_dlj(object_t* obj, bool match_running = true);
+void object_combo_duj(object_t* obj, bool match_running = true);
+void object_combo_ddj(object_t* obj, bool match_running = true);
+void object_combo_dja(object_t* obj, bool match_running = true, int32_t unlock_chars = 0);
+
+// 1:1 Lift of 0x00413080: Master per-object input/state tick & combo dispatcher
+void object_input_tick(object_t* obj, bool match_running = true, int32_t unlock_chars = 0);
+
+// Integrates continuous 3D velocity, stage clamping with blocked_* flags, and truncates to integer coordinates
 void object_update_motion(object_t* obj, int32_t stage_z_min = 0, int32_t stage_z_max = 400, int32_t stage_width = 2000);
 
-// Applies vertical gravity acceleration and ground impact collision
+// Applies vertical gravity acceleration and ground impact collision (delegates to object_physics_tick)
 void object_update_physics(object_t* obj);
 
-// Decays horizontal and depth sliding velocity when grounded
-void object_apply_ground_friction(object_t* obj, double friction = 0.6);
+// Decays horizontal and depth sliding velocity when grounded (1:1 -1.0 linear decay with 0.0001 threshold)
+void object_apply_ground_friction(object_t* obj, double friction = 1.0);
 
 // Player controller input state
 struct input_state_t {
@@ -58,12 +87,12 @@ struct input_state_t {
     bool defend = false;
 };
 
-// Processes player inputs and executes character state machine transitions
-void object_handle_input(object_t* obj, const input_state_t& input);
+// Processes player inputs and executes character state machine transitions (delegates to object_input_tick)
+void object_handle_input(object_t* obj, const input_state_t& input, bool match_running = true, int32_t unlock_chars = 0);
 
-// Advances frame wait counter, updates frame history, and transitions to frame->next
-// Returns false if entity has expired (next == 999 or 1000)
-bool object_tick_frame(object_t* obj);
+// Advances frame wait counter, updates frame history, and transitions to frame->next (delegates to object_frame_advance)
+// Returns false if entity has expired (frame_id1 > 399 or frame == 1000)
+bool object_tick_frame(object_t* obj, int32_t mode = 0, int32_t obj_idx = 0, int32_t difficulty = 1, bool match_running = true);
 
 } // namespace lf2
 

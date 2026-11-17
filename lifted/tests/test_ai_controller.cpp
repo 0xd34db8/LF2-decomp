@@ -143,11 +143,11 @@ void test_ai_melee_engagement()
     assert(input.attack == true);
     assert(ai_bot.facing == FACING_RIGHT);
 
-    // Apply tick and verify state transition to attacking
+    // Apply tick and verify state transition to attacking (punch 1 or punch 2: (r + 12) * 5)
     ai_tick(&world, 0, AI_NORMAL);
-    assert(ai_bot.frame_id1 == 60); // Punch attack frame
+    assert(ai_bot.frame_id1 == 60 || ai_bot.frame_id1 == 65);
 
-    std::cout << "    AI successfully triggered melee attack and transitioned to punch frame 60!" << std::endl;
+    std::cout << "    AI successfully triggered melee attack and transitioned to punch frame " << ai_bot.frame_id1 << "!" << std::endl;
 }
 
 void test_ai_combat_dodge()
