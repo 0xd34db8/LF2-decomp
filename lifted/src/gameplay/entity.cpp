@@ -1,5 +1,7 @@
 #include "entity.h"
 #include "audio/audio.h"
+#include "core/overlap.h"
+#include "gameplay/grapple.h"
 #include <cmath>
 #include <cstring>
 #include <algorithm>
@@ -490,6 +492,136 @@ finish_input:
             get_audio_system().on_frame_sound(snd);
         }
     }
+}
+
+// 1:1 Lift of 0x00417200: Broad-phase 2D bounding box overlap check between attacker and injured
+bool is_broadphase_overlap(const global_t* world, uint32_t attacker_id, uint32_t injured_id)
+{
+    if (!world || attacker_id >= MAX_OBJECTS || injured_id >= MAX_OBJECTS) {
+        return false;
+    }
+    if (!world->is_object_exists[attacker_id] || !world->is_object_exists[injured_id]) {
+        return false;
+    }
+    const object_t* attacker = world->objects[attacker_id];
+    const object_t* injured = world->objects[injured_id];
+    if (!attacker || !injured || !attacker->file || !injured->file) {
+        return false;
+    }
+    if (attacker->frame_id1 >= MAX_FRAMES || injured->frame_id1 >= MAX_FRAMES ||
+        attacker->frame_id4 >= MAX_FRAMES || injured->frame_id4 >= MAX_FRAMES) {
+        return false;
+    }
+
+    const frame_t* att_f1 = &attacker->file->frames[attacker->frame_id1];
+    const frame_t* inj_f1 = &injured->file->frames[injured->frame_id1];
+    if (att_f1->itrs_size == 0 || inj_f1->bdys_size == 0 ||
+        attacker->arest > 0 || static_cast<int8_t>(injured->vrest_of_objects[attacker_id]) > 0) {
+        return false;
+    }
+
+    const frame_t* att_f4 = &attacker->file->frames[attacker->frame_id4];
+    const frame_t* inj_f4 = &injured->file->frames[injured->frame_id4];
+    if (att_f4->itrs_size == 0 || !att_f4->itrs || inj_f4->bdys_size == 0 || !inj_f4->bdys) {
+        return false;
+    }
+
+    // Dynamic union AABB across injured bdys (0x8EC..0x8F8 in 0x0040ef70)
+    int32_t bdy_min_x = inj_f4->bdys[0].x;
+    int32_t bdy_min_y = inj_f4->bdys[0].y;
+    int32_t bdy_max_x = inj_f4->bdys[0].x + inj_f4->bdys[0].w;
+    int32_t bdy_max_y = inj_f4->bdys[0].y + inj_f4->bdys[0].h;
+    for (uint32_t k = 1; k < inj_f4->bdys_size; ++k) {
+        const bdy_t& b = inj_f4->bdys[k];
+        if (b.x < bdy_min_x) bdy_min_x = b.x;
+        if (b.y < bdy_min_y) bdy_min_y = b.y;
+        if (b.x + b.w > bdy_max_x) bdy_max_x = b.x + b.w;
+        if (b.y + b.h > bdy_max_y) bdy_max_y = b.y + b.h;
+    }
+    int32_t bdy_bw = bdy_max_x - bdy_min_x;
+    int32_t bdy_bh = bdy_max_y - bdy_min_y;
+
+    // Dynamic union AABB across attacker itrs (0x8DC..0x8E8 in 0x0040ef70)
+    int32_t itr_min_x = att_f4->itrs[0].x;
+    int32_t itr_min_y = att_f4->itrs[0].y;
+    int32_t itr_max_x = att_f4->itrs[0].x + att_f4->itrs[0].w;
+    int32_t itr_max_y = att_f4->itrs[0].y + att_f4->itrs[0].h;
+    for (uint32_t k = 1; k < att_f4->itrs_size; ++k) {
+        const itr_t& it = att_f4->itrs[k];
+        if (it.x < itr_min_x) itr_min_x = it.x;
+        if (it.y < itr_min_y) itr_min_y = it.y;
+        if (it.x + it.w > itr_max_x) itr_max_x = it.x + it.w;
+        if (it.y + it.h > itr_max_y) itr_max_y = it.y + it.h;
+    }
+    int32_t itr_bw = itr_max_x - itr_min_x;
+    int32_t itr_bh = itr_max_y - itr_min_y;
+
+    int32_t inj_left = (injured->facing == FACING_RIGHT)
+        ? (bdy_min_x + (injured->x - inj_f4->centerx))
+        : (((inj_f4->centerx + injured->x) - bdy_bw) - bdy_min_x);
+    int32_t inj_top = bdy_min_y + (injured->y - inj_f4->centery);
+
+    int32_t att_left = (attacker->facing == FACING_RIGHT)
+        ? (itr_min_x + (attacker->x - att_f4->centerx))
+        : (((att_f4->centerx + attacker->x) - itr_bw) - itr_min_x);
+    int32_t att_top = itr_min_y + (attacker->y - att_f4->centery);
+
+    return is_itr_bdy_overlap(inj_left, inj_top, bdy_bw, bdy_bh,
+                              att_left, att_top, itr_bw, itr_bh);
+}
+
+// 1:1 Lift of 0x00419380: Per-frame frame_id4/arest reset, pairwise vrest decrement & collision dispatch
+void world_step_collisions(global_t* world, uint32_t mode)
+{
+    if (!world) return;
+
+    for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
+        if (!world->is_object_exists[i]) continue;
+        object_t* obj = world->objects[i];
+        if (!obj || !obj->file) continue;
+
+        obj->frame_id4 = obj->frame_id1;
+        if (obj->frame_id1 < MAX_FRAMES) {
+            const frame_t& f1 = obj->file->frames[obj->frame_id1];
+            if (f1.itrs_size == 0) {
+                obj->arest = 0;
+            } else if (f1.state == 1001) {
+                int32_t hid = obj->holder_id;
+                if (hid >= 0 && hid < static_cast<int32_t>(MAX_OBJECTS) &&
+                    world->objects[hid] && world->objects[hid]->file) {
+                    const object_t* holder = world->objects[hid];
+                    if (holder->frame_id1 < MAX_FRAMES &&
+                        holder->file->frames[holder->frame_id1].wpoint.attacking == 0) {
+                        obj->arest = 0;
+                    }
+                }
+            }
+        }
+    }
+
+    for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
+        if (!world->is_object_exists[i]) continue;
+        object_t* oi = world->objects[i];
+        for (uint32_t j = i + 1; j < MAX_OBJECTS; ++j) {
+            if (!world->is_object_exists[j]) continue;
+            object_t* oj = world->objects[j];
+
+            if (oi && static_cast<int8_t>(oi->vrest_of_objects[j]) > 0) {
+                oi->vrest_of_objects[j]--;
+            }
+            if (oj && static_cast<int8_t>(oj->vrest_of_objects[i]) > 0) {
+                oj->vrest_of_objects[i]--;
+            }
+            if (is_broadphase_overlap(world, i, j)) {
+                world->does_attack_success(i, j, mode);
+            }
+            if (is_broadphase_overlap(world, j, i)) {
+                world->does_attack_success(j, i, mode);
+            }
+        }
+    }
+
+    process_firzen_fusion(world, 0);
 }
 
 // 1:1 Lift of 0x004196F0: Physics velocity/impulse averaging pass across active objects

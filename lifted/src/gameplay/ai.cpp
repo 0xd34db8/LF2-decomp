@@ -118,12 +118,14 @@ bool ai_evaluate_dodge(const global_t* world, uint32_t ai_id, uint32_t target_id
     if (!self || !target || !self->file || !target->file) return false;
 
     int32_t cid = static_cast<int32_t>(self->file->id);
-    int32_t dx = std::abs(target->x - self->x);
+    int32_t dx_self_lead = std::abs((target->x - static_cast<int32_t>(self->x_velocity) * 2) - self->x);
+    int32_t dx_target_lead = std::abs((target->x + static_cast<int32_t>(target->x_velocity) * 2) - self->x);
     int32_t dz = std::abs(target->z - self->z);
 
     // Counter-attack check (0x004034F0)
-    if (cid != FIREN_DAT && cid != FREEZE_DAT && cid != JULIAN_DAT && cid != FIRZEN_DAT) {
-        if (dx < 80 && dz < 5 && lf2_random(0x37, (difficulty == AI_CRAZY ? 3 : 6)) == 0) {
+    if (((cid != static_cast<int32_t>(HENRY_DAT) && cid != static_cast<int32_t>(RUDOLF_DAT)) &&
+         cid != static_cast<int32_t>(HUNTER_DAT)) || cid != static_cast<int32_t>(JAN_DAT)) {
+        if (dx_self_lead < 80 && dz < 5 && lf2_random(0x37, (difficulty == AI_CRAZY ? 3 : 6)) == 0) {
             out_input.attack = true;
         }
     }
@@ -131,25 +133,30 @@ bool ai_evaluate_dodge(const global_t* world, uint32_t ai_id, uint32_t target_id
     uint32_t diff_mod = (difficulty == AI_CRAZY) ? 1 : ((difficulty == AI_NORMAL) ? 4 : 8);
     if (lf2_random(0x38, diff_mod) != 0) return false;
 
-    // Guard defense against standard roster attacks
-    if (cid == DEEP_DAT || cid == FIREN_DAT || cid == DENNIS_DAT ||
-        cid == MARK_DAT || cid == JAN_DAT || cid == MONK_DAT ||
-        cid == DAVIS_DAT || cid == WOODY_DAT || cid == BAT_DAT || cid == LOUISE_EX_DAT) {
-        if (dx > 100 && dx < 900 && dz < 5 && lf2_random(0x39, diff_mod + 9) == 0) {
+    // Guard defense against standard roster attacks (2,4,6,9,10,11,8,7,33,34)
+    if (cid == static_cast<int32_t>(JOHN_DAT) || cid == static_cast<int32_t>(HENRY_DAT) ||
+        cid == static_cast<int32_t>(LOUIS_DAT) || cid == static_cast<int32_t>(FIREN_DAT) ||
+        cid == static_cast<int32_t>(FREEZE_DAT) || cid == static_cast<int32_t>(DENNIS_DAT) ||
+        cid == static_cast<int32_t>(WOODY_DAT) || cid == static_cast<int32_t>(DAVIS_DAT) ||
+        cid == static_cast<int32_t>(JACK_DAT) || cid == static_cast<int32_t>(SORCERER_DAT)) {
+        if (dx_target_lead > 100 && dx_target_lead < 900 && dz < 5 && lf2_random(0x39, diff_mod + 9) == 0) {
             out_input.defend = true;
         }
         // Roll / dodge check
-        if (dx > 90) {
+        if (dx_target_lead > 90) {
             bool facing_ok = (self->facing == FACING_RIGHT && self->x < target->x) ||
                              (self->facing == FACING_LEFT && target->x < self->x);
             int32_t frame = static_cast<int32_t>(self->frame_id1);
             if (facing_ok && (frame == 110 || frame > 234) && dz < 13) {
+                self->holding_right = 0;
+                self->holding_left = 0;
+                self->holding_attack = 0;
                 out_input.left = false;
                 out_input.right = false;
                 if (self->x < target->x) out_input.right = true;
                 else out_input.left = true;
 
-                if (cid == LOUISE_EX_DAT && lf2_random(0x3A, 2) == 0) {
+                if (cid == static_cast<int32_t>(SORCERER_DAT) && lf2_random(0x3A, 2) == 0) {
                     out_input.jump = true;
                 } else {
                     out_input.attack = true;
@@ -160,16 +167,19 @@ bool ai_evaluate_dodge(const global_t* world, uint32_t ai_id, uint32_t target_id
         }
     }
 
-    // John specific shield / heal defense
-    if (cid == JOHN_DAT) {
-        if (dx > 100 && dx < 300 && dz < 5 && lf2_random(0x3B, diff_mod + 9) == 0) {
+    // Deep specific shield / roll defense (cid == 1)
+    if (cid == static_cast<int32_t>(DEEP_DAT)) {
+        if (dx_target_lead > 100 && dx_target_lead < 300 && dz < 5 && lf2_random(0x3B, diff_mod + 9) == 0) {
             out_input.defend = true;
         }
-        if (dx > 90) {
+        if (dx_target_lead > 90) {
             bool facing_ok = (self->facing == FACING_RIGHT && self->x < target->x) ||
                              (self->facing == FACING_LEFT && target->x < self->x);
             int32_t frame = static_cast<int32_t>(self->frame_id1);
             if (facing_ok && (frame == 110 || frame > 234) && dz < 7) {
+                self->holding_right = 0;
+                self->holding_left = 0;
+                self->holding_attack = 0;
                 out_input.left = false;
                 out_input.right = false;
                 if (self->x < target->x) out_input.right = true;

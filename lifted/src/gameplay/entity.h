@@ -14,6 +14,12 @@ inline bool is_between(int32_t a, int32_t b, int32_t c) {
     return ((a < b && b < c) || (c < b && b < a));
 }
 
+// 1:1 Lift of 0x00417200: Broad-phase 2D bounding box overlap check between attacker and injured
+bool is_broadphase_overlap(const global_t* world, uint32_t attacker_id, uint32_t injured_id);
+
+// 1:1 Lift of 0x00419380: Per-frame frame_id4/arest update, pairwise vrest decrement & collision dispatch
+void world_step_collisions(global_t* world, uint32_t mode = 0);
+
 // 1:1 Lift of 0x004196F0: Physics velocity/impulse averaging pass across all active objects
 void world_average_velocities(global_t* world);
 

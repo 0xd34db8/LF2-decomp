@@ -4,11 +4,144 @@
 
 /*
  * Virtual Addresses:
+ *   0x00417200: FUN_00417200 (Broad-phase 2D bounding box overlap test)
+ *   0x00419380: FUN_00419380 (Per-frame frame_id4/arest update & pairwise collision dispatch)
  *   0x004196F0: FUN_004196f0 (Velocity / impulse averaging pass across all 400 active objects)
  *   0x004197A0: FUN_004197a0 (Remote / network input bits unpacking & flag latching)
  *   0x004198F0: FUN_004198f0 (Local player input bits latching & replay recording)
  *   0x00419A60: FUN_00419a60 (Master per-slot controller / AI input dispatch & loop)
  */
+
+// 0x00417200: Broad-phase 2D bounding box overlap test between attacker and injured
+int FUN_00417200(int param_1, int param_2)
+{
+    global_t *global = (global_t *)in_ECX;
+    if (!global || param_1 < 0 || param_1 >= MAX_OBJECTS || param_2 < 0 || param_2 >= MAX_OBJECTS) {
+        return 0;
+    }
+    if (!global->is_object_exists[param_1] || !global->is_object_exists[param_2]) {
+        return 0;
+    }
+    object_t *attacker = global->objects[param_1];
+    object_t *injured = global->objects[param_2];
+    if (!attacker || !injured || !attacker->file || !injured->file) {
+        return 0;
+    }
+    if (attacker->frame_id1 >= MAX_FRAMES || injured->frame_id1 >= MAX_FRAMES ||
+        attacker->frame_id4 >= MAX_FRAMES || injured->frame_id4 >= MAX_FRAMES) {
+        return 0;
+    }
+
+    frame_t *att_f1 = &attacker->file->frames[attacker->frame_id1];
+    frame_t *inj_f1 = &injured->file->frames[injured->frame_id1];
+    if (att_f1->itrs_size == 0 || inj_f1->bdys_size == 0 ||
+        attacker->arest > 0 || injured->vrest_of_objects[param_1] > 0) {
+        return 0;
+    }
+
+    frame_t *att_f4 = &attacker->file->frames[attacker->frame_id4];
+    frame_t *inj_f4 = &injured->file->frames[injured->frame_id4];
+    if (att_f4->itrs_size == 0 || !att_f4->itrs || inj_f4->bdys_size == 0 || !inj_f4->bdys) {
+        return 0;
+    }
+
+    // Dynamic union AABB across injured bdys (0x8EC..0x8F8 in 0x0040ef70)
+    int32_t bdy_min_x = inj_f4->bdys[0].x;
+    int32_t bdy_min_y = inj_f4->bdys[0].y;
+    int32_t bdy_max_x = inj_f4->bdys[0].x + inj_f4->bdys[0].w;
+    int32_t bdy_max_y = inj_f4->bdys[0].y + inj_f4->bdys[0].h;
+    for (uint32_t k = 1; k < inj_f4->bdys_size; ++k) {
+        const bdy_t *b = &inj_f4->bdys[k];
+        if (b->x < bdy_min_x) bdy_min_x = b->x;
+        if (b->y < bdy_min_y) bdy_min_y = b->y;
+        if (b->x + b->w > bdy_max_x) bdy_max_x = b->x + b->w;
+        if (b->y + b->h > bdy_max_y) bdy_max_y = b->y + b->h;
+    }
+    int32_t bdy_bw = bdy_max_x - bdy_min_x;
+    int32_t bdy_bh = bdy_max_y - bdy_min_y;
+
+    // Dynamic union AABB across attacker itrs (0x8DC..0x8E8 in 0x0040ef70)
+    int32_t itr_min_x = att_f4->itrs[0].x;
+    int32_t itr_min_y = att_f4->itrs[0].y;
+    int32_t itr_max_x = att_f4->itrs[0].x + att_f4->itrs[0].w;
+    int32_t itr_max_y = att_f4->itrs[0].y + att_f4->itrs[0].h;
+    for (uint32_t k = 1; k < att_f4->itrs_size; ++k) {
+        const itr_t *it = &att_f4->itrs[k];
+        if (it->x < itr_min_x) itr_min_x = it->x;
+        if (it->y < itr_min_y) itr_min_y = it->y;
+        if (it->x + it->w > itr_max_x) itr_max_x = it->x + it->w;
+        if (it->y + it->h > itr_max_y) itr_max_y = it->y + it->h;
+    }
+    int32_t itr_bw = itr_max_x - itr_min_x;
+    int32_t itr_bh = itr_max_y - itr_min_y;
+
+    int32_t inj_left = (injured->facing == FACING_RIGHT)
+        ? (bdy_min_x + (injured->x - inj_f4->centerx))
+        : (((inj_f4->centerx + injured->x) - bdy_bw) - bdy_min_x);
+    int32_t inj_top = bdy_min_y + (injured->y - inj_f4->centery);
+
+    int32_t att_left = (attacker->facing == FACING_RIGHT)
+        ? (itr_min_x + (attacker->x - att_f4->centerx))
+        : (((att_f4->centerx + attacker->x) - itr_bw) - itr_min_x);
+    int32_t att_top = itr_min_y + (attacker->y - att_f4->centery);
+
+    return FUN_004171c0(inj_left, inj_top, bdy_bw, bdy_bh,
+                        att_left, att_top, itr_bw, itr_bh);
+}
+
+// 0x00419380: Per-frame frame_id4/arest reset, pairwise vrest decrement & collision dispatch
+void FUN_00419380(int param_1)
+{
+    global_t *global = (global_t *)in_ECX;
+    if (!global) return;
+
+    for (int32_t i = 0; i < MAX_OBJECTS; ++i) {
+        if (global->is_object_exists[i] == 0) continue;
+        object_t *obj = global->objects[i];
+        if (!obj || !obj->file) continue;
+
+        obj->frame_id4 = obj->frame_id1;
+        if (obj->frame_id1 < MAX_FRAMES) {
+            frame_t *f1 = &obj->file->frames[obj->frame_id1];
+            if (f1->itrs_size == 0) {
+                obj->arest = 0;
+            } else if (f1->state == 1001) {
+                int32_t hid = obj->holder_id;
+                if (hid >= 0 && hid < MAX_OBJECTS && global->objects[hid] && global->objects[hid]->file) {
+                    object_t *holder = global->objects[hid];
+                    if (holder->frame_id1 < MAX_FRAMES &&
+                        holder->file->frames[holder->frame_id1].wpoint.attacking == 0) {
+                        obj->arest = 0;
+                    }
+                }
+            }
+        }
+    }
+
+    for (int32_t i = 0; i < MAX_OBJECTS; ++i) {
+        if (global->is_object_exists[i] == 0) continue;
+        object_t *oi = global->objects[i];
+        for (int32_t j = i + 1; j < MAX_OBJECTS; ++j) {
+            if (global->is_object_exists[j] == 0) continue;
+            object_t *oj = global->objects[j];
+
+            if (oi && (int8_t)oi->vrest_of_objects[j] > 0) {
+                oi->vrest_of_objects[j]--;
+            }
+            if (oj && (int8_t)oj->vrest_of_objects[i] > 0) {
+                oj->vrest_of_objects[i]--;
+            }
+            if (FUN_00417200(i, j) != 0) {
+                FUN_00417400(i, j, param_1);
+            }
+            if (FUN_00417200(j, i) != 0) {
+                FUN_00417400(j, i, param_1);
+            }
+        }
+    }
+
+    FUN_004064d0();
+}
 
 // 0x004196F0: Physics velocity/impulse averaging pass across active objects
 void FUN_004196f0(void)
@@ -115,7 +248,7 @@ void FUN_004198f0(uint8_t *param_1, int param_2, int param_3)
                 if (b & 0x02) obj->click_defend = 1;
 
                 if (DAT_00450b80 != 0) {
-                    param_1[param_3] = b;
+                    param_1[param_3 + i] = b;
                 }
             }
         }
@@ -156,7 +289,7 @@ void FUN_00419a60(int param_1, int param_2, uint8_t *param_3)
 
                     uint32_t slot_idx = (uint32_t)slot_type - 1;
                     if (slot_idx < 4) {
-                        int32_t key_offset = slot_type * 0x50 / sizeof(int);
+                        int32_t key_offset = slot_type * 0x50 / (int32_t)sizeof(int);
                         int32_t ctrl_type = DAT_0044fb20[key_offset];
                         if (ctrl_type == 0) {
                             // Keyboard controls
@@ -200,6 +333,10 @@ void FUN_00419a60(int param_1, int param_2, uint8_t *param_3)
                             // Joystick / gamepad
                             int joy_base = (ctrl_type * 3 - 3) * 0x10;
                             if (joy_base >= 0 && joy_base + 16 <= 128) {
+                                int atk_btn = DAT_0044fb20[key_offset + 8];
+                                int jmp_btn = DAT_0044fb20[key_offset + 9];
+                                int def_btn = DAT_0044fb20[key_offset + 10];
+
                                 if (DAT_00453ff0[joy_base] != '\0') {
                                     obj->click_up = 1;
                                     if (out_packed && DAT_00450b80 != 0) *out_packed |= 0x80;
@@ -216,8 +353,33 @@ void FUN_00419a60(int param_1, int param_2, uint8_t *param_3)
                                     obj->click_right = 1;
                                     if (out_packed && DAT_00450b80 != 0) *out_packed |= 0x10;
                                 }
+                                if (atk_btn >= 0 && joy_base + 4 + atk_btn < 128 &&
+                                    DAT_00453ff0[joy_base + 4 + atk_btn] != '\0') {
+                                    obj->click_attack = 1;
+                                    if (out_packed && DAT_00450b80 != 0) *out_packed |= 0x08;
+                                }
+                                if (jmp_btn >= 0 && joy_base + 4 + jmp_btn < 128 &&
+                                    DAT_00453ff0[joy_base + 4 + jmp_btn] != '\0') {
+                                    obj->click_jump = 1;
+                                    if (out_packed && DAT_00450b80 != 0) *out_packed |= 0x04;
+                                }
+                                if (def_btn >= 0 && joy_base + 4 + def_btn < 128 &&
+                                    DAT_00453ff0[joy_base + 4 + def_btn] != '\0') {
+                                    obj->click_defend = 1;
+                                    if (out_packed && DAT_00450b80 != 0) *out_packed |= 0x02;
+                                }
                             }
                         }
+                    }
+
+                    if (DAT_0044f1af > 0) {
+                        if (obj->click_up != 0)     DAT_0044d040[i] |= 0x80;
+                        if (obj->click_down != 0)   DAT_0044d040[i] |= 0x40;
+                        if (obj->click_left != 0)   DAT_0044d040[i] |= 0x20;
+                        if (obj->click_right != 0)  DAT_0044d040[i] |= 0x10;
+                        if (obj->click_attack != 0) DAT_0044d040[i] |= 0x08;
+                        if (obj->click_jump != 0)   DAT_0044d040[i] |= 0x04;
+                        if (obj->click_defend != 0) DAT_0044d040[i] |= 0x02;
                     }
                 }
             }
@@ -225,7 +387,7 @@ void FUN_00419a60(int param_1, int param_2, uint8_t *param_3)
         }
     }
 
-    // AI dispatch for world objects 10..399
+    // AI / projectile steering dispatch for world objects 10..399
     for (int32_t i = 10; i < MAX_OBJECTS; ++i) {
         if (global->is_object_exists[i] == 0) continue;
         object_t *obj = global->objects[i];
@@ -233,7 +395,7 @@ void FUN_00419a60(int param_1, int param_2, uint8_t *param_3)
 
         if (obj->file->type == TYPE_CHARACTER) {
             FUN_004094b0(i, param_2);
-        } else if (obj->file->frames[obj->frame_id1].state > 0) {
+        } else if (obj->file->frames[obj->frame_id1].hit_Fa > 0) {
             FUN_00406ba0(i);
         }
     }

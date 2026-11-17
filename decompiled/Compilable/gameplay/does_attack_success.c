@@ -221,7 +221,7 @@ void lf2_does_attack_success(global_t *global, uint32_t attacker_id, uint32_t in
                                 accept = 2;
                             }
                         }
-                        if (kind == ITR_KIND_THROWN && attacker->fall != 0 && accept != 2) {
+                        if (kind == ITR_KIND_THROWN && (attacker->thrown_injury != 0 || attacker->fall != 0) && accept != 2) {
                             accept = 1;
                         }
                         if (kind == ITR_KIND_CATCH) {

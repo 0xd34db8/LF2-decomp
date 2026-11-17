@@ -188,7 +188,7 @@ void global_t::does_attack_success(uint32_t attacker_id, uint32_t injured_id, ui
 
             // 12. Register hit into attacker queue
             if (itr->vrest != 0 || itr->kind == 1 || itr->kind == 2 || itr->kind == 7 ||
-                (i_frame4->state == 1004 && (attacker_file->type < 1 || attacker->weapon_type != 0)) ||
+                (i_frame4->state == 1004 && (attacker_file->type < 1 || attacker->weapon_type < 0)) ||
                 hit_fail) {
 
                 if (attacker->successful_attacks >= 20 || hit_fail) {
@@ -197,7 +197,7 @@ void global_t::does_attack_success(uint32_t attacker_id, uint32_t injured_id, ui
 
                 int32_t flag = 0;
                 if (i_frame4->state == 1004 &&
-                    (attacker_file->type < 1 || attacker->weapon_type != 0) &&
+                    (attacker_file->type < 1 || attacker->weapon_type < 0) &&
                     itr->kind != 2 && itr->kind != 7 && itr->kind != 10) {
                     flag = 2;
                 }
@@ -212,13 +212,13 @@ void global_t::does_attack_success(uint32_t attacker_id, uint32_t injured_id, ui
                     }
                 }
 
-                if (itr->kind == 4 && attacker->thrown_injury != 0 && flag != 2) {
+                if (itr->kind == 4 && (attacker->thrown_injury != 0 || attacker->fall != 0) && flag != 2) {
                     flag = 1;
                 }
 
                 if (itr->kind == 1 &&
-                    ((attacker->holding_attack && attacker->x < injured->x) ||
-                     (attacker->click_attack && injured->x <= attacker->x)) &&
+                    ((attacker->click_right && attacker->x < injured->x) ||
+                     (attacker->click_left && injured->x <= attacker->x)) &&
                     i_frame1->state == 16) {
                     if (flag != 2) flag = 1;
                 } else if (itr->kind != 1 && itr->kind != 2 && itr->kind != 7) {
@@ -247,7 +247,7 @@ void global_t::does_attack_success(uint32_t attacker_id, uint32_t injured_id, ui
             } else {
                 // Tracking minimum attackable distance target
                 int32_t dist_x = attacker->x - injured->x;
-                if (attacker->weapon_type != 0) {
+                if (attacker->weapon_type < 0) {
                     uint32_t h_id = attacker->holder_id;
                     if (injured_id != h_id && h_id < MAX_OBJECTS && is_object_exists[h_id]) {
                         dist_x = objects[h_id]->x - injured->x;

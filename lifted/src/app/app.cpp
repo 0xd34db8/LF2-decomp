@@ -1273,6 +1273,7 @@ void app_t::update_battle() {
 
     // Hitbox interactions & attacks
     m_world.process_all_attacks();
+    world_average_velocities(&m_world);
 
     if (m_num_fighters > 0) {
         m_camera.update_target(m_fighters[0].x);
