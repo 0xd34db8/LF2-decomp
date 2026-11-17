@@ -33,7 +33,7 @@ For a buildable C target with all synthetic types, calling convention shims, and
 
 ---
 
-## Function Index (106 Decompiled Routines)
+## Function Index (112 Decompiled Routines)
 
 | Virtual Address | File Path | Subsystem | Original Routine Description |
 | :--- | :--- | :--- | :--- |
@@ -65,31 +65,36 @@ For a buildable C target with all synthetic types, calling convention shims, and
 | `0x00403a40` | [`gameplay/func_00403a40_ai_char_special.c`](gameplay/func_00403a40_ai_char_special.c) | Gameplay | AI character-specific special move decision tree |
 | `0x004061a0` | [`gameplay/func_004061a0_is_between.c`](gameplay/func_004061a0_is_between.c) | Gameplay | 1D interval coordinate betweenness test |
 | `0x004061d0` | [`gameplay/func_004061d0_object_init.c`](gameplay/func_004061d0_object_init.c) | Gameplay | Entity constructor & default state initialization |
-| `0x004064d0` | [`gameplay/func_004064d0_firzen_fusion.c`](gameplay/func_004064d0_firzen_fusion.c) | Gameplay | Grapple caught-target coordinate sync & throw release |
-| `0x00406a20` | [`gameplay/func_00406a20_opoint_spawn.c`](gameplay/func_00406a20_opoint_spawn.c) | Gameplay | Opoint projectile & particle effect spawner |
-| `0x00406ba0` | [`gameplay/func_00406ba0_hit_fa_chase.c`](gameplay/func_00406ba0_hit_fa_chase.c) | Gameplay | AI combat decision tree & homing projectile physics |
-| `0x00408cb0` | [`gameplay/func_00408cb0_ai_weapon_decision.c`](gameplay/func_00408cb0_ai_weapon_decision.c) | Gameplay | Weapon attachment point sync, drop & throw physics |
+| `0x004064d0` | [`gameplay/func_004064d0_firzen_fusion.c`](gameplay/func_004064d0_firzen_fusion.c) | Gameplay | Firen + Freeze -> Firzen fusion collision check & transformation |
+| `0x00406a20` | [`gameplay/func_00406a20_opoint_spawn.c`](gameplay/func_00406a20_opoint_spawn.c) | Gameplay | Dynamic world object, projectile & particle spawner (slots 50..399) |
+| `0x00406ba0` | [`gameplay/func_00406ba0_hit_fa_chase.c`](gameplay/func_00406ba0_hit_fa_chase.c) | Gameplay | `hit_Fa` homing projectile & chase physics |
+| `0x00408cb0` | [`gameplay/func_00408cb0_ai_weapon_decision.c`](gameplay/func_00408cb0_ai_weapon_decision.c) | Gameplay | AI weapon pickup, throw & drink decision helper |
 | `0x004094b0` | [`gameplay/func_004094b0_ai_controller.c`](gameplay/func_004094b0_ai_controller.c) | Gameplay | Primary AI controller, target acquisition & state machine |
 | `0x0040bbf0` | [`data/func_0040bbf0_frame_ctor.c`](data/func_0040bbf0_frame_ctor.c) | Data | Frame structure constructor & zeroing |
 | `0x0040be70` | [`data/func_0040be70_calc_frame_coords.c`](data/func_0040be70_calc_frame_coords.c) | Data | Sprite sheet UV cell coordinate calculator |
 | `0x0040d0a0` | [`data/func_0040d0a0_save_dat.c`](data/func_0040d0a0_save_dat.c) | Data | Character .dat file serializer |
 | `0x0040de30` | [`graphics/func_0040de30_draw_entity.c`](graphics/func_0040de30_draw_entity.c) | Graphics | Sprite entity rendering, facing flip & palette blit |
+| `0x0040e2d0` | [`gameplay/func_0040e2d0_frame_transition.c`](gameplay/func_0040e2d0_frame_transition.c) | Gameplay | Frame transition, MP cost deduction & hit-state reset helper |
+| `0x0040e450` | [`gameplay/func_0040e450_input_history_push.c`](gameplay/func_0040e450_input_history_push.c) | Gameplay | 5-entry object input history shift register (`+0x408..+0x418`) |
+| `0x0040e490` | [`gameplay/func_0040e490_object_physics_tick.c`](gameplay/func_0040e490_object_physics_tick.c) | Gameplay | Per-object physics, velocity integration, gravity, landing & opoint tick |
 | `0x0040ef70` | [`data/func_0040ef70_load_dat.c`](data/func_0040ef70_load_dat.c) | Data | Master .dat script lexer & block parser |
+| `0x00413080` | [`gameplay/func_00413080_object_input_tick.c`](gameplay/func_00413080_object_input_tick.c) | Gameplay | Master per-object input/state tick & combo recognizer dispatcher |
 | `0x004143d0` | [`data/func_004143d0_file_ctor.c`](data/func_004143d0_file_ctor.c) | Data | Character file data structure constructor |
 | `0x004146b0` | [`data/func_004146b0_encrypt_dat.c`](data/func_004146b0_encrypt_dat.c) | Data | Character .dat encryption cipher serializer |
 | `0x004148a0` | [`data/func_004148a0_decrypt_dat.c`](data/func_004148a0_decrypt_dat.c) | Data | 123-byte header skip & Vigenère cipher decrypter |
 | `0x00414a30` | [`data/func_00414a30_decrypt_dat_to_file.c`](data/func_00414a30_decrypt_dat_to_file.c) | Data | Decrypted .dat file exporter |
-| `0x00414b70` | [`data/func_00414b70_stage_dat_loader.c`](data/func_00414b70_stage_dat_loader.c) | Data | Stage background .dat definition parser |
+| `0x00414b70` | [`data/func_00414b70_stage_dat_loader.c`](data/func_00414b70_stage_dat_loader.c) | Data | Interactive .dat encrypt/decrypt CLI tool ("Doing what ('E'=encrp, 'D'=decrp)?", `helpme`) |
 | `0x004151d0` | [`graphics/func_004151d0_frame_debugger.c`](graphics/func_004151d0_frame_debugger.c) | Graphics | Frame debugger HUD, sprite rendering dispatch & box overlay |
 | `0x00416fb0` | [`audio/func_00416fb0_sound_pan_calc_1.c`](audio/func_00416fb0_sound_pan_calc_1.c) | Audio | Positional audio panning calculator pass 1 |
 | `0x00417090` | [`audio/func_00417090_sound_pan_calc_2.c`](audio/func_00417090_sound_pan_calc_2.c) | Audio | Positional audio panning calculator pass 2 |
 | `0x00417170` | [`core/func_00417170_random.c`](core/func_00417170_random.c) | Core | 3,000-byte precomputed circular PRNG lookup |
 | `0x004171c0` | [`core/func_004171c0_overlap.c`](core/func_004171c0_overlap.c) | Core | 1D coordinate interval overlap detector |
+| `0x00417200` | [`gameplay/func_00417200_broadphase_overlap.c`](gameplay/func_00417200_broadphase_overlap.c) | Gameplay | Broad-phase `itr` vs `bdy` 2D bounding box overlap pre-check |
 | `0x00417400` | [`gameplay/func_00417400_does_attack_success.c`](gameplay/func_00417400_does_attack_success.c) | Gameplay | 3D AABB hitbox intersection testing (itr vs bdy) |
 | `0x00417f80` | [`gameplay/func_00417f80_wpoint_process.c`](gameplay/func_00417f80_wpoint_process.c) | Gameplay | Held weapon wpoint anchor synchronization |
 | `0x004187b0` | [`gameplay/func_004187b0_cpoint_process.c`](gameplay/func_004187b0_cpoint_process.c) | Gameplay | Grapple cpoint caught anchor synchronization |
 | `0x00418c30` | [`gameplay/func_00418c30_cpoint_chain.c`](gameplay/func_00418c30_cpoint_chain.c) | Gameplay | Grapple cpoint throw release & damage chaining |
-| `0x00419380` | [`gameplay/func_00419380_entity_tick.c`](gameplay/func_00419380_entity_tick.c) | Gameplay | Entity frame tick, wait counter & state advancement |
+| `0x00419380` | [`gameplay/func_00419380_entity_tick.c`](gameplay/func_00419380_entity_tick.c) | Gameplay | Master 400x400 pairwise collision pass & rest-timer reset |
 | `0x004196f0` | [`gameplay/func_004196f0_velocity_average.c`](gameplay/func_004196f0_velocity_average.c) | Gameplay | Physics velocity/impulse averaging pass across 400 objects |
 | `0x004197a0` | [`gameplay/func_004197a0_input_unpack_net.c`](gameplay/func_004197a0_input_unpack_net.c) | Gameplay | Remote/network input bits unpacking & flag latching |
 | `0x004198f0` | [`gameplay/func_004198f0_input_latch_local.c`](gameplay/func_004198f0_input_latch_local.c) | Gameplay | Local player input bits latching & replay recording |
@@ -98,6 +103,7 @@ For a buildable C target with all synthetic types, calling convention shims, and
 | `0x0041a5a0` | [`graphics/func_0041a5a0_render_scene.c`](graphics/func_0041a5a0_render_scene.c) | Graphics | Master scene rendering dispatcher & Z-sorting pass |
 | `0x0041ae60` | [`graphics/func_0041ae60_render_hud_bars.c`](graphics/func_0041ae60_render_hud_bars.c) | Graphics | In-game HUD HP/MP gauge bar renderer |
 | `0x0041b130` | [`graphics/func_0041b130_render_hud_status.c`](graphics/func_0041b130_render_hud_status.c) | Graphics | In-game HUD player status & score renderer |
+| `0x0041b5d0` | [`gameplay/func_0041b5d0_camera_stage_bounds.c`](gameplay/func_0041b5d0_camera_stage_bounds.c) | Gameplay | Stage camera bounds, phase scroll lock & enemy wave spawner |
 | `0x0041bc90` | [`net/func_0041bc90_battle_main_loop.c`](net/func_0041bc90_battle_main_loop.c) | Network | Master battle main loop, lockstep frame pacing & input sampling |
 | `0x00422ac0` | [`core/func_00422ac0_prng_seed.c`](core/func_00422ac0_prng_seed.c) | Core | PRNG lookup table re-seed & linear congruential init |
 | `0x00422b00` | [`app/func_00422b00_key_name.c`](app/func_00422b00_key_name.c) | App | Virtual Key to text name translation & width adjust |

@@ -16,7 +16,7 @@ lifted/
 │   ├── gameplay/       # Combat dispatcher, hitbox intersection, AI, weapons
 │   ├── graphics/       # Software renderer, parallax background, embedded UI
 │   └── net/            # Lockstep network synchronization & packets
-├── tests/              # 14 comprehensive unit test suites
+├── tests/              # 16 comprehensive unit test suites
 ├── tools/              # Embedded UI asset generation pipeline
 ├── third_party/        # Self-contained MinGW-w64 SDL2 development headers & libraries
 ├── data/               # UI source assets and control configuration
@@ -33,7 +33,7 @@ From within the `lifted/` directory (or from the repository root via `-C lifted`
 # Build the modern game executable (build/lf2.exe)
 mingw32-make -C lifted
 
-# Run all 14 unit test suites and the 30-frame verification test (15 tests total)
+# Run all 16 unit test suites and the 30-frame verification test (17 tests total)
 mingw32-make -C lifted test
 
 # Clean all build artifacts
