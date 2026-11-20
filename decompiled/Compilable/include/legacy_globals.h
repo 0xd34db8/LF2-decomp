@@ -420,6 +420,8 @@ extern int   DAT_0044f610;
 extern int   DAT_0044f614;
 extern int   DAT_0044f618;
 extern int   DAT_0044f61c;
+extern int   lf2_bg_zmin;
+extern int   lf2_bg_zmax;
 
 #ifdef __cplusplus
 }

@@ -376,6 +376,8 @@ int   DAT_0044f610 = 0;
 int   DAT_0044f614 = 0;
 int   DAT_0044f618 = 0;
 int   DAT_0044f61c = 0;
+int   lf2_bg_zmin = 0;
+int   lf2_bg_zmax = 400;
 
 void FUN_00401290(const char *msg) {
     (void)msg;

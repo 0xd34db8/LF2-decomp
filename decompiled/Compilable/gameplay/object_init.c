@@ -57,7 +57,7 @@ void lf2_object_init(object_t *obj)
     obj->team = 0;
 
     // AI target defaults (0x3F8 - 0x400)
-    *((int32_t *)&obj->ai_target_x - 1) = -1;
+    obj->chase_target = -1;
     obj->ai_target_x = -1000;
     obj->ai_target_z = -1000;
 }

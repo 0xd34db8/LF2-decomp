@@ -527,7 +527,10 @@ typedef struct object {
                     int32_t reserve;          // 0x0D8
                     int32_t curing_speed;     // 0x0DC
                     int32_t curing_hp;        // 0x0E0
-                    int32_t additional_y;     // 0x0E4
+                    union {
+                        int32_t additional_y; // 0x0E4
+                        int32_t heal_timer;   // 0x0E4 (Jan healing angel timer)
+                    };
                 };
                 uint32_t    _unknown15[4];    // 0x0D8 - 0x0E8
             };
@@ -611,7 +614,10 @@ typedef struct object {
     int32_t         chase_target;             // 0x3F8
     int32_t         ai_target_x;              // 0x3FC
     int32_t         ai_target_z;              // 0x400
-    uint32_t        ai_vars_tail;             // 0x404
+    union {
+        uint32_t    ai_vars_tail;             // 0x404
+        int32_t     follow_order;             // 0x404 (Stage/Battle stay/follow order flag)
+    };
     int32_t         input_history[5];         // 0x408 - 0x41C
     uint32_t        _pad_41c;                 // 0x41C - 0x420 (8-byte alignment)
 } object_t;

@@ -722,6 +722,194 @@ void test_phase21_22_pipeline()
     std::cout << "    All Phase 21 & 22 functions (15/15) verified 100%!" << std::endl;
 }
 
+void test_phase20_opoint_and_hit_fa()
+{
+    std::cout << "[+] Testing Phase 20 opoint spawner (0x406A20) & hit_Fa physics (0x406BA0)..." << std::endl;
+    global_t world;
+    std::memset(&world, 0, sizeof(world));
+
+    file_t john_file{}, dennis_file{}, stick_file{}, firen_flame_file{}, firzen_chasef_file{},
+           firzen_chasei_file{}, freeze_col_file{}, bat_chase_file{}, jball_file{},
+           jan_chaseh_file{}, jan_chase_file{};
+    john_file.id = JOHN_DAT; john_file.type = TYPE_CHARACTER;
+    dennis_file.id = DENNIS_DAT; dennis_file.type = TYPE_CHARACTER;
+    stick_file.id = STICK_DAT; stick_file.type = 1; stick_file.weapon_hp = 77;
+    firen_flame_file.id = FIREN_FLAME_DAT; firen_flame_file.type = 3;
+    firzen_chasef_file.id = FIRZEN_CHASEF_DAT; firzen_chasef_file.type = 3;
+    firzen_chasei_file.id = FIRZEN_CHASEI_DAT; firzen_chasei_file.type = 3;
+    freeze_col_file.id = FREEZE_COLUMN_DAT; freeze_col_file.type = 3;
+    bat_chase_file.id = BAT_CHASE_DAT; bat_chase_file.type = 3;
+    jball_file.id = JULIAN_BALL_DAT; jball_file.type = 3;
+    jan_chaseh_file.id = JAN_CHASEH_DAT; jan_chaseh_file.type = 3;
+    jan_chase_file.id = JAN_CHASE_DAT; jan_chase_file.type = 3;
+
+    world.files[0] = &john_file;
+    world.files[1] = &dennis_file;
+    world.files[2] = &stick_file;
+    world.files[3] = &firen_flame_file;
+    world.files[4] = &firzen_chasef_file;
+    world.files[5] = &firzen_chasei_file;
+    world.files[6] = &freeze_col_file;
+    world.files[7] = &bat_chase_file;
+    world.files[8] = &jball_file;
+    world.files[9] = &jan_chaseh_file;
+    world.files[10] = &jan_chase_file;
+
+    object_t p0, e1;
+    object_init(&p0); p0.file = &john_file; p0.team = 1; p0.hp = 500;
+    p0.x = 200; p0.y = 0; p0.z = 200; p0.x_position = 200.0; p0.z_position = 200.0;
+    world.objects[0] = &p0; world.is_object_exists[0] = 1;
+
+    object_init(&e1); e1.file = &dennis_file; e1.team = 2; e1.hp = 500;
+    e1.x = 500; e1.y = 0; e1.z = 220; e1.x_position = 500.0; e1.z_position = 220.0;
+    world.objects[1] = &e1; world.is_object_exists[1] = 1;
+
+    // 1. object_spawn_opoint (0x406A20)
+    int32_t s = object_spawn_opoint(&world, STICK_DAT, 0, 12, 1, 350, -10, 210, 3.5, -1.0, 0.25, FACING_LEFT);
+    assert(s == 50);
+    assert(world.is_object_exists[50] == 1);
+    assert(world.objects[50]->chase_target == -1 && world.objects[50]->weapon_hp == 77);
+    assert(world.objects[50]->x == 350 && world.objects[50]->y == -10 && world.objects[50]->z == 210);
+    assert(world.objects[50]->x_velocity == 3.5 && world.objects[50]->facing == FACING_LEFT);
+    world.is_object_exists[50] = 0;
+
+    // 2. hit_Fa == 11: 14 volcano flames + self removed
+    firen_flame_file.frames[1].hit_Fa = 11;
+    object_init(world.objects[50]);
+    world.objects[50]->file = &firen_flame_file; world.objects[50]->frame_id1 = 1;
+    world.objects[50]->team = 1; world.objects[50]->x = 300; world.objects[50]->y = 0; world.objects[50]->z = 200;
+    world.is_object_exists[50] = 1;
+    object_process_hit_fa(&world, 50);
+    assert(world.is_object_exists[50] == 0);
+    int volcano_count = 0;
+    for (int32_t i = 51; i <= 64; ++i) {
+        if (world.is_object_exists[i] == 1) volcano_count++;
+        world.is_object_exists[i] = 0;
+    }
+    assert(volcano_count == 14);
+    firen_flame_file.frames[1].hit_Fa = 0;
+
+    // 3. hit_Fa == 8: Bat multi-seeker
+    bat_chase_file.frames[2].hit_Fa = 8;
+    object_init(world.objects[50]);
+    world.objects[50]->file = &bat_chase_file; world.objects[50]->frame_id1 = 2; world.objects[50]->team = 1;
+    world.is_object_exists[50] = 1;
+    object_process_hit_fa(&world, 50);
+    assert(world.is_object_exists[50] == 0);
+    int bat_count = 0;
+    for (int32_t i = 51; i < 60; ++i) {
+        if (world.is_object_exists[i] == 1) {
+            assert(world.objects[i]->file->id == BAT_CHASE_DAT);
+            assert(world.objects[i]->chase_target == 1);
+            bat_count++;
+            world.is_object_exists[i] = 0;
+        }
+    }
+    assert(bat_count == 3);
+    bat_chase_file.frames[2].hit_Fa = 0;
+
+    // 4. hit_Fa == 13 (Julian seeker), 5 (Jan heal spawner), 6 (Jan chase spawner), 9 (Firzen disaster)
+    jball_file.frames[2].hit_Fa = 13;
+    object_init(world.objects[50]);
+    world.objects[50]->file = &jball_file; world.objects[50]->frame_id1 = 2; world.objects[50]->team = 1;
+    world.is_object_exists[50] = 1;
+    object_process_hit_fa(&world, 50);
+    assert(world.is_object_exists[50] == 0 && world.is_object_exists[51] == 1 && world.objects[51]->chase_target == 1);
+    world.is_object_exists[51] = 0;
+    jball_file.frames[2].hit_Fa = 0;
+
+    jan_chaseh_file.frames[1].hit_Fa = 5;
+    world.objects[50]->file = &jan_chaseh_file; world.objects[50]->frame_id1 = 1;
+    world.is_object_exists[50] = 1;
+    object_process_hit_fa(&world, 50);
+    assert(world.is_object_exists[50] == 0 && world.is_object_exists[51] == 1 && world.objects[51]->chase_target == 0);
+    world.is_object_exists[51] = 0;
+    jan_chaseh_file.frames[1].hit_Fa = 0;
+
+    jan_chase_file.frames[1].hit_Fa = 6;
+    world.objects[50]->file = &jan_chase_file; world.objects[50]->frame_id1 = 1;
+    world.is_object_exists[50] = 1;
+    object_process_hit_fa(&world, 50);
+    assert(world.is_object_exists[50] == 0 && world.is_object_exists[51] == 1 && world.objects[51]->chase_target == 1);
+    world.is_object_exists[51] = 0;
+    jan_chase_file.frames[1].hit_Fa = 0;
+
+    firzen_chasef_file.frames[1].hit_Fa = 9;
+    world.objects[50]->file = &firzen_chasef_file; world.objects[50]->frame_id1 = 1;
+    world.is_object_exists[50] = 1;
+    object_process_hit_fa(&world, 50);
+    assert(world.is_object_exists[50] == 0);
+    int dis_cnt = 0;
+    for (int32_t i = 51; i < 65; ++i) {
+        if (world.is_object_exists[i] == 1) { dis_cnt++; world.is_object_exists[i] = 0; }
+    }
+    assert(dis_cnt == 4);
+    firzen_chasef_file.frames[1].hit_Fa = 0;
+
+    // 5. hit_Fa == 4: heal angel contact sets heal_timer = 100
+    jan_chaseh_file.frames[2].hit_Fa = 4;
+    object_init(world.objects[50]);
+    world.objects[50]->file = &jan_chaseh_file; world.objects[50]->frame_id1 = 2;
+    world.objects[50]->chase_target = 0;
+    world.objects[50]->x = 200; world.objects[50]->y = -20; world.objects[50]->z = 200;
+    world.is_object_exists[50] = 1;
+    p0.heal_timer = 0;
+    object_process_hit_fa(&world, 50);
+    assert(world.objects[50]->frame_id1 == 60 && p0.heal_timer == 100);
+    world.is_object_exists[50] = 0;
+    jan_chaseh_file.frames[2].hit_Fa = 0;
+
+    // 6. hit_Fa == 7 (meteor trail + explosion), 10 (accel clamp), 2/14 (speed frames), 1/3 (homing)
+    firzen_chasef_file.frames[3].hit_Fa = 7;
+    object_init(world.objects[50]);
+    world.objects[50]->file = &firzen_chasef_file; world.objects[50]->frame_id1 = 3;
+    world.objects[50]->team = 1; world.objects[50]->chase_target = 1;
+    world.objects[50]->x = 250; world.objects[50]->y = -10; world.objects[50]->z = 200;
+    world.is_object_exists[50] = 1;
+    object_process_hit_fa(&world, 50);
+    assert(world.is_object_exists[51] == 1 && world.objects[51]->frame_id1 == 40);
+    assert(world.objects[50]->frame_id1 == 60 && world.objects[50]->x_velocity == 0.0);
+    world.is_object_exists[50] = 0; world.is_object_exists[51] = 0;
+    firzen_chasef_file.frames[3].hit_Fa = 0;
+
+    firen_flame_file.frames[3].hit_Fa = 10;
+    object_init(world.objects[50]);
+    world.objects[50]->file = &firen_flame_file; world.objects[50]->frame_id1 = 3;
+    world.objects[50]->team = 1; world.objects[50]->x_velocity = 29.5;
+    world.is_object_exists[50] = 1;
+    object_process_hit_fa(&world, 50);
+    assert(world.objects[50]->x_velocity == 30.0 && world.objects[50]->facing == FACING_RIGHT);
+    world.is_object_exists[50] = 0;
+    firen_flame_file.frames[3].hit_Fa = 0;
+
+    jan_chase_file.frames[3].hit_Fa = 14;
+    object_init(world.objects[50]);
+    world.objects[50]->file = &jan_chase_file; world.objects[50]->frame_id1 = 3;
+    world.objects[50]->team = 1; world.objects[50]->chase_target = 1;
+    world.objects[50]->x_velocity = 4.0; world.objects[50]->y_position = 3.0;
+    world.is_object_exists[50] = 1;
+    object_process_hit_fa(&world, 50);
+    assert(world.objects[50]->frame_id1 == 53 && world.objects[50]->y_position == 1.4);
+    jan_chase_file.frames[3].hit_Fa = 2;
+    world.objects[50]->frame_id1 = 3; world.objects[50]->x_velocity = 11.0;
+    object_process_hit_fa(&world, 50);
+    assert(world.objects[50]->frame_id1 == 3);
+    world.objects[50]->frame_id1 = 53;
+    jan_chase_file.frames[53].hit_Fa = 1;
+    world.objects[50]->x = 200; world.objects[50]->x_velocity = 0.0;
+    object_process_hit_fa(&world, 50);
+    assert(world.objects[50]->x_velocity == 0.85 && world.objects[50]->facing == FACING_RIGHT);
+    jan_chase_file.frames[3].hit_Fa = 0;
+    jan_chase_file.frames[53].hit_Fa = 0;
+
+    for (uint32_t i = 50; i < MAX_OBJECTS; ++i) {
+        delete world.objects[i];
+        world.objects[i] = nullptr;
+    }
+
+    std::cout << "    Phase 20 opoint spawner (0x406A20) & all hit_Fa modes (1..14) verified 100%!" << std::endl;
+}
+
 int main()
 {
     std::cout << "=== Little Fighter 2 Entity Physics & State Machine Tests ===" << std::endl;
@@ -732,6 +920,7 @@ int main()
     test_frame_progression();
     test_input_state_machine();
     test_phase20_entity_core();
+    test_phase20_opoint_and_hit_fa();
     test_phase21_22_pipeline();
     std::cout << "[SUCCESS] All Entity Physics & Lifecycle tests passed with 100% precision!" << std::endl;
     return 0;

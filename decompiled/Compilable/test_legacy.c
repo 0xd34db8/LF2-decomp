@@ -881,6 +881,400 @@ int main() {
         printf("    [PASS] Phase 21 Weapon Sync, Cpoint Grapple/Chain, and Firzen Fusion verified!\n");
     }
 
+    // =========================================================================
+    // Test 16: Phase 20 AI Controller, opoint Spawner, hit_Fa & Weapon Decisions
+    // =========================================================================
+    printf("[16] Testing Phase 20 opoint Spawner (0x406A20), hit_Fa (0x406BA0), Weapon AI (0x408CB0), Specials (0x403A40), Dodge (0x4034F0) & AI Core (0x4094B0)...\n");
+    {
+        global_t *g16 = (global_t *)calloc(1, sizeof(global_t));
+        void *prev_ecx16 = in_ECX;
+        in_ECX = g16;
+
+        // Save globals touched by AI functions
+        int saved_c2c = DAT_00450c2c;
+        int saved_c30 = DAT_00450c30;
+        int saved_bb4 = DAT_00450bb4;
+        int saved_bac = DAT_00450bac;
+        int saved_zmin = lf2_bg_zmin;
+        int saved_zmax = lf2_bg_zmax;
+        int saved_bcc = DAT_00450bcc;
+        int saved_c34 = DAT_00450c34;
+
+        for (int s = 0; s < MAX_OBJECTS; ++s) {
+            g16->objects[s] = (object_t *)calloc(1, sizeof(object_t));
+            lf2_object_init(g16->objects[s]);
+        }
+
+        // Helper macro-like local file allocation for IDs used across tests
+        file_t *files16[24] = {0};
+        const int fids16[24] = {
+            ID_JOHN_DAT, ID_DEEP_DAT, ID_HENRY_DAT, ID_FIREN_DAT, ID_FREEZE_DAT,
+            ID_DENNIS_DAT, ID_WOODY_DAT, ID_DAVIS_DAT, ID_MARK_DAT, ID_JAN_DAT,
+            ID_BAT_DAT, ID_FIRZEN_DAT, ID_JULIAN_DAT, ID_SORCERER_DAT,
+            ID_STICK_DAT, ID_MILK_DAT, ID_BOOMERANG_DAT, ID_STONE_DAT,
+            ID_JOHN_BALL_DAT, ID_FIREN_FLAME_DAT, ID_FREEZE_COLUMN_DAT,
+            ID_JAN_CHASEH_DAT, ID_JAN_CHASE_DAT, ID_BAT_CHASE_DAT
+        };
+        file_t *f_chasef = (file_t *)calloc(1, sizeof(file_t));
+        f_chasef->id = ID_FIRZEN_CHASEF_DAT;
+        f_chasef->type = 3;
+        file_t *f_chasei = (file_t *)calloc(1, sizeof(file_t));
+        f_chasei->id = ID_FIRZEN_CHASEF_DAT + 1;
+        f_chasei->type = 3;
+        file_t *f_jball = (file_t *)calloc(1, sizeof(file_t));
+        f_jball->id = ID_JULIAN_BALL_DAT;
+        f_jball->type = 3;
+
+        for (int i = 0; i < 24; ++i) {
+            files16[i] = (file_t *)calloc(1, sizeof(file_t));
+            files16[i]->id = (uint32_t)fids16[i];
+            if (fids16[i] < 100) files16[i]->type = TYPE_CHARACTER;
+            else if (fids16[i] < 200) files16[i]->type = (fids16[i] == ID_STONE_DAT) ? 4 : 1;
+            else files16[i]->type = 3;
+            g16->files[i] = files16[i];
+        }
+        g16->files[24] = f_chasef;
+        g16->files[25] = f_chasei;
+        g16->files[26] = f_jball;
+        files16[14]->weapon_hp = 85; // STICK_DAT weapon_hp
+
+        // File lookup helper indices matching files16 array above:
+        // 0:JOHN 1:DEEP 2:HENRY 3:FIREN 4:FREEZE 5:DENNIS 6:WOODY 7:DAVIS 8:MARK 9:JAN
+        // 10:BAT 11:FIRZEN 12:JULIAN 13:SORCERER 14:STICK 15:MILK 16:BOOMERANG 17:STONE
+        // 18:JOHN_BALL 19:FIREN_FLAME 20:FREEZE_COLUMN 21:JAN_CHASEH 22:JAN_CHASE 23:BAT_CHASE
+
+        // 16A. FUN_00406a20 (0x00406A20 opoint spawner)
+        int sp_slot = FUN_00406a20(ID_STICK_DAT, 2, 10, 1, 320, -15, 220, 4.5, -2.0, 0.5, FACING_LEFT);
+        assert(sp_slot == 50);
+        assert(g16->is_object_exists[50] == 1);
+        assert(g16->objects[50]->file == files16[14]);
+        assert(g16->objects[50]->owner == 2 && g16->objects[50]->team == 1);
+        assert(g16->objects[50]->chase_target == -1 && g16->objects[50]->weapon_hp == 85);
+        assert(g16->objects[50]->x == 320 && g16->objects[50]->y == -15 && g16->objects[50]->z == 220);
+        assert(g16->objects[50]->x_velocity == 4.5 && g16->objects[50]->facing == FACING_LEFT);
+        g16->is_object_exists[50] = 0;
+
+        // 16B. FUN_00406ba0 (0x00406BA0 hit_Fa modes 1..14)
+        lf2_object_init(g16->objects[0]);
+        g16->objects[0]->file = files16[0]; g16->objects[0]->team = 1; g16->objects[0]->hp = 500;
+        g16->objects[0]->x = 200; g16->objects[0]->y = 0; g16->objects[0]->z = 200;
+        g16->objects[0]->x_position = 200.0; g16->objects[0]->z_position = 200.0;
+        g16->is_object_exists[0] = 1;
+
+        lf2_object_init(g16->objects[1]);
+        g16->objects[1]->file = files16[5]; g16->objects[1]->team = 2; g16->objects[1]->hp = 500;
+        g16->objects[1]->x = 500; g16->objects[1]->y = 0; g16->objects[1]->z = 220;
+        g16->objects[1]->x_position = 500.0; g16->objects[1]->z_position = 220.0;
+        g16->is_object_exists[1] = 1;
+
+        // hit_Fa == 11: Firzen Artic Volcano (14 child spawns + self removed)
+        files16[19]->frames[1].hit_Fa = 11;
+        lf2_object_init(g16->objects[50]);
+        g16->objects[50]->file = files16[19]; g16->objects[50]->frame_id1 = 1;
+        g16->objects[50]->owner = 0; g16->objects[50]->team = 1;
+        g16->objects[50]->x = 300; g16->objects[50]->y = 0; g16->objects[50]->z = 200;
+        g16->is_object_exists[50] = 1;
+        FUN_00406ba0(50);
+        assert(g16->is_object_exists[50] == 0);
+        int volcano_children = 0;
+        for (int s = 51; s <= 64; ++s) {
+            if (g16->is_object_exists[s] == 1) volcano_children++;
+            g16->is_object_exists[s] = 0;
+        }
+        assert(volcano_children == 14);
+        files16[19]->frames[1].hit_Fa = 0;
+
+        // hit_Fa == 8: Bat multi-seeker (3 with 1 enemy, (5-3)/2+3 = 4 with 5 enemies)
+        files16[23]->frames[2].hit_Fa = 8;
+        lf2_object_init(g16->objects[50]);
+        g16->objects[50]->file = files16[23]; g16->objects[50]->frame_id1 = 2;
+        g16->objects[50]->team = 1; g16->objects[50]->x = 220; g16->objects[50]->z = 200;
+        g16->is_object_exists[50] = 1;
+        FUN_00406ba0(50);
+        assert(g16->is_object_exists[50] == 0);
+        int bat_count = 0;
+        for (int s = 51; s < 60; ++s) {
+            if (g16->is_object_exists[s] == 1) {
+                assert(g16->objects[s]->file->id == ID_BAT_CHASE_DAT);
+                assert(g16->objects[s]->chase_target == 1);
+                bat_count++;
+                g16->is_object_exists[s] = 0;
+            }
+        }
+        assert(bat_count == 3);
+        for (int e = 2; e <= 5; ++e) {
+            lf2_object_init(g16->objects[e]);
+            g16->objects[e]->file = files16[5]; g16->objects[e]->team = 2; g16->objects[e]->hp = 400;
+            g16->is_object_exists[e] = 1;
+        }
+        g16->is_object_exists[50] = 1;
+        FUN_00406ba0(50);
+        int bat_count5 = 0;
+        for (int s = 51; s < 65; ++s) {
+            if (g16->is_object_exists[s] == 1) { bat_count5++; g16->is_object_exists[s] = 0; }
+        }
+        assert(bat_count5 == 4);
+        for (int e = 2; e <= 5; ++e) g16->is_object_exists[e] = 0;
+        files16[23]->frames[2].hit_Fa = 0;
+
+        // hit_Fa == 13: Julian Big Bang seeker spawn
+        f_jball->frames[2].hit_Fa = 13;
+        lf2_object_init(g16->objects[50]);
+        g16->objects[50]->file = f_jball; g16->objects[50]->frame_id1 = 2;
+        g16->objects[50]->team = 1; g16->objects[50]->x_velocity = 5.0;
+        g16->is_object_exists[50] = 1;
+        FUN_00406ba0(50);
+        assert(g16->is_object_exists[50] == 0 && g16->is_object_exists[51] == 1);
+        assert(g16->objects[51]->file->id == ID_JULIAN_BALL_DAT && g16->objects[51]->chase_target == 1);
+        g16->is_object_exists[51] = 0;
+        f_jball->frames[2].hit_Fa = 0;
+
+        // hit_Fa == 5 (Jan heal), 6 (Jan chase), 9 (Firzen disaster)
+        files16[21]->frames[1].hit_Fa = 5;
+        lf2_object_init(g16->objects[50]);
+        g16->objects[50]->file = files16[21]; g16->objects[50]->frame_id1 = 1; g16->objects[50]->team = 1;
+        g16->is_object_exists[50] = 1;
+        FUN_00406ba0(50);
+        assert(g16->is_object_exists[50] == 0 && g16->is_object_exists[51] == 1);
+        assert(g16->objects[51]->file->id == ID_JAN_CHASEH_DAT && g16->objects[51]->chase_target == 0);
+        g16->is_object_exists[51] = 0;
+        files16[21]->frames[1].hit_Fa = 0;
+
+        files16[22]->frames[1].hit_Fa = 6;
+        g16->is_object_exists[50] = 1;
+        g16->objects[50]->file = files16[22]; g16->objects[50]->frame_id1 = 1;
+        FUN_00406ba0(50);
+        assert(g16->is_object_exists[50] == 0 && g16->is_object_exists[51] == 1);
+        assert(g16->objects[51]->file->id == ID_JAN_CHASE_DAT && g16->objects[51]->chase_target == 1);
+        g16->is_object_exists[51] = 0;
+        files16[22]->frames[1].hit_Fa = 0;
+
+        f_chasef->frames[1].hit_Fa = 9;
+        g16->is_object_exists[50] = 1;
+        g16->objects[50]->file = f_chasef; g16->objects[50]->frame_id1 = 1; g16->objects[50]->team = 1;
+        FUN_00406ba0(50);
+        assert(g16->is_object_exists[50] == 0);
+        int dis_cnt = 0;
+        for (int s = 51; s < 65; ++s) {
+            if (g16->is_object_exists[s] == 1) {
+                uint32_t sfid = g16->objects[s]->file->id;
+                assert(sfid == ID_FIRZEN_CHASEF_DAT || sfid == ID_FIRZEN_CHASEF_DAT + 1);
+                dis_cnt++;
+                g16->is_object_exists[s] = 0;
+            }
+        }
+        assert(dis_cnt == 4);
+        f_chasef->frames[1].hit_Fa = 0;
+
+        // hit_Fa == 4: Jan heal angel impact sets target->heal_timer = 100
+        files16[21]->frames[2].hit_Fa = 4;
+        lf2_object_init(g16->objects[50]);
+        g16->objects[50]->file = files16[21]; g16->objects[50]->frame_id1 = 2;
+        g16->objects[50]->chase_target = 0;
+        g16->objects[50]->x = 200; g16->objects[50]->y = -20; g16->objects[50]->z = 200;
+        g16->is_object_exists[50] = 1;
+        g16->objects[0]->heal_timer = 0;
+        FUN_00406ba0(50);
+        assert(g16->objects[50]->frame_id1 == 60 && g16->objects[0]->heal_timer == 100);
+        g16->is_object_exists[50] = 0;
+        files16[21]->frames[2].hit_Fa = 0;
+
+        // hit_Fa == 7 (meteor trail + ground impact), 10 (accel clamp), 2/14 (speed frame switch), 1/3 (steer)
+        f_chasef->frames[3].hit_Fa = 7;
+        lf2_object_init(g16->objects[50]);
+        g16->objects[50]->file = f_chasef; g16->objects[50]->frame_id1 = 3;
+        g16->objects[50]->team = 1; g16->objects[50]->chase_target = 1;
+        g16->objects[50]->x = 250; g16->objects[50]->y = -10; g16->objects[50]->z = 200;
+        g16->is_object_exists[50] = 1;
+        FUN_00406ba0(50);
+        assert(g16->is_object_exists[51] == 1 && g16->objects[51]->frame_id1 == 40);
+        assert(g16->objects[50]->frame_id1 == 60 && g16->objects[50]->x_velocity == 0.0);
+        g16->is_object_exists[50] = 0; g16->is_object_exists[51] = 0;
+        f_chasef->frames[3].hit_Fa = 0;
+
+        files16[19]->frames[3].hit_Fa = 10;
+        lf2_object_init(g16->objects[50]);
+        g16->objects[50]->file = files16[19]; g16->objects[50]->frame_id1 = 3;
+        g16->objects[50]->team = 1; g16->objects[50]->x_velocity = 29.5;
+        g16->is_object_exists[50] = 1;
+        FUN_00406ba0(50);
+        assert(g16->objects[50]->x_velocity == 30.0 && g16->objects[50]->facing == FACING_RIGHT);
+        g16->is_object_exists[50] = 0;
+        files16[19]->frames[3].hit_Fa = 0;
+
+        files16[22]->frames[3].hit_Fa = 14;
+        lf2_object_init(g16->objects[50]);
+        g16->objects[50]->file = files16[22]; g16->objects[50]->frame_id1 = 3;
+        g16->objects[50]->team = 1; g16->objects[50]->chase_target = 1;
+        g16->objects[50]->x_velocity = 4.0; g16->objects[50]->y_position = 3.0;
+        g16->is_object_exists[50] = 1;
+        FUN_00406ba0(50);
+        assert(g16->objects[50]->frame_id1 == 53 && g16->objects[50]->y_position == 1.4);
+        files16[22]->frames[3].hit_Fa = 2;
+        g16->objects[50]->frame_id1 = 3; g16->objects[50]->x_velocity = 11.0;
+        FUN_00406ba0(50);
+        assert(g16->objects[50]->frame_id1 == 3);
+        g16->is_object_exists[50] = 0;
+        files16[22]->frames[3].hit_Fa = 0;
+
+        // 16C. FUN_00408cb0 (0x00408CB0 held weapon & drink decisions)
+        DAT_00450c2c = 0; DAT_00450c30 = -1;
+        DAT_0044f60c = 0; DAT_0044f61c = 0; DAT_0044f618 = 0; DAT_0044f614 = 0; DAT_0044f610 = 0;
+        DAT_0044f604 = 800; DAT_0044f608 = 0;
+        lf2_bg_zmin = 0; lf2_bg_zmax = 400;
+
+        lf2_object_init(g16->objects[2]);
+        g16->objects[2]->file = files16[14]; // STICK_DAT
+        g16->objects[2]->x = 200; g16->objects[2]->z = 200;
+        g16->is_object_exists[2] = 1;
+
+        lf2_object_init(g16->objects[3]);
+        g16->objects[3]->file = files16[0]; g16->objects[3]->team = 1; g16->objects[3]->hp = 500;
+        g16->objects[3]->x = 300; g16->objects[3]->z = 200;
+        g16->is_object_exists[3] = 1;
+
+        // Self holding stick, velocity lead target->x - 2*x_velocity = 500 - 20 = 480, dx_lead = 80 < 115
+        g16->objects[0]->weapon_type = 1; g16->objects[0]->weapon_id = 2;
+        g16->objects[0]->x = 400; g16->objects[0]->z = 220; g16->objects[0]->x_velocity = 10.0;
+        g16->objects[1]->x = 500; g16->objects[1]->z = 220; g16->objects[1]->team = 2;
+        int got_w_atk = 0;
+        for (int t = 0; t < 48; ++t) {
+            g16->objects[0]->click_attack = 0;
+            FUN_00408cb0(1, 0, 0, 0, 0, 0);
+            if (g16->objects[0]->click_attack == 1) { got_w_atk = 1; break; }
+        }
+        assert(got_w_atk == 1);
+
+        // ally_in_line check requires target->team == self->team alongside ally->team != 0
+        g16->objects[1]->team = 1; g16->objects[1]->x = 600; g16->objects[1]->z = 200;
+        g16->objects[0]->x = 200; g16->objects[0]->z = 200;
+        g16->objects[3]->x = 400; g16->objects[3]->z = 200;
+        int got_jump_over = 0;
+        for (int t = 0; t < 64; ++t) {
+            g16->objects[0]->click_jump = 0;
+            FUN_00408cb0(1, 0, STATE_RUNNING, 0, 0, 0);
+            if (g16->objects[0]->click_jump == 1) { got_jump_over = 1; break; }
+        }
+        assert(got_jump_over == 1);
+
+        // Milk corner escape & John shield
+        g16->objects[2]->file = files16[15]; // MILK_DAT
+        g16->objects[1]->team = 2;
+        g16->objects[0]->x = 50; g16->objects[0]->z = 200; g16->objects[0]->follow_order = 0;
+        g16->objects[1]->x = 150; g16->objects[1]->z = 200;
+        FUN_00408cb0(1, 0, 0, 0, 0, 0);
+        assert(g16->objects[0]->click_right == 1 && g16->objects[0]->click_up == 1);
+
+        g16->objects[0]->x = 200; g16->objects[0]->z = 200; g16->objects[0]->mp = 300;
+        g16->objects[1]->x = 750; g16->objects[1]->z = 200;
+        int got_shield = 0;
+        for (int t = 0; t < 64; ++t) {
+            g16->objects[0]->click_DRJ = 0;
+            if (FUN_00408cb0(1, 0, 0, 0, 0, 0) == 1 && g16->objects[0]->click_DRJ == 3) {
+                got_shield = 1; break;
+            }
+        }
+        assert(got_shield == 1);
+        g16->is_object_exists[2] = 0; g16->is_object_exists[3] = 0;
+        g16->objects[0]->weapon_type = 0; g16->objects[0]->weapon_id = 0;
+
+        // 16D. FUN_00403a40 (0x00403A40 character specials) + FUN_004034f0 (0x004034F0 dodge)
+        // Firen blaze cancel (deterministic)
+        g16->objects[0]->file = files16[3]; g16->objects[0]->frame_id1 = 257;
+        g16->objects[0]->facing = FACING_RIGHT; g16->objects[0]->x = 400; g16->objects[0]->z = 200;
+        g16->objects[1]->x = 200; g16->objects[1]->z = 200;
+        g16->objects[0]->click_defend = 0;
+        assert(FUN_00403a40(1, 0, 0, 0, 0, 200, 0) == 1 && g16->objects[0]->click_defend == 1);
+
+        // Firzen cannon cancel (deterministic)
+        g16->objects[0]->file = files16[11]; g16->objects[0]->frame_id1 = 270;
+        g16->objects[1]->z = 230; g16->objects[0]->click_defend = 0;
+        assert(FUN_00403a40(1, 0, 0, 0, 0, 200, 0) == 1 && g16->objects[0]->click_defend == 1);
+
+        // Jan ally blessing scan 0..99
+        g16->objects[0]->file = files16[9]; g16->objects[0]->frame_id1 = 0;
+        g16->objects[0]->mp = 300; g16->objects[0]->team = 1;
+        g16->objects[3]->hp = 100; g16->objects[3]->dark_hp = 400; g16->objects[3]->team = 1;
+        g16->is_object_exists[3] = 1;
+        int got_jan_heal = 0;
+        for (int t = 0; t < 48; ++t) {
+            g16->objects[0]->click_DUJ = 0;
+            if (FUN_00403a40(1, 0, 0, 0, 0, 200, 0) == 1 && g16->objects[0]->click_DUJ == 3) {
+                got_jan_heal = 1; break;
+            }
+        }
+        assert(got_jan_heal == 1);
+        g16->is_object_exists[3] = 0;
+
+        // FUN_004034f0 dodge roll on frame 110
+        g16->objects[0]->file = files16[7]; // DAVIS_DAT
+        g16->objects[0]->frame_id1 = 110; g16->objects[0]->facing = FACING_RIGHT;
+        g16->objects[0]->x = 200; g16->objects[0]->z = 200;
+        g16->objects[1]->x = 350; g16->objects[1]->z = 200;
+        g16->objects[0]->click_right = 0; g16->objects[0]->click_attack = 0;
+        assert(FUN_004034f0(1, 0, 0, 0, 0, 0, 0) == 1);
+        assert(g16->objects[0]->click_right == 1 && g16->objects[0]->click_attack == 1);
+
+        // 16E. FUN_004094b0 (0x004094B0 master AI controller)
+        DAT_00450bac = 1; DAT_00450bb4 = 2000;
+        g16->objects[0]->ai_target_x = -1000; g16->objects[0]->blocked_right = 1;
+        FUN_004094b0(0, 1);
+        assert(g16->objects[0]->click_right == 1 && g16->objects[0]->click_attack == 1);
+        DAT_00450bac = 0; g16->objects[0]->blocked_right = 0;
+
+        // Waypoint arrival clears ai_target_x / ai_target_z
+        g16->objects[0]->ai_target_x = 220; g16->objects[0]->ai_target_z = 200;
+        FUN_004094b0(0, 0);
+        assert(g16->objects[0]->ai_target_x == -1000 && g16->objects[0]->ai_target_z == -1000);
+
+        // Defend oncoming flying ball (state 3000)
+        files16[18]->frames[0].state = 3000;
+        lf2_object_init(g16->objects[50]);
+        g16->objects[50]->file = files16[18]; g16->objects[50]->frame_id1 = 0;
+        g16->objects[50]->team = 2; g16->objects[50]->hp = 500;
+        g16->objects[50]->x = 300; g16->objects[50]->z = 200; g16->objects[50]->x_velocity = -10.0;
+        g16->is_object_exists[50] = 1; g16->is_object_exists[1] = 0;
+        g16->objects[0]->x = 200; g16->objects[0]->z = 200; g16->objects[0]->facing = FACING_RIGHT;
+        g16->objects[0]->frame_id1 = 0; g16->objects[0]->click_defend = 0;
+        FUN_004094b0(0, 0);
+        assert(g16->objects[0]->click_defend == 1);
+        g16->is_object_exists[50] = 0; files16[18]->frames[0].state = 0;
+
+        // Firen flame hazard avoidance & no-target cancel
+        files16[19]->frames[0].state = STATE_BURNING;
+        lf2_object_init(g16->objects[50]);
+        g16->objects[50]->file = files16[19]; g16->objects[50]->frame_id1 = 0;
+        g16->objects[50]->x = 240; g16->objects[50]->z = 210;
+        g16->is_object_exists[50] = 1;
+        g16->objects[1]->x = 400; g16->objects[1]->z = 210; g16->is_object_exists[1] = 1;
+        g16->objects[0]->x = 200; g16->objects[0]->z = 200;
+        FUN_004094b0(0, 0);
+        assert(g16->objects[0]->click_down == 1);
+        g16->is_object_exists[50] = 0; g16->is_object_exists[1] = 0; files16[19]->frames[0].state = 0;
+
+        g16->objects[0]->file = files16[3]; g16->objects[0]->frame_id1 = 258;
+        g16->objects[0]->click_defend = 0;
+        FUN_004094b0(0, 0);
+        assert(g16->objects[0]->click_defend == 1);
+
+        // Cleanup and restore globals
+        for (int i = 0; i < 24; ++i) free(files16[i]);
+        free(f_chasef); free(f_chasei); free(f_jball);
+        for (int s = 0; s < MAX_OBJECTS; ++s) free(g16->objects[s]);
+        free(g16);
+
+        DAT_00450c2c = saved_c2c;
+        DAT_00450c30 = saved_c30;
+        DAT_00450bb4 = saved_bb4;
+        DAT_00450bac = saved_bac;
+        lf2_bg_zmin = saved_zmin;
+        lf2_bg_zmax = saved_zmax;
+        DAT_00450bcc = saved_bcc;
+        DAT_00450c34 = saved_c34;
+        in_ECX = prev_ecx16;
+        printf("    [PASS] Phase 20 AI Controller, opoint, hit_Fa, Weapons, Specials & Dodge verified!\n");
+    }
+
     printf("\n[SUCCESS] All Decompiled Compilable Suite Tests Passed with 100%% Parity!\n");
     return 0;
 }

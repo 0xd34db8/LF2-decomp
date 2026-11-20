@@ -1238,6 +1238,20 @@ void app_t::update_battle() {
     }
 
     int32_t unlock_chars = (m_cheat_lf2net == 'd') ? 1 : 0;
+    int32_t z_min = m_stage_loaded ? m_background.zboundary_min : 0;
+    int32_t z_max = m_stage_loaded ? m_background.zboundary_max : 400;
+    int32_t stage_w = m_stage_loaded ? m_background.width : 2000;
+
+    ai_world_params_t ai_params;
+    ai_params.mode = static_cast<int32_t>(m_selected_mode);
+    ai_params.difficulty = 1;
+    ai_params.stage_width = stage_w;
+    ai_params.zboundary_min = z_min;
+    ai_params.zboundary_max = z_max;
+    ai_params.stage_bound = stage_w;
+    ai_params.stage_last_phase = 0;
+    ai_params.random_game = (m_selected_mode == MODE_DEMO);
+    ai_params.unlock_chars = unlock_chars;
 
     // Process inputs for all active fighters (Players 0..3 read their control.txt mappings)
     for (uint32_t i = 0; i < m_num_fighters; ++i) {
@@ -1257,13 +1271,24 @@ void app_t::update_battle() {
 
             object_handle_input(fighter, input, true, unlock_chars);
         } else {
-            ai_tick(&m_world, i, AI_NORMAL);
+            ai_tick(&m_world, i, ai_params);
         }
     }
 
-    int32_t z_min = m_stage_loaded ? m_background.zboundary_min : 0;
-    int32_t z_max = m_stage_loaded ? m_background.zboundary_max : 400;
-    int32_t stage_w = m_stage_loaded ? m_background.width : 2000;
+    // Per-slot AI & hit_Fa dispatch for world objects >= 10 (0x00419A60)
+    for (uint32_t i = 10; i < MAX_OBJECTS; ++i) {
+        if (!m_world.is_object_exists[i]) continue;
+        object_t* obj = m_world.objects[i];
+        if (!obj || !obj->file) continue;
+
+        if (obj->file->type == TYPE_CHARACTER) {
+            if (i >= m_num_fighters || obj != &m_fighters[i]) {
+                ai_tick(&m_world, i, ai_params);
+            }
+        } else if (obj->frame_id1 < MAX_FRAMES && obj->file->frames[obj->frame_id1].hit_Fa > 0) {
+            object_process_hit_fa(&m_world, static_cast<int32_t>(i));
+        }
+    }
 
     double d_z_min = static_cast<double>(z_min);
     double d_z_max = static_cast<double>(z_max);

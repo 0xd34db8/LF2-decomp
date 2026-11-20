@@ -32,6 +32,7 @@ void object_init(object_t* obj)
     obj->owner = -1;                   // 0x354
     obj->enemy = -1;                   // 0x360
 
+    obj->chase_target = -1;            // 0x3F8
     obj->ai_target_x = -1000;          // 0x3FC
     obj->ai_target_z = -1000;          // 0x400
 }
@@ -54,11 +55,16 @@ int32_t object_spawn_opoint(global_t* world, int32_t file_id, int32_t owner, int
     for (uint32_t f = 0; f < MAX_FILES; ++f) {
         file_t* file = world->files[f];
         if (file && static_cast<int32_t>(file->id) == file_id) {
+            if (!world->objects[slot]) {
+                world->objects[slot] = new object_t();
+            }
             object_t* obj = world->objects[slot];
-            if (!obj) return -1;
             object_init(obj);
             obj->file = file;
+            obj->x_position = 580.0;
+            obj->y_position = -200.0;
             obj->weapon_hp = file->weapon_hp;
+            obj->z_position = 300.0;
             obj->owner = owner;
             obj->x = x;
             obj->y = y;
@@ -81,45 +87,362 @@ int32_t object_spawn_opoint(global_t* world, int32_t file_id, int32_t owner, int
 
 void object_process_hit_fa(global_t* world, int32_t obj_idx)
 {
-    if (!world || obj_idx < 0 || obj_idx >= static_cast<int32_t>(MAX_OBJECTS) || !world->is_object_exists[obj_idx]) return;
-    object_t* proj = world->objects[obj_idx];
-    if (!proj || !proj->file || proj->frame_id1 >= MAX_FRAMES) return;
+    if (!world || obj_idx < 0 || obj_idx >= static_cast<int32_t>(MAX_OBJECTS) ||
+        !world->is_object_exists[obj_idx]) {
+        return;
+    }
+    object_t* obj = world->objects[obj_idx];
+    if (!obj || !obj->file || obj->frame_id1 >= MAX_FRAMES) return;
 
-    int32_t hit_fa = static_cast<int32_t>(proj->file->frames[proj->frame_id1].hit_Fa);
-    if (hit_fa == 1 || hit_fa == 2 || hit_fa == 7 || hit_fa == 10 || hit_fa == 13 || hit_fa == 14) {
-        int32_t best_target = -1;
-        int32_t best_dist = 10000;
+    int32_t hit_fa = static_cast<int32_t>(obj->file->frames[obj->frame_id1].hit_Fa);
+    int32_t team_i = static_cast<int32_t>(obj->team);
+
+    if (hit_fa == 11) {
+        object_spawn_opoint(world, FIREN_FLAME_DAT, obj->owner, 109, team_i, obj->x, obj->y, obj->z,
+                            obj->x_velocity, obj->y_velocity, obj->z_velocity, obj->facing);
+        object_spawn_opoint(world, FIRZEN_CHASEF_DAT, obj->owner, 81, team_i, obj->x, obj->y - 100, obj->z,
+                            obj->x_velocity, obj->y_velocity, obj->z_velocity, obj->facing);
+        object_spawn_opoint(world, FREEZE_COLUMN_DAT, obj->owner, 100, team_i, obj->x + 80, obj->y - 3, obj->z,
+                            obj->x_velocity, obj->y_velocity, obj->z_velocity - 7.0, FACING_RIGHT);
+        object_spawn_opoint(world, FREEZE_COLUMN_DAT, obj->owner, 100, team_i, obj->x + 100, obj->y - 3, obj->z,
+                            obj->x_velocity, obj->y_velocity, obj->z_velocity, FACING_RIGHT);
+        object_spawn_opoint(world, FREEZE_COLUMN_DAT, obj->owner, 100, team_i, obj->x + 80, obj->y - 3, obj->z,
+                            obj->x_velocity, obj->y_velocity, obj->z_velocity + 7.0, FACING_RIGHT);
+        object_spawn_opoint(world, FREEZE_COLUMN_DAT, obj->owner, 100, team_i, obj->x - 80, obj->y - 3, obj->z,
+                            obj->x_velocity, obj->y_velocity, obj->z_velocity - 7.0, FACING_LEFT);
+        object_spawn_opoint(world, FREEZE_COLUMN_DAT, obj->owner, 100, team_i, obj->x - 100, obj->y - 3, obj->z,
+                            obj->x_velocity, obj->y_velocity, obj->z_velocity, FACING_LEFT);
+        object_spawn_opoint(world, FREEZE_COLUMN_DAT, obj->owner, 100, team_i, obj->x - 80, obj->y - 3, obj->z,
+                            obj->x_velocity, obj->y_velocity, obj->z_velocity + 7.0, FACING_LEFT);
+        object_spawn_opoint(world, FIREN_FLAME_DAT, obj->owner, 50, team_i, obj->x - 30, obj->y - 1, obj->z - 5,
+                            obj->x_velocity, obj->y_velocity, obj->z_velocity, FACING_LEFT);
+        object_spawn_opoint(world, FIREN_FLAME_DAT, obj->owner, 50, team_i, obj->x + 30, obj->y - 1, obj->z - 5,
+                            obj->x_velocity, obj->y_velocity, obj->z_velocity, FACING_LEFT);
+        object_spawn_opoint(world, FIREN_FLAME_DAT, obj->owner, 50, team_i, obj->x - 30, obj->y - 1, obj->z + 2,
+                            obj->x_velocity, obj->y_velocity, obj->z_velocity, FACING_RIGHT);
+        object_spawn_opoint(world, FIREN_FLAME_DAT, obj->owner, 50, team_i, obj->x + 30, obj->y - 1, obj->z + 2,
+                            obj->x_velocity, obj->y_velocity, obj->z_velocity, FACING_RIGHT);
+        object_spawn_opoint(world, FIREN_FLAME_DAT, obj->owner, 50, team_i, obj->x, obj->y - 1, obj->z - 9,
+                            obj->x_velocity, obj->y_velocity, obj->z_velocity, FACING_LEFT);
+        object_spawn_opoint(world, FIREN_FLAME_DAT, obj->owner, 50, team_i, obj->x, obj->y - 1, obj->z + 6,
+                            obj->x_velocity, obj->y_velocity, obj->z_velocity, FACING_RIGHT);
+        world->is_object_exists[obj_idx] = 0;
+        return;
+    }
+
+    if (hit_fa == 8) {
+        int32_t candidates[MAX_OBJECTS];
+        int32_t cand_count = 0;
         for (int32_t i = 0; i < static_cast<int32_t>(MAX_OBJECTS); ++i) {
-            if (!world->is_object_exists[i]) continue;
-            object_t* cand = world->objects[i];
-            if (!cand || !cand->file || cand->file->type != TYPE_CHARACTER) continue;
-            if (cand->team == proj->team || cand->hp <= 0) continue;
-            int32_t d = std::abs(cand->x - proj->x) + std::abs(cand->z - proj->z);
-            if (d < best_dist) {
-                best_dist = d;
-                best_target = i;
+            if (world->is_object_exists[i] && world->objects[i] && world->objects[i]->file) {
+                object_t* cand = world->objects[i];
+                if (cand->file->type == TYPE_CHARACTER && cand->team != obj->team && cand->hp > 0) {
+                    candidates[cand_count++] = i;
+                }
             }
         }
-        if (best_target >= 0) {
-            object_t* tgt = world->objects[best_target];
-            proj->enemy = best_target;
-            if (tgt->x > proj->x) {
-                proj->x_velocity += 1.0;
-                if (proj->x_velocity > 14.0) proj->x_velocity = 14.0;
-                proj->facing = FACING_RIGHT;
-            } else if (tgt->x < proj->x) {
-                proj->x_velocity -= 1.0;
-                if (proj->x_velocity < -14.0) proj->x_velocity = -14.0;
-                proj->facing = FACING_LEFT;
+        int32_t amount = (cand_count > 4) ? ((cand_count - 3) / 2 + 3) : 3;
+        while (amount > 0) {
+            int32_t s = object_spawn_opoint(world, BAT_CHASE_DAT, obj->owner, 0, team_i,
+                                            obj->x, obj->y, obj->z, 0.0, 0.0, 0.0, obj->facing);
+            if (s != -1) {
+                object_t* bat = world->objects[s];
+                bat->x_velocity = static_cast<double>(lf2_random(4, 21) - 11);
+                bat->y_velocity = 3.0 - static_cast<double>(lf2_random(5, 24)) * 0.25;
+                bat->z_velocity = 3.0 - static_cast<double>(lf2_random(6, 24)) * 0.25;
+                bat->chase_target = (cand_count == 0) ? obj_idx : candidates[lf2_random(7, cand_count)];
             }
-            if (tgt->z > proj->z) {
-                proj->z_velocity += 0.5;
-                if (proj->z_velocity > 3.0) proj->z_velocity = 3.0;
-            } else if (tgt->z < proj->z) {
-                proj->z_velocity -= 0.5;
-                if (proj->z_velocity < -3.0) proj->z_velocity = -3.0;
+            amount--;
+        }
+        world->is_object_exists[obj_idx] = 0;
+        return;
+    }
+
+    if (hit_fa == 13) {
+        int32_t candidates[MAX_OBJECTS];
+        int32_t cand_count = 0;
+        for (int32_t i = 0; i < static_cast<int32_t>(MAX_OBJECTS); ++i) {
+            if (world->is_object_exists[i] && world->objects[i] && world->objects[i]->file) {
+                object_t* cand = world->objects[i];
+                if (cand->file->type == TYPE_CHARACTER && cand->team != obj->team && cand->hp > 0) {
+                    candidates[cand_count++] = i;
+                }
             }
         }
+        int32_t s = object_spawn_opoint(world, JULIAN_BALL_DAT, obj->owner, 0, team_i,
+                                        obj->x, obj->y, obj->z, obj->x_velocity, 0.0, 0.0, obj->facing);
+        if (s != -1) {
+            object_t* jb = world->objects[s];
+            jb->y = lf2_random(8, 7) - 3 + obj->y;
+            jb->x_position = obj->x_position;
+            jb->y_position = obj->y_position;
+            jb->z_position = obj->z_position;
+            jb->z_velocity = (3.0 - static_cast<double>(lf2_random(11, 24)) * 0.25) + obj->z_velocity;
+            jb->chase_target = (cand_count == 0) ? obj_idx : candidates[lf2_random(12, cand_count)];
+        }
+        world->is_object_exists[obj_idx] = 0;
+        return;
+    }
+
+    if (hit_fa == 5) {
+        for (int32_t i = 0; i < static_cast<int32_t>(MAX_OBJECTS); ++i) {
+            if (world->is_object_exists[i] == 1 && world->objects[i] && world->objects[i]->file) {
+                object_t* ally = world->objects[i];
+                if (ally->file->type == TYPE_CHARACTER && ally->team == obj->team && ally->hp > 0) {
+                    int32_t s = object_spawn_opoint(world, JAN_CHASEH_DAT, obj->owner, 0, team_i,
+                                                    obj->x, obj->y, obj->z, 0.0, 0.0, 0.0, FACING_RIGHT);
+                    if (s != -1) {
+                        object_t* angel = world->objects[s];
+                        angel->x_velocity = static_cast<double>((ally->x - angel->x) / 50);
+                        angel->y_velocity = 0.0;
+                        angel->z_velocity = 0.0;
+                        angel->facing = FACING_RIGHT;
+                        angel->chase_target = i;
+                    }
+                }
+            }
+        }
+        world->is_object_exists[obj_idx] = 0;
+        return;
+    }
+
+    if (hit_fa == 6 || hit_fa == 9) {
+        int32_t minimum = (hit_fa == 9) ? 4 : 0;
+        int32_t maximum = (hit_fa == 6) ? 7 : 10;
+        int32_t spawned = 0;
+        int32_t pass = 0;
+        int32_t last_slot = -1;
+        do {
+            for (int32_t i = 0; i < static_cast<int32_t>(MAX_OBJECTS); ++i) {
+                if (world->is_object_exists[i] == 1 && world->objects[i] && world->objects[i]->file) {
+                    object_t* enemy = world->objects[i];
+                    if (enemy->file->type == TYPE_CHARACTER && enemy->team != obj->team && enemy->hp > 0 &&
+                        (spawned < minimum || pass == 0)) {
+                        spawned++;
+                        int32_t spawn_fid = (hit_fa == 6)
+                            ? static_cast<int32_t>(JAN_CHASE_DAT)
+                            : (static_cast<int32_t>(FIRZEN_CHASEF_DAT) + lf2_random(13, 2));
+                        last_slot = object_spawn_opoint(world, spawn_fid, obj->owner, 0, team_i,
+                                                        obj->x, obj->y, obj->z, 0.0, 0.0, 0.0, FACING_RIGHT);
+                        if (last_slot == -1) break;
+                        object_t* sp = world->objects[last_slot];
+                        if (hit_fa == 6) {
+                            sp->x_velocity = static_cast<double>((enemy->x - sp->x) / 50);
+                            sp->y_velocity = static_cast<double>(-4 - lf2_random(14, 4));
+                        } else {
+                            sp->x_velocity = static_cast<double>(lf2_random(15, 21) - 11);
+                            sp->y_velocity = -2.0 - static_cast<double>(lf2_random(16, 40)) / 6.0;
+                        }
+                        sp->z_velocity = 0.0;
+                        sp->facing = FACING_RIGHT;
+                        sp->chase_target = i;
+                        if (spawned >= maximum) break;
+                    }
+                }
+            }
+            pass++;
+        } while (spawned < minimum && spawned != 0 && last_slot != -1 && spawned < maximum);
+        world->is_object_exists[obj_idx] = 0;
+        return;
+    }
+
+    if (hit_fa == 7) {
+        object_spawn_opoint(world, static_cast<int32_t>(obj->file->id), obj->owner, 40, team_i,
+                            obj->x, obj->y, obj->z, 0.0, 0.0, 0.0, FACING_RIGHT);
+    } else if (hit_fa == 10) {
+        obj->x_velocity += (obj->x_velocity >= 0.0) ? 1.1 : -1.1;
+        if (obj->x_velocity > 30.0) obj->x_velocity = 30.0;
+        if (obj->x_velocity < -30.0) obj->x_velocity = -30.0;
+        if (obj->y_position > 3.0) obj->y_position = 3.0;
+        obj->facing = (obj->x_velocity <= 0.0) ? FACING_LEFT : FACING_RIGHT;
+        return;
+    }
+
+    int32_t deflected_team = -1;
+    if (obj->weapon_throw_injury >= 0 && obj->weapon_throw_injury < static_cast<int32_t>(MAX_OBJECTS) &&
+        world->is_object_exists[obj->weapon_throw_injury] == 1 && world->objects[obj->weapon_throw_injury]) {
+        deflected_team = static_cast<int32_t>(world->objects[obj->weapon_throw_injury]->team);
+    }
+
+    if (hit_fa != 4 && hit_fa != 5 && hit_fa != 6 && hit_fa != 7) {
+        int32_t tid = obj->chase_target;
+        bool valid_target = false;
+        if (tid >= 0 && tid < static_cast<int32_t>(MAX_OBJECTS) && world->is_object_exists[tid] &&
+            world->objects[tid] && world->objects[tid]->file &&
+            world->objects[tid]->frame_id1 < MAX_FRAMES) {
+            object_t* t = world->objects[tid];
+            if (t->hp > 0 && t->file->frames[t->frame_id1].state != STATE_LYING &&
+                std::abs(t->blink_time) < 3 &&
+                t->team != obj->team && static_cast<int32_t>(t->team) != deflected_team) {
+                valid_target = true;
+            }
+        }
+        if (!valid_target) {
+            int32_t best_dist = 10000;
+            for (int32_t i = 0; i < static_cast<int32_t>(MAX_OBJECTS); ++i) {
+                if (i == obj_idx || !world->is_object_exists[i] || !world->objects[i] || !world->objects[i]->file) {
+                    continue;
+                }
+                object_t* cand = world->objects[i];
+                if (cand->file->type == TYPE_CHARACTER && cand->team != obj->team &&
+                    static_cast<int32_t>(cand->team) != deflected_team &&
+                    cand->frame_id1 < MAX_FRAMES) {
+                    if (cand->file->frames[cand->frame_id1].state == STATE_LYING ||
+                        std::abs(cand->blink_time) > 2) {
+                        if (obj->chase_target != -1) continue;
+                    }
+                    if (cand->hp > 0) {
+                        int32_t d = std::abs(cand->z - obj->z) + std::abs(cand->x - obj->x);
+                        if (d < best_dist) {
+                            best_dist = d;
+                            obj->chase_target = i;
+                        }
+                    }
+                }
+            }
+            if (obj->chase_target == -1) {
+                obj->hp = 0;
+                return;
+            }
+        }
+    }
+
+    int32_t target_id = obj->chase_target;
+    if (target_id < 0 || target_id >= static_cast<int32_t>(MAX_OBJECTS) || !world->objects[target_id]) return;
+    object_t* target = world->objects[target_id];
+
+    if (hit_fa == 1) {
+        if (obj->x < target->x) obj->x_velocity += 0.85;
+        if (target->x < obj->x) obj->x_velocity -= 0.85;
+        if (obj->z + 7 < target->z) obj->z_velocity += 0.3;
+        if (target->z < obj->z - 7) obj->z_velocity -= 0.3;
+        obj->y_velocity /= 1.4;
+        if (target->file && target->file->type == TYPE_CHARACTER) {
+            if (obj->y_position + 10.0 < target->y_position) obj->y_position += 1.2;
+            if (target->y_position < obj->y_position + 10.0) obj->y_position -= 1.2;
+        } else if (obj->y_position > 0.0) {
+            obj->y_position += 1.0;
+        }
+        if (obj->x_velocity > 13.0) obj->x_velocity = 13.0;
+        if (obj->x_velocity < -13.0) obj->x_velocity = -13.0;
+        if (obj->z_velocity > 2.0) obj->z_velocity = 2.0;
+        if (obj->z_velocity < -2.0) obj->z_velocity = -2.0;
+        if (obj->y_position > 1.0) obj->y_position = 1.0;
+        obj->facing = (obj->x_velocity <= 0.0) ? FACING_LEFT : FACING_RIGHT;
+        return;
+    }
+
+    if (hit_fa == 4 && target->hp > 0 &&
+        target->x - 30 < obj->x && obj->x < target->x + 30 &&
+        target->y - 80 < obj->y && obj->y < target->y &&
+        target->z - 10 < obj->z && obj->z < target->z + 10) {
+        obj->x_velocity = 0.0;
+        obj->y_velocity = 0.0;
+        obj->z_velocity = 0.0;
+        obj->frame_id1 = 60;
+        target->heal_timer = 100;
+        return;
+    }
+
+    bool chasing = (hit_fa == 2 || hit_fa == 4 || hit_fa == 7 || hit_fa == 12 || hit_fa == 14);
+    if (chasing && obj->hp > 0 && world->is_object_exists[obj_idx] == 1) {
+        if (obj->x < target->x) obj->x_velocity += 0.7;
+        if (target->x < obj->x) obj->x_velocity -= 0.7;
+        if (hit_fa == 7) {
+            if (obj->x < target->x) obj->x_velocity += 0.7;
+            if (target->x < obj->x) obj->x_velocity -= 0.7;
+        }
+        if (obj->z + 5 < target->z) obj->z_velocity += 0.4;
+        if (target->z < obj->z - 5) obj->z_velocity -= 0.4;
+
+        if (hit_fa == 2 || hit_fa == 4 || hit_fa == 12) {
+            obj->y_velocity /= 1.4;
+            if (target->file && target->file->type == TYPE_CHARACTER) {
+                if (obj->y_position + 40.0 < target->y_position) obj->y_position += 1.0;
+                if (target->y_position < obj->y_position + 40.0) obj->y_position -= 1.0;
+            } else if (obj->y_position > 0.0) {
+                obj->y_position += 1.0;
+            }
+        } else if (hit_fa == 7) {
+            if (obj->y_velocity < 4.0) obj->y_velocity += 0.4;
+            obj->y_position += obj->y_velocity;
+            if (obj->y > -25) {
+                obj->frame_id1 = 60;
+                obj->x_velocity = 0.0;
+                obj->y_velocity = 0.0;
+                obj->z_velocity = 0.0;
+            }
+        }
+
+        if (obj->x_velocity > 14.0) obj->x_velocity = 14.0;
+        if (obj->x_velocity < -14.0) obj->x_velocity = -14.0;
+        if (obj->y_position > 1.4) obj->y_position = 1.4;
+        double max_z = (hit_fa == 14) ? 1.5 : 2.2;
+        if (obj->z_velocity > max_z) obj->z_velocity = max_z;
+        if (obj->z_velocity < -max_z) obj->z_velocity = -max_z;
+        obj->facing = (obj->x_velocity <= 0.0) ? FACING_LEFT : FACING_RIGHT;
+
+        double speed = std::abs(obj->x_velocity);
+        if (hit_fa == 14) {
+            if (speed >= 8.0) {
+                if (obj->frame_id1 >= 41) obj->frame_id1 -= 50;
+            } else {
+                if (obj->frame_id1 < 10) obj->frame_id1 += 50;
+            }
+            return;
+        }
+        if (hit_fa == 2) {
+            if (speed > 14.0) {
+                if (obj->frame_id1 != 5 && obj->frame_id1 != 6) obj->frame_id1 = 5;
+            } else if (speed > 7.0) {
+                if (obj->frame_id1 != 3 && obj->frame_id1 != 4) obj->frame_id1 = 3;
+            } else if (obj->frame_id1 != 1 && obj->frame_id1 != 2) {
+                obj->frame_id1 = 1;
+            }
+        }
+        return;
+    }
+
+    if (chasing && (obj->hp <= 0 || world->is_object_exists[obj_idx] == 0)) {
+        obj->x_velocity += (obj->x_velocity >= 0.0) ? 2.0 : -2.0;
+        if (obj->x_velocity > 17.0) obj->x_velocity = 17.0;
+        if (obj->x_velocity < -17.0) obj->x_velocity = -17.0;
+        if (hit_fa == 2 || hit_fa == 4 || hit_fa == 14 || hit_fa == 12) {
+            if (obj->y_position > 1.4) obj->y_position = 1.4;
+        } else if (hit_fa == 7) {
+            if (obj->y_velocity < 4.0) obj->y_velocity += 0.4;
+            obj->y_position += obj->y_velocity;
+            if (obj->y > -25) {
+                obj->frame_id1 = 60;
+                obj->y = -25;
+                obj->x_velocity = 0.0;
+                obj->y_velocity = 0.0;
+                obj->z_velocity = 0.0;
+            }
+        }
+        obj->facing = (obj->x_velocity <= 0.0) ? FACING_LEFT : FACING_RIGHT;
+        double speed = std::abs(obj->x_velocity);
+        if (hit_fa == 2) {
+            if (speed > 14.0) {
+                if (obj->frame_id1 != 5 && obj->frame_id1 != 6) obj->frame_id1 = 5;
+            } else if (speed > 7.0) {
+                if (obj->frame_id1 != 3 && obj->frame_id1 != 4) obj->frame_id1 = 3;
+            } else if (obj->frame_id1 != 1 && obj->frame_id1 != 2) {
+                obj->frame_id1 = 1;
+            }
+        }
+        return;
+    }
+
+    if (hit_fa == 3) {
+        if (obj->x < target->x) obj->x_velocity += 0.7;
+        if (target->x < obj->x) obj->x_velocity -= 0.7;
+        if (obj->z + 10 < target->z) obj->z_velocity += 0.17;
+        if (target->z < obj->z - 10) obj->z_velocity -= 0.17;
+        if (obj->x_velocity > 16.0) obj->x_velocity = 16.0;
+        if (obj->x_velocity < -16.0) obj->x_velocity = -16.0;
+        if (obj->z_velocity > 2.4) obj->z_velocity = 2.4;
+        if (obj->z_velocity < -2.4) obj->z_velocity = -2.4;
     }
 }
 

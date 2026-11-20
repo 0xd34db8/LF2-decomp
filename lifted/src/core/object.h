@@ -130,7 +130,11 @@ struct object_t {
         int32_t     curing_hp;                // 0x0E0
         uint32_t    _unknown15_2;             // 0x0E0
     };
-    int32_t         _unknown15_3;             // 0x0E4
+    union {
+        int32_t     heal_timer;               // 0x0E4 (Jan healing angel timer = 100 in 0x00406BA0)
+        int32_t     additional_y;             // 0x0E4
+        int32_t     _unknown15_3;             // 0x0E4
+    };
     union {
         struct {
             uint8_t  flag_e8;                 // 0x0E8
@@ -238,7 +242,10 @@ struct object_t {
 #endif
     int32_t         ai_target_x;              // 0x3FC
     int32_t         ai_target_z;              // 0x400
-    uint32_t        ai_vars_tail;             // 0x404
+    union {
+        uint32_t    ai_vars_tail;             // 0x404
+        int32_t     follow_order;             // 0x404 (Stage/Battle stay/follow order flag)
+    };
     int32_t         input_history[5];         // 0x408 - 0x41C (5-entry input ring shift register)
 #if INTPTR_MAX == INT32_MAX
     uint32_t        _pad_41c;                 // 0x41C - 0x420
@@ -287,6 +294,9 @@ static_assert(offsetof(object_t, team) == 0x364, "object_t::team offset mismatch
 static_assert(offsetof(object_t, file) == 0x368, "object_t::file offset mismatch");
 static_assert(offsetof(object_t, ai_target_x) == 0x3FC, "object_t::ai_target_x offset mismatch");
 static_assert(offsetof(object_t, ai_target_z) == 0x400, "object_t::ai_target_z offset mismatch");
+static_assert(offsetof(object_t, heal_timer) == 0x0E4, "object_t::heal_timer offset mismatch");
+static_assert(offsetof(object_t, chase_target) == 0x3F8, "object_t::chase_target offset mismatch");
+static_assert(offsetof(object_t, follow_order) == 0x404, "object_t::follow_order offset mismatch");
 static_assert(offsetof(object_t, input_history) == 0x408, "object_t::input_history offset mismatch");
 
 } // namespace lf2

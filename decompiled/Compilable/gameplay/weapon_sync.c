@@ -198,7 +198,7 @@ void FUN_00417f80(void)
     }
 }
 
-// AI held-weapon decision helper (0x00408CB0)
+// AI held-weapon & drink decision helper (0x00408CB0)
 int FUN_00408cb0(int target_id, int self_id, int self_state, int target_state, int z_close, int incoming_proj)
 {
     global_t *global = (global_t *)in_ECX;
@@ -211,7 +211,10 @@ int FUN_00408cb0(int target_id, int self_id, int self_state, int target_state, i
 
     object_t *self = global->objects[self_id];
     object_t *target = global->objects[target_id];
-    if (!self || !target || self->weapon_id < 0 || self->weapon_id >= MAX_OBJECTS) return 0;
+    if (!self || !target || !self->file || !target->file ||
+        self->weapon_id < 0 || self->weapon_id >= MAX_OBJECTS) {
+        return 0;
+    }
     object_t *weapon = global->objects[self->weapon_id];
     if (!weapon || !weapon->file) return 0;
 
@@ -220,14 +223,13 @@ int FUN_00408cb0(int target_id, int self_id, int self_state, int target_state, i
     for (int32_t i = 0; i < 20; ++i) {
         if (i != self_id && global->is_object_exists[i] && global->objects[i] && global->objects[i]->file) {
             object_t *ally = global->objects[i];
+            /* Original binary 0x00408D46 checks target->team == self->team alongside ally->team != 0 */
             if (ally->team != 0 && target->team == self->team && ally->hp > 0 &&
                 ally->file->frames[ally->frame_id1].state != STATE_LYING &&
                 FUN_004034e0((int)ally->invincible_time) < 3 &&
-                FUN_004034e0(ally->z - self->z) < 15) {
-                if ((self->x <= ally->x && ally->x <= target->x) ||
-                    (target->x <= ally->x && ally->x <= self->x)) {
-                    ally_in_line = true;
-                }
+                FUN_004034e0(ally->z - self->z) < 15 &&
+                FUN_004061a0(self->x, ally->x, target->x) != 0) {
+                ally_in_line = true;
             }
         }
     }
@@ -239,32 +241,36 @@ int FUN_00408cb0(int target_id, int self_id, int self_state, int target_state, i
 
     if (wid == ID_STICK_DAT || wid == ID_HOE_DAT || wid == ID_KNIFE_DAT ||
         wid == ID_BASEBALL_DAT || wid == ID_BOOMERANG_DAT) {
-        int32_t dx = FUN_004034e0(target->x - self->x);
+        int32_t dx_lead = FUN_004034e0((target->x + ((int32_t)self->x_velocity) * -2) - self->x);
         int32_t dz = FUN_004034e0(target->z - self->z);
-        if (dx < 115 && dz < 6 && FUN_00417170(0x2a, DAT_0044f61c + 3) == 0 && target_state != STATE_LYING) {
+        if (dx_lead < 115 && dz < 6 && FUN_00417170(0x2a, DAT_0044f61c + 3) == 0 && target_state != STATE_LYING) {
             self->click_attack = 1;
         }
         if (wid == ID_BOOMERANG_DAT && FUN_00417170(0x2b, DAT_0044f614 + 30) == 0) {
             self->click_attack = 1;
         }
         if (FUN_00417170(0x2c, DAT_0044f61c + 5) == 0) {
-            if (dx < 600 && dz < 20) {
-                if (self->x < target->x && DAT_0044f608 == 0) {
-                    self->click_right = 1;
-                    self->holding_right = 0;
-                }
-                if (target->x < self->x) {
-                    self->click_left = 1;
-                    self->holding_left = 0;
+            if (self->follow_order == 0 ||
+                (FUN_004034e0(self->z - target->z) <= 150 && FUN_004034e0(self->x - target->x) <= 240)) {
+                int32_t raw_dx = FUN_004034e0(target->x - self->x);
+                if (raw_dx < 600 && dz < 20) {
+                    if (self->x < target->x && DAT_0044f608 == 0) {
+                        self->click_right = 1;
+                        self->holding_right = 0;
+                    }
+                    if (target->x < self->x) {
+                        self->click_left = 1;
+                        self->holding_left = 0;
+                    }
                 }
             }
         }
     }
 
     if ((wid == ID_STONE_DAT || wid == ID_WOODEN_BOX_DAT) && !ally_in_line) {
-        int32_t dx = FUN_004034e0(target->x - self->x);
+        int32_t dx_lead = FUN_004034e0((target->x + ((int32_t)self->x_velocity) * -2) - self->x);
         int32_t dz = FUN_004034e0(target->z - self->z);
-        if (dx < 300 && dz < 6 && FUN_00417170(0x2d, DAT_0044f618 + 7) == 0 && target_state != STATE_LYING) {
+        if (dx_lead < 300 && dz < 6 && FUN_00417170(0x2d, DAT_0044f618 + 7) == 0 && target_state != STATE_LYING) {
             self->click_attack = 1;
         }
     }
@@ -285,8 +291,80 @@ int FUN_00408cb0(int target_id, int self_id, int self_state, int target_state, i
         self->click_defend = 1;
         return 0;
     }
-    if (FUN_00417170(0x34, 5) == 0) {
-        self->click_attack = 1;
+
+    if (self->follow_order != 0) {
+        if (FUN_004034e0(self->z - target->z) > 150) return 0;
+        if (FUN_004034e0(self->x - target->x) > 240) return 0;
+    }
+
+    int32_t tz = target->z;
+    if (lf2_bg_zmin + 30 <= tz && (tz < lf2_bg_zmax - 30 || self->z < tz)) {
+        self->click_up = 1;
+    } else {
+        self->click_down = 1;
+    }
+
+    int32_t tx = target->x;
+    int32_t width_limit = (DAT_0044f604 > 0) ? DAT_0044f604 : 794;
+    if (tx < 400 && self->x < 200) {
+        self->click_right = 1;
+        if (FUN_00417170(0x2e, DAT_0044f61c + 7) == 0) {
+            self->holding_right = 0;
+        }
+        if (FUN_00417170(0x2f, DAT_0044f61c + 5) == 0 && self_state == STATE_RUNNING) {
+            self->click_jump = 1;
+            return 0;
+        }
+    } else if (width_limit - 400 < tx && width_limit - 200 < self->x) {
+        self->click_left = 1;
+        if (FUN_00417170(0x30, DAT_0044f61c + 7) == 0) {
+            self->holding_left = 0;
+        }
+        if (FUN_00417170(0x31, DAT_0044f61c + 5) == 0 && self_state == STATE_RUNNING) {
+            self->click_jump = 1;
+            return 0;
+        }
+    } else {
+        int32_t dx = FUN_004034e0(tx - self->x);
+        if (dx < 350 && FUN_004034e0(tz - self->z) < 70) {
+            if (self->x < tx) {
+                self->click_left = 1;
+                if (FUN_00417170(0x32, DAT_0044f61c + 4) == 0) {
+                    self->holding_left = 0;
+                }
+            }
+            if (self->x < target->x) {
+                return 0;
+            }
+            self->click_right = 1;
+            if (FUN_00417170(0x33, DAT_0044f61c + 4) == 0) {
+                self->holding_right = 0;
+            }
+            return 0;
+        }
+        if (self_state == STATE_RUNNING) {
+            if (self->facing == FACING_RIGHT) {
+                self->click_left = 1;
+            }
+            if (self->facing == FACING_LEFT) {
+                self->click_right = 1;
+                return 0;
+            }
+        } else if (FUN_00417170(0x34, 5) == 0) {
+            if (incoming_proj == 0) {
+                int32_t cid = (int32_t)self->file->id;
+                if ((cid == ID_JOHN_DAT || cid == ID_SORCERER_DAT) &&
+                    self->mp > 150 && FUN_00417170(0x35, DAT_0044f61c + 3) > 0) {
+                    if (self->x < target->x) {
+                        self->click_DRJ = 3;
+                    } else {
+                        self->click_DLJ = 3;
+                    }
+                    return 1;
+                }
+            }
+            self->click_attack = 1;
+        }
     }
     return 0;
 }
