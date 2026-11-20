@@ -74,9 +74,10 @@ int main() {
     assert(sizeof(frame_t) == 0x178);
     assert(sizeof(file_t) == 0x25360);
     assert(offsetof(file_t, attacking_itrs[1]) + offsetof(itr_t, dvx) == 0x114);
-    assert(sizeof(object_t) == 0x418);
+    assert(sizeof(object_t) == 0x420);
     assert(offsetof(object_t, x) == 0x10);
-    assert(offsetof(object_t, wait_counter) == 0x84);
+    assert(offsetof(object_t, wait_counter) == 0x88);
+    assert(offsetof(object_t, input_history) == 0x408);
     assert(offsetof(object_t, hp) == 0x2FC);
     assert(offsetof(object_t, team) == 0x364);
     assert(offsetof(object_t, file) == 0x368);

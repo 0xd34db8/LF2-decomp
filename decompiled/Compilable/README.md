@@ -62,7 +62,7 @@ Any individual file or the entire suite can be compiled into object files using 
 # Compile a single routine
 gcc -c -Iinclude gameplay/attack_process.c -o attack_process.o
 
-# Verify all 54 library C translation units + test_legacy.c compile cleanly
+# Verify all 55 library C translation units + test_legacy.c compile cleanly
 Get-ChildItem -Recurse -Filter *.c | ForEach-Object {
     gcc -c -Iinclude $_.FullName -o ($_.BaseName + ".o")
 }
@@ -109,8 +109,23 @@ Remove-Item *.o
 | `0x0040be70` | [`data/calc_frame_coords.c`](data/calc_frame_coords.c) | Data | Sprite sheet UV cell coordinate calculator |
 | `0x0040bf30` | [`graphics/draw_object.c`](graphics/draw_object.c) | Graphics | Frame wait/next helper (`lf2_draw_object` sprite cell lookup) |
 | `0x0040d0a0` | [`data/save_dat.c`](data/save_dat.c) | Data | Character `.dat` file serializer |
+| `0x0040d960` | [`gameplay/entity_tick.c`](gameplay/entity_tick.c) | Gameplay | Per-object frame timer, sound trigger & `frame.next` advancement |
 | `0x0040de30` | [`graphics/draw_object.c`](graphics/draw_object.c) | Graphics | Sprite entity rendering, facing flip & palette blit |
+| `0x0040e170` | [`gameplay/entity_tick.c`](gameplay/entity_tick.c) | Gameplay | Combo timer window (`== 5`) interruption check helper |
+| `0x0040e2d0` | [`gameplay/entity_tick.c`](gameplay/entity_tick.c) | Gameplay | Frame transition, HP/MP cost deduction & hit-state reset helper |
+| `0x0040e450` | [`gameplay/entity_tick.c`](gameplay/entity_tick.c) | Gameplay | 5-entry object input history shift register (`+0x408..+0x418`) |
+| `0x0040e490` | [`gameplay/entity_tick.c`](gameplay/entity_tick.c) | Gameplay | Per-object physics, velocity integration, gravity & ground landing |
 | `0x0040ef70` | [`data/load_dat.c`](data/load_dat.c) | Data | Master `.dat` script lexer & block parser |
+| `0x00412800` | [`gameplay/entity_tick.c`](gameplay/entity_tick.c) | Gameplay | Special-move combo recognizer (`D > R > A` -> `hit_Fa`) |
+| `0x004128f0` | [`gameplay/entity_tick.c`](gameplay/entity_tick.c) | Gameplay | Special-move combo recognizer (`D > L > A` -> `hit_Fa`) |
+| `0x004129e0` | [`gameplay/entity_tick.c`](gameplay/entity_tick.c) | Gameplay | Special-move combo recognizer (`D > U > A` -> `hit_Ua` + Louis transform) |
+| `0x00412ac0` | [`gameplay/entity_tick.c`](gameplay/entity_tick.c) | Gameplay | Special-move combo recognizer (`D > D > A` -> `hit_Da` + Firzen counter reset) |
+| `0x00412ba0` | [`gameplay/entity_tick.c`](gameplay/entity_tick.c) | Gameplay | Special-move combo recognizer (`D > R > J` -> `hit_Fj`) |
+| `0x00412c90` | [`gameplay/entity_tick.c`](gameplay/entity_tick.c) | Gameplay | Special-move combo recognizer (`D > L > J` -> `hit_Fj`) |
+| `0x00412d80` | [`gameplay/entity_tick.c`](gameplay/entity_tick.c) | Gameplay | Special-move combo recognizer (`D > U > J` -> `hit_Uj`) |
+| `0x00412e60` | [`gameplay/entity_tick.c`](gameplay/entity_tick.c) | Gameplay | Special-move combo recognizer (`D > D > J` -> `hit_Dj`) |
+| `0x00412f40` | [`gameplay/entity_tick.c`](gameplay/entity_tick.c) | Gameplay | Special-move combo recognizer (`D > J > A` -> `hit_ja`) |
+| `0x00413080` | [`gameplay/entity_tick.c`](gameplay/entity_tick.c) | Gameplay | Master per-object input/state tick & combo recognizer dispatcher |
 | `0x004143d0` | [`data/file_ctor.c`](data/file_ctor.c) | Data | Character file data structure constructor |
 | `0x004146b0` | [`data/decrypt_dat.c`](data/decrypt_dat.c) | Data | Character `.dat` encryption cipher serializer |
 | `0x004148a0` | [`data/decrypt_dat.c`](data/decrypt_dat.c) | Data | 123-byte header skip & Vigenère cipher decrypter |

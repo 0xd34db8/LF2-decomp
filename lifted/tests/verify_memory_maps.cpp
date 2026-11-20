@@ -34,7 +34,7 @@ int main() {
     assert(sizeof(wpoint_t) == 0x24);
     assert(sizeof(frame_t) == 0x178);
     assert(sizeof(file_t) == 0x25360);
-    assert(sizeof(object_t) == 0x418);
+    assert(sizeof(object_t) == 0x420);
 #if INTPTR_MAX == INT32_MAX
     assert(sizeof(global_t) == 0x8D8);
     assert(offsetof(global_t, files) == 0x7D4);
@@ -55,12 +55,14 @@ int main() {
     assert(offsetof(object_t, y_position) == 0x060);
     assert(offsetof(object_t, z_position) == 0x068);
     assert(offsetof(object_t, facing) == 0x080);
+    assert(offsetof(object_t, wait_counter) == 0x088);
     assert(offsetof(object_t, vrest_of_objects) == 0x0F0);
     assert(offsetof(object_t, injured_of_attack) == 0x280);
     assert(offsetof(object_t, itr_of_attack) == 0x2D0);
     assert(offsetof(object_t, hp) == 0x2FC);
     assert(offsetof(object_t, team) == 0x364);
     assert(offsetof(object_t, file) == 0x368);
+    assert(offsetof(object_t, input_history) == 0x408);
 
     // Verify critical offsets in file_t
     assert(offsetof(file_t, attacking_itrs) == 0x0B0);

@@ -33,7 +33,7 @@ For a buildable C target with all synthetic types, calling convention shims, and
 
 ---
 
-## Function Index (112 Decompiled Routines)
+## Function Index (123 Decompiled Routines)
 
 | Virtual Address | File Path | Subsystem | Original Routine Description |
 | :--- | :--- | :--- | :--- |
@@ -73,11 +73,22 @@ For a buildable C target with all synthetic types, calling convention shims, and
 | `0x0040bbf0` | [`data/func_0040bbf0_frame_ctor.c`](data/func_0040bbf0_frame_ctor.c) | Data | Frame structure constructor & zeroing |
 | `0x0040be70` | [`data/func_0040be70_calc_frame_coords.c`](data/func_0040be70_calc_frame_coords.c) | Data | Sprite sheet UV cell coordinate calculator |
 | `0x0040d0a0` | [`data/func_0040d0a0_save_dat.c`](data/func_0040d0a0_save_dat.c) | Data | Character .dat file serializer |
+| `0x0040d960` | [`gameplay/func_0040d960_object_frame_advance.c`](gameplay/func_0040d960_object_frame_advance.c) | Gameplay | Per-object frame timer, sound trigger & `frame.next` advancement |
 | `0x0040de30` | [`graphics/func_0040de30_draw_entity.c`](graphics/func_0040de30_draw_entity.c) | Graphics | Sprite entity rendering, facing flip & palette blit |
+| `0x0040e170` | [`gameplay/func_0040e170_combo_timer_check.c`](gameplay/func_0040e170_combo_timer_check.c) | Gameplay | Combo timer window (`== 5`) interruption check helper |
 | `0x0040e2d0` | [`gameplay/func_0040e2d0_frame_transition.c`](gameplay/func_0040e2d0_frame_transition.c) | Gameplay | Frame transition, MP cost deduction & hit-state reset helper |
 | `0x0040e450` | [`gameplay/func_0040e450_input_history_push.c`](gameplay/func_0040e450_input_history_push.c) | Gameplay | 5-entry object input history shift register (`+0x408..+0x418`) |
 | `0x0040e490` | [`gameplay/func_0040e490_object_physics_tick.c`](gameplay/func_0040e490_object_physics_tick.c) | Gameplay | Per-object physics, velocity integration, gravity, landing & opoint tick |
 | `0x0040ef70` | [`data/func_0040ef70_load_dat.c`](data/func_0040ef70_load_dat.c) | Data | Master .dat script lexer & block parser |
+| `0x00412800` | [`gameplay/func_00412800_combo_dra.c`](gameplay/func_00412800_combo_dra.c) | Gameplay | Special-move combo recognizer (`D > R > A` -> `hit_Fa`) |
+| `0x004128f0` | [`gameplay/func_004128f0_combo_dla.c`](gameplay/func_004128f0_combo_dla.c) | Gameplay | Special-move combo recognizer (`D > L > A` -> `hit_Fa`) |
+| `0x004129e0` | [`gameplay/func_004129e0_combo_dua.c`](gameplay/func_004129e0_combo_dua.c) | Gameplay | Special-move combo recognizer (`D > U > A` -> `hit_Ua` + Louis armor break) |
+| `0x00412ac0` | [`gameplay/func_00412ac0_combo_dda.c`](gameplay/func_00412ac0_combo_dda.c) | Gameplay | Special-move combo recognizer (`D > D > A` -> `hit_Da` + Firzen counter reset) |
+| `0x00412ba0` | [`gameplay/func_00412ba0_combo_drj.c`](gameplay/func_00412ba0_combo_drj.c) | Gameplay | Special-move combo recognizer (`D > R > J` -> `hit_Fj`) |
+| `0x00412c90` | [`gameplay/func_00412c90_combo_dlj.c`](gameplay/func_00412c90_combo_dlj.c) | Gameplay | Special-move combo recognizer (`D > L > J` -> `hit_Fj`) |
+| `0x00412d80` | [`gameplay/func_00412d80_combo_duj.c`](gameplay/func_00412d80_combo_duj.c) | Gameplay | Special-move combo recognizer (`D > U > J` -> `hit_Uj`) |
+| `0x00412e60` | [`gameplay/func_00412e60_combo_ddj.c`](gameplay/func_00412e60_combo_ddj.c) | Gameplay | Special-move combo recognizer (`D > D > J` -> `hit_Dj`) |
+| `0x00412f40` | [`gameplay/func_00412f40_combo_dja.c`](gameplay/func_00412f40_combo_dja.c) | Gameplay | Special-move combo recognizer (`D > J > A` -> `hit_ja`) |
 | `0x00413080` | [`gameplay/func_00413080_object_input_tick.c`](gameplay/func_00413080_object_input_tick.c) | Gameplay | Master per-object input/state tick & combo recognizer dispatcher |
 | `0x004143d0` | [`data/func_004143d0_file_ctor.c`](data/func_004143d0_file_ctor.c) | Data | Character file data structure constructor |
 | `0x004146b0` | [`data/func_004146b0_encrypt_dat.c`](data/func_004146b0_encrypt_dat.c) | Data | Character .dat encryption cipher serializer |

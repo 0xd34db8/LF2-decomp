@@ -12,6 +12,7 @@ void lf2_frame_ctor(frame_t *frame)
 {
     if (!frame) return;
     memset(frame, 0, sizeof(frame_t));
+    frame->sound_id = -1;
 }
 
 // MSVC __thiscall bridge for FUN_0040bbf0

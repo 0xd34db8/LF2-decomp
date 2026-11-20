@@ -435,7 +435,7 @@ typedef struct file {
 } file_t;
 
 // 9. World Entity / Character / Weapon Instance (object)
-// Total Size: 0x418 (1048 bytes)
+// Total Size: 0x420 (1056 bytes)
 typedef struct object {
     uint32_t        move_counter;             // 0x000
     union {
@@ -468,11 +468,11 @@ typedef struct object {
     uint32_t        frame_id4;                // 0x07C
     uint8_t         facing;                   // 0x080 (0: right, 1: left)
     uint8_t         _unknown4[3];             // 0x081 - 0x084
-    int32_t         wait_counter;             // 0x084
+    uint32_t        _unknown7;                // 0x084
     union {
+        int32_t     wait_counter;             // 0x088
         int32_t     cpoint_hurt;              // 0x088
         int32_t     in_sky;                   // 0x088
-        uint32_t    _unknown7;                // 0x088
     };
     int32_t         cpoint_catcher;           // 0x08C
     union {
@@ -611,10 +611,9 @@ typedef struct object {
     int32_t         chase_target;             // 0x3F8
     int32_t         ai_target_x;              // 0x3FC
     int32_t         ai_target_z;              // 0x400
-    union {
-        int32_t     ai_tail[5];               // 0x404 - 0x418
-        int32_t     input_history[5];         // 0x404 - 0x418
-    };
+    uint32_t        ai_vars_tail;             // 0x404
+    int32_t         input_history[5];         // 0x408 - 0x41C
+    uint32_t        _pad_41c;                 // 0x41C - 0x420 (8-byte alignment)
 } object_t;
 
 // 10. Global Game Manager State (global)

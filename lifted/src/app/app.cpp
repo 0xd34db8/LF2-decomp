@@ -1263,33 +1263,60 @@ void app_t::update_battle() {
     int32_t z_max = m_stage_loaded ? m_background.zboundary_max : 400;
     int32_t stage_w = m_stage_loaded ? m_background.width : 2000;
 
+    double d_z_min = static_cast<double>(z_min);
+    double d_z_max = static_cast<double>(z_max);
+    double d_stage_w = static_cast<double>(stage_w);
+
     for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
         if (!m_world.is_object_exists[i]) continue;
         object_t* obj = m_world.objects[i];
         if (!obj || !obj->file) continue;
-
-        if (obj->x_position <= 0.0) obj->blocked_left = 1;
-        if (obj->x_position >= static_cast<double>(stage_w)) obj->blocked_right = 1;
-        if (obj->z_position <= static_cast<double>(z_min)) obj->blocked_up = 1;
-        if (obj->z_position >= static_cast<double>(z_max)) obj->blocked_down = 1;
 
         obj->frame_id4 = obj->frame_id3;
         obj->frame_id3 = obj->frame_id2;
         object_frame_advance(obj, static_cast<int32_t>(m_selected_mode), static_cast<int32_t>(i), 1, true);
         object_physics_tick(obj, static_cast<int32_t>(m_frame_counter % 12));
 
-        if (obj->x_position < 0.0) {
-            obj->x_position = 0.0;
-        } else if (obj->x_position > static_cast<double>(stage_w)) {
-            obj->x_position = static_cast<double>(stage_w);
+        // 0x0041B5D0: Authentic Z and X stage boundary clamping / off-screen removal
+        if (obj->file->type == TYPE_CHARACTER) {
+            if (obj->z_position < d_z_min) {
+                obj->z_position = d_z_min;
+            } else if (obj->z_position > d_z_max) {
+                obj->z_position = d_z_max;
+            }
+        } else {
+            if (obj->z_position < d_z_min - 1.0) {
+                obj->z_position = d_z_min - 1.0;
+            } else if (obj->z_position > d_z_max + 1.0) {
+                obj->z_position = d_z_max + 1.0;
+            }
         }
-        if (obj->z_position < static_cast<double>(z_min)) {
-            obj->z_position = static_cast<double>(z_min);
-        } else if (obj->z_position > static_cast<double>(z_max)) {
-            obj->z_position = static_cast<double>(z_max);
+        obj->z = static_cast<int32_t>(obj->z_position);
+
+        if (obj->file->type == TYPE_ATTACK) {
+            if (obj->x_position < -300.0 || obj->x_position > d_stage_w + 300.0) {
+                m_world.is_object_exists[i] = 0;
+            }
+        } else if (obj->file->type == TYPE_CHARACTER) {
+            double x_min = (i < 20) ? ((obj->team == 5) ? -300.0 : 0.0) : -100.0;
+            double x_max = (i < 20) ? d_stage_w : (d_stage_w + 100.0);
+            if (obj->x_position < x_min) {
+                obj->x_position = x_min;
+            } else if (obj->x_position > x_max) {
+                obj->x_position = x_max;
+            }
+        } else {
+            if ((obj->file->id == MILK_DAT || obj->file->id == BEER_DAT) && obj->player_index > 0) {
+                if (obj->x_position < 10.0) {
+                    obj->x_position = 10.0;
+                } else if (obj->x_position > d_stage_w - 10.0) {
+                    obj->x_position = d_stage_w - 10.0;
+                }
+            } else if ((obj->x_position < 0.0 || obj->x_position > d_stage_w) && obj->y == 0) {
+                m_world.is_object_exists[i] = 0;
+            }
         }
         obj->x = static_cast<int32_t>(obj->x_position);
-        obj->z = static_cast<int32_t>(obj->z_position);
     }
 
     // Hitbox interactions & attacks

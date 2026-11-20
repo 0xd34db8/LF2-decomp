@@ -49,6 +49,7 @@ void dat_loader_t::init_file(file_t* file, uint32_t id, uint32_t type) {
         file->frames[i].bdys = nullptr;
         file->frames[i].itrs_size = 0;
         file->frames[i].bdys_size = 0;
+        file->frames[i].sound_id = -1;
     }
 }
 
@@ -332,14 +333,17 @@ bool dat_loader_t::parse_content(file_t* file, const std::string& content, uint3
                     } else if (token == "sound:") {
                         std::string snd_str;
                         if (stream >> snd_str) {
-                            int snd_id = 0;
+                            int snd_id = -1;
                             size_t d_pos = snd_str.find_first_of("0123456789");
                             if (d_pos != std::string::npos) {
                                 try {
                                     snd_id = std::stoi(snd_str.substr(d_pos));
                                 } catch (...) {}
                             }
-                            frame.sound = static_cast<uint32_t>(snd_id);
+                            if (snd_id >= 0) {
+                                frame.sound = static_cast<uint32_t>(snd_id);
+                                frame.sound_id = snd_id;
+                            }
                         }
                     } else if (token == "bpoint:") {
                         while (stream >> token && token != "bpoint_end:") {

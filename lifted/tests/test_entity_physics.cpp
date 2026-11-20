@@ -25,7 +25,7 @@ void test_object_init()
     assert(obj.wait_counter == 0);
     assert(obj.hp == 500 && obj.dark_hp == 500 && obj.max_hp == 500 && obj.mp == 500);
     assert(obj.owner == -1 && obj.clone == -1 && obj.enemy == -1);
-    assert(obj.in_sky == 1 && obj.weapon_hp == 1000 && obj.ai_target_x == -1000 && obj.ai_target_z == -1000);
+    assert(obj.cpoint_hurt == 0 && obj.weapon_hp == 1000 && obj.ai_target_x == -1000 && obj.ai_target_z == -1000);
     assert(obj.attackable_distance == 1000);
     assert(obj.vulnerable_distance == 1000);
 
@@ -364,6 +364,7 @@ void test_phase21_22_pipeline()
     f.frames[16].state = STATE_RUNNING;
     f.frames[100].state = STATE_ROWING;
     f.frames[110].state = STATE_DEFEND;
+    f.frames[110].wait = 5;
     f.frames[110].hit_Fa = 235;
     f.frames[110].hit_Ua = 240;
     f.frames[110].hit_Da = 245;
@@ -373,10 +374,12 @@ void test_phase21_22_pipeline()
     f.frames[110].hit_ja = 265;
     for (int i : {180, 181, 182, 183, 186, 187, 188, 189})
         f.frames[i].state = STATE_FALLING;
+    f.frames[210].state = STATE_ATTACKING;
     f.frames[210].wait = 0;
     f.frames[210].next = 212;
     f.frames[212].state = STATE_JUMPING;
     f.frames[213].state = STATE_DASHING;
+    f.frames[215].state = STATE_INJURED_2;
     f.frames[235].mp = 150;
     f.frames[235].dvx = 556;
     f.frames[235].dvy = 548;
@@ -572,7 +575,7 @@ void test_phase21_22_pipeline()
     assert(obj.arest == 3); // Paused by shaking
     obj.shaking = 0;
     object_frame_advance(&obj);
-    assert(obj.arest == 2 && obj.defend_lock == 3 && obj.wait_counter == 1 && obj.cpoint_hurt == 1);
+    assert(obj.arest == 2 && obj.defend_lock == 3 && obj.wait_counter == 1);
 
     obj.frame_id1 = 202;
     obj.frame_id2 = 202;

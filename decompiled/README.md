@@ -37,11 +37,11 @@ decompiled/
 ## Suite Summary & Documentation
 
 - **[`decompiled/RAW/`](RAW/README.md):**
-  Houses the 112 pristine decompiler exports directly as emitted by Ghidra, verified 1:1 against genuine function entry points in `lf2.exe` via `verify_raw_entries.py`. Preserves raw `DAT_` pointers, synthetic registers (`in_ECX`), and original formatting without hand-written shortcuts. Serves as immutable forensic evidence for mathematical validation.
+  Houses the 123 pristine decompiler exports directly as emitted by Ghidra, verified 1:1 against genuine function entry points in `lf2.exe` via `verify_raw_entries.py`. Preserves raw `DAT_` pointers, synthetic registers (`in_ECX`), and original formatting without hand-written shortcuts. Serves as immutable forensic evidence for mathematical validation.
   *Read the full guide: [RAW/README.md](RAW/README.md)*
 
 - **[`decompiled/Compilable/`](Compilable/README.md):**
-  Houses the complete compilable legacy suite (54 library translation units + test runner) with synthetic types (`legacy_types.h`), calling convention bridges, external global memory declarations (`legacy_globals.h`), and zeroed static allocations (`legacy_globals.c`). Compiles with 0 syntax or symbol errors under GCC and Clang.
+  Houses the complete compilable legacy suite (55 library translation units + test runner) with synthetic types (`legacy_types.h`), calling convention bridges, external global memory declarations (`legacy_globals.h`), and zeroed static allocations (`legacy_globals.c`). Compiles with 0 syntax or symbol errors under GCC and Clang.
   *Read the full guide: [Compilable/README.md](Compilable/README.md)*
 
 - **[`decompiled/resources/`](resources/):**
@@ -95,12 +95,23 @@ decompiled/
 | `0x0040bbf0` | Data | Frame structure constructor & zeroing | [`RAW/data`](RAW/data/func_0040bbf0_frame_ctor.c) | [`Compilable/data`](Compilable/data/frame_ctor.c) |
 | `0x0040be70` | Data | Sprite sheet UV coordinate calculation | [`RAW/data`](RAW/data/func_0040be70_calc_frame_coords.c) | [`Compilable/data`](Compilable/data/calc_frame_coords.c) |
 | `0x0040d0a0` | Data | Character `.dat` file serializer | [`RAW/data`](RAW/data/func_0040d0a0_save_dat.c) | [`Compilable/data`](Compilable/data/save_dat.c) |
+| `0x0040d960` | Gameplay | Per-object frame timer, sound trigger & `frame.next` advancement | [`RAW/gameplay`](RAW/gameplay/func_0040d960_object_frame_advance.c) | [`Compilable/gameplay`](Compilable/gameplay/entity_tick.c) |
 | `0x0040de30` | Graphics | Sprite entity rendering, facing flip & palette blit | [`RAW/graphics`](RAW/graphics/func_0040de30_draw_entity.c) | [`Compilable/graphics`](Compilable/graphics/draw_object.c) |
-| `0x0040e2d0` | Gameplay | Frame transition, MP cost deduction & hit-state reset helper | [`RAW/gameplay`](RAW/gameplay/func_0040e2d0_frame_transition.c) | — |
-| `0x0040e450` | Gameplay | 5-entry object input history shift register (`+0x408..+0x418`) | [`RAW/gameplay`](RAW/gameplay/func_0040e450_input_history_push.c) | — |
-| `0x0040e490` | Gameplay | Per-object physics, velocity integration, gravity, landing & opoint tick | [`RAW/gameplay`](RAW/gameplay/func_0040e490_object_physics_tick.c) | — |
+| `0x0040e170` | Gameplay | Combo timer window (`== 5`) interruption check helper | [`RAW/gameplay`](RAW/gameplay/func_0040e170_combo_timer_check.c) | [`Compilable/gameplay`](Compilable/gameplay/entity_tick.c) |
+| `0x0040e2d0` | Gameplay | Frame transition, MP cost deduction & hit-state reset helper | [`RAW/gameplay`](RAW/gameplay/func_0040e2d0_frame_transition.c) | [`Compilable/gameplay`](Compilable/gameplay/entity_tick.c) |
+| `0x0040e450` | Gameplay | 5-entry object input history shift register (`+0x408..+0x418`) | [`RAW/gameplay`](RAW/gameplay/func_0040e450_input_history_push.c) | [`Compilable/gameplay`](Compilable/gameplay/entity_tick.c) |
+| `0x0040e490` | Gameplay | Per-object physics, velocity integration, gravity, landing & opoint tick | [`RAW/gameplay`](RAW/gameplay/func_0040e490_object_physics_tick.c) | [`Compilable/gameplay`](Compilable/gameplay/entity_tick.c) |
 | `0x0040ef70` | Data | Master `.dat` script lexer & parser | [`RAW/data`](RAW/data/func_0040ef70_load_dat.c) | [`Compilable/data`](Compilable/data/load_dat.c) |
-| `0x00413080` | Gameplay | Master per-object input/state tick & combo recognizer dispatcher | [`RAW/gameplay`](RAW/gameplay/func_00413080_object_input_tick.c) | — |
+| `0x00412800` | Gameplay | Special-move combo recognizer (`D > R > A` -> `hit_Fa`) | [`RAW/gameplay`](RAW/gameplay/func_00412800_combo_dra.c) | [`Compilable/gameplay`](Compilable/gameplay/entity_tick.c) |
+| `0x004128f0` | Gameplay | Special-move combo recognizer (`D > L > A` -> `hit_Fa`) | [`RAW/gameplay`](RAW/gameplay/func_004128f0_combo_dla.c) | [`Compilable/gameplay`](Compilable/gameplay/entity_tick.c) |
+| `0x004129e0` | Gameplay | Special-move combo recognizer (`D > U > A` -> `hit_Ua` + Louis transform) | [`RAW/gameplay`](RAW/gameplay/func_004129e0_combo_dua.c) | [`Compilable/gameplay`](Compilable/gameplay/entity_tick.c) |
+| `0x00412ac0` | Gameplay | Special-move combo recognizer (`D > D > A` -> `hit_Da` + Firzen counter reset) | [`RAW/gameplay`](RAW/gameplay/func_00412ac0_combo_dda.c) | [`Compilable/gameplay`](Compilable/gameplay/entity_tick.c) |
+| `0x00412ba0` | Gameplay | Special-move combo recognizer (`D > R > J` -> `hit_Fj`) | [`RAW/gameplay`](RAW/gameplay/func_00412ba0_combo_drj.c) | [`Compilable/gameplay`](Compilable/gameplay/entity_tick.c) |
+| `0x00412c90` | Gameplay | Special-move combo recognizer (`D > L > J` -> `hit_Fj`) | [`RAW/gameplay`](RAW/gameplay/func_00412c90_combo_dlj.c) | [`Compilable/gameplay`](Compilable/gameplay/entity_tick.c) |
+| `0x00412d80` | Gameplay | Special-move combo recognizer (`D > U > J` -> `hit_Uj`) | [`RAW/gameplay`](RAW/gameplay/func_00412d80_combo_duj.c) | [`Compilable/gameplay`](Compilable/gameplay/entity_tick.c) |
+| `0x00412e60` | Gameplay | Special-move combo recognizer (`D > D > J` -> `hit_Dj`) | [`RAW/gameplay`](RAW/gameplay/func_00412e60_combo_ddj.c) | [`Compilable/gameplay`](Compilable/gameplay/entity_tick.c) |
+| `0x00412f40` | Gameplay | Special-move combo recognizer (`D > J > A` -> `hit_ja`) | [`RAW/gameplay`](RAW/gameplay/func_00412f40_combo_dja.c) | [`Compilable/gameplay`](Compilable/gameplay/entity_tick.c) |
+| `0x00413080` | Gameplay | Master per-object input/state tick & combo recognizer dispatcher | [`RAW/gameplay`](RAW/gameplay/func_00413080_object_input_tick.c) | [`Compilable/gameplay`](Compilable/gameplay/entity_tick.c) |
 | `0x004143d0` | Data | Master character file data constructor | [`RAW/data`](RAW/data/func_004143d0_file_ctor.c) | [`Compilable/data`](Compilable/data/file_ctor.c) |
 | `0x004146b0` | Data | Character `.dat` encryption cipher serializer | [`RAW/data`](RAW/data/func_004146b0_encrypt_dat.c) | [`Compilable/data`](Compilable/data/decrypt_dat.c) |
 | `0x004148a0` | Data | 123-byte header skip & Vigenère decrypter | [`RAW/data`](RAW/data/func_004148a0_decrypt_dat.c) | [`Compilable/data`](Compilable/data/decrypt_dat.c) |

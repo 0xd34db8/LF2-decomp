@@ -16,8 +16,6 @@ void object_init(object_t* obj)
     std::memset(obj, 0, sizeof(object_t));
 
     // Exact ground-truth initializations from FUN_004061d0 (0x004061D0)
-    obj->in_sky = 1; // 0x088 (overwritten on first wait_counter sync)
-
     obj->attackable_distance = 1000;   // 0x2E8
     obj->vulnerable_distance = 1000;   // 0x2EC
     obj->clone = -1;                   // 0x2F4
@@ -129,12 +127,6 @@ namespace {
 
 constexpr uint32_t BINARY_STATE_FIRE = 19; // Binary 0x13 (legacy_types STATE_FIRE)
 constexpr int32_t  HEAVY_WEAPON_TYPE = static_cast<int32_t>(TYPE_HEAVY_WEAPON);
-
-inline void sync_wait_counter(object_t* obj, int32_t val)
-{
-    obj->wait_counter = val;
-    obj->cpoint_hurt = val;
-}
 
 void trigger_frame_sound(const object_t* obj, uint32_t fid)
 {
@@ -494,10 +486,10 @@ void object_frame_advance(object_t* obj, int32_t mode, int32_t obj_idx, int32_t 
 
     if (obj->frame_id1 != obj->frame_id2 && obj->frame_id1 < MAX_FRAMES) {
         trigger_frame_sound(obj, obj->frame_id1);
-        sync_wait_counter(obj, 0);
+        obj->wait_counter = 0;
     }
 
-    sync_wait_counter(obj, obj->wait_counter + 1);
+    obj->wait_counter++;
 
     if (static_cast<int32_t>(file->type) >= 0 && obj->frame_id1 < MAX_FRAMES &&
         file->frames[obj->frame_id1].state == STATE_STANDING && obj->y < 0) {
@@ -513,7 +505,7 @@ void object_frame_advance(object_t* obj, int32_t mode, int32_t obj_idx, int32_t 
         if ((obj->clone >= 0 || obj->team == 5 || obj_idx > 19) && obj->blink_time < 1) {
             obj->blink_time = 30;
         }
-        sync_wait_counter(obj, 0);
+        obj->wait_counter = 0;
     }
     if (obj->frame_id1 < MAX_FRAMES && file->frames[obj->frame_id1].state == 2000) {
         obj->facing = (obj->x_velocity <= 0.0) ? FACING_LEFT : FACING_RIGHT;
@@ -521,7 +513,7 @@ void object_frame_advance(object_t* obj, int32_t mode, int32_t obj_idx, int32_t 
 
     if (obj->frame_id1 < MAX_FRAMES &&
         obj->wait_counter > static_cast<int32_t>(file->frames[obj->frame_id1].wait)) {
-        sync_wait_counter(obj, 0);
+        obj->wait_counter = 0;
         int32_t next_frame = file->frames[obj->frame_id1].next;
         if (next_frame != 0) {
             obj->frame_id1 = static_cast<uint32_t>(next_frame);
@@ -777,10 +769,11 @@ void object_physics_tick(object_t* obj, int32_t counter_12)
                     } else {
                         obj->frame_id1 = 219;
                     }
-                    sync_wait_counter(obj, 0);
+                    obj->wait_counter = 0;
                 } else if (0.0001 < obj->y_position && 0.0001 < obj->y_velocity &&
                            (file->frames[obj->frame_id1].state == STATE_FALLING ||
                             file->frames[obj->frame_id1].state == STATE_BURNING)) {
+                    get_audio_system().on_frame_sound(6);
                     int32_t dmg = static_cast<int32_t>(obj->thrown_injury);
                     if (dmg != 0) {
                         if (dmg < 0) {
@@ -809,7 +802,7 @@ void object_physics_tick(object_t* obj, int32_t counter_12)
                     } else {
                         obj->y_position = 0.0;
                         obj->y_velocity = 0.0;
-                        sync_wait_counter(obj, 0);
+                        obj->wait_counter = 0;
                         obj->frame_id1 = (obj->frame_id1 > 185) ? 231 : 230;
                         obj->x_velocity /= 3.0;
                     }
@@ -821,7 +814,7 @@ void object_physics_tick(object_t* obj, int32_t counter_12)
                     if (obj->y_velocity <= 9.9) {
                         obj->frame_id1 = (cur->state == 1002) ? 70 : 60;
                         obj->y_velocity = 0.0;
-                        sync_wait_counter(obj, 0);
+                        obj->wait_counter = 0;
                         obj->x_velocity *= 0.5;
                     } else if (cur->state == 1002) {
                         obj->frame_id1 = 7;
@@ -836,7 +829,7 @@ void object_physics_tick(object_t* obj, int32_t counter_12)
                     } else {
                         obj->frame_id1 = 60;
                         obj->y_velocity = 0.0;
-                        sync_wait_counter(obj, 0);
+                        obj->wait_counter = 0;
                         obj->x_velocity *= 0.5;
                     }
                 }
@@ -850,7 +843,7 @@ void object_physics_tick(object_t* obj, int32_t counter_12)
                     if ((obj->y_velocity <= 8.5 && -10.0 <= obj->x_velocity && obj->x_velocity <= 10.0) ||
                         (cur->state != 1002 && cur->state != 1000)) {
                         obj->y_velocity = 0.0;
-                        sync_wait_counter(obj, 0);
+                        obj->wait_counter = 0;
                         obj->x_velocity *= 0.7;
                         obj->frame_id1 = (cur->state == 1002) ? 70 : 60;
                     } else {
@@ -887,7 +880,7 @@ void object_physics_tick(object_t* obj, int32_t counter_12)
                         }
                         obj->frame_id1 = 20;
                         obj->y_velocity = 0.0;
-                        sync_wait_counter(obj, 0);
+                        obj->wait_counter = 0;
                         obj->x_velocity *= 0.5;
                     }
                 }
@@ -895,7 +888,7 @@ void object_physics_tick(object_t* obj, int32_t counter_12)
                 obj->y_position = 0.0;
                 obj->frame_id1 = 101;
                 obj->y_velocity = 0.0;
-                sync_wait_counter(obj, 0);
+                obj->wait_counter = 0;
                 obj->x_velocity = 0.0;
             }
         }
@@ -1054,7 +1047,7 @@ void object_input_tick(object_t* obj, bool match_running, int32_t unlock_chars)
 
         if (obj->click_attack == 1 && static_cast<int8_t>(obj->attack_press) > 0) {
             obj->dash_counter = 0;
-            sync_wait_counter(obj, 0);
+            obj->wait_counter = 0;
             if (wtype == 0) {
                 if (static_cast<int8_t>(obj->can_hit_flag) < 1) {
                     int32_t r = lf2_random(0x82, 2);
@@ -1081,13 +1074,13 @@ void object_input_tick(object_t* obj, bool match_running, int32_t unlock_chars)
             }
         }
         if (obj->click_jump == 1 && static_cast<int8_t>(obj->jump_press) > 0) {
-            sync_wait_counter(obj, 0);
+            obj->wait_counter = 0;
             obj->dash_counter = 0;
             obj->frame_id1 = 210;
         }
         if (obj->click_defend == 1 && obj->defend_lock == 0 && static_cast<int8_t>(obj->defend_press) > 0) {
             obj->dash_counter = 0;
-            sync_wait_counter(obj, 0);
+            obj->wait_counter = 0;
             obj->frame_id1 = 110;
         }
     }
@@ -1144,7 +1137,7 @@ void object_input_tick(object_t* obj, bool match_running, int32_t unlock_chars)
         }
         if (obj->click_attack == 1 && static_cast<int8_t>(obj->attack_press) > 0) {
             obj->dash_counter = 0;
-            sync_wait_counter(obj, 0);
+            obj->wait_counter = 0;
             obj->frame_id1 = 50;
         }
     }
@@ -1155,11 +1148,11 @@ void object_input_tick(object_t* obj, bool match_running, int32_t unlock_chars)
         if (obj->click_left == 1 && obj->click_right == 0) obj->facing = FACING_LEFT;
         if (obj->click_attack != 0) {
             if (wtype == 0) {
-                sync_wait_counter(obj, 0);
+                obj->wait_counter = 0;
                 obj->frame_id1 = 80;
                 deduct_frame_mp(obj, 80, match_running);
             } else if (wtype % 100 == 1) {
-                sync_wait_counter(obj, 0);
+                obj->wait_counter = 0;
                 if (obj->click_left == 0 && obj->click_right == 0 &&
                     obj->click_up == 0 && obj->click_down == 0) {
                     obj->frame_id1 = 30;
@@ -1175,7 +1168,7 @@ void object_input_tick(object_t* obj, bool match_running, int32_t unlock_chars)
 
     if (obj->frame_id1 < MAX_FRAMES &&
         file->frames[obj->frame_id1].state == STATE_RUNNING && wtype != HEAVY_WEAPON_TYPE) {
-        sync_wait_counter(obj, 0);
+        obj->wait_counter = 0;
         int32_t rfr = (file->running_frame_rate > 0) ? static_cast<int32_t>(file->running_frame_rate) : 1;
         step_grid_run_cycle(obj, rfr, 9);
 
@@ -1227,6 +1220,7 @@ void object_input_tick(object_t* obj, bool match_running, int32_t unlock_chars)
             obj->frame_id1 = 102;
         }
         if (obj->click_jump == 1 && static_cast<int8_t>(obj->jump_press) > 0) {
+            get_audio_system().on_frame_sound(7);
             obj->dash_counter = 0;
             obj->frame_id1 = 213;
             obj->x_velocity = static_cast<double>(static_cast<int32_t>(obj->facing) * -2 + 1) * file->dash_distance;
@@ -1244,7 +1238,7 @@ void object_input_tick(object_t* obj, bool match_running, int32_t unlock_chars)
     if (obj->frame_id1 < MAX_FRAMES &&
         file->frames[obj->frame_id1].state == STATE_RUNNING &&
         obj->weapon_type == HEAVY_WEAPON_TYPE) {
-        sync_wait_counter(obj, 0);
+        obj->wait_counter = 0;
         int32_t rfr = (file->running_frame_rate > 0) ? static_cast<int32_t>(file->running_frame_rate) : 1;
         step_grid_run_cycle(obj, rfr, 16);
 
@@ -1276,6 +1270,7 @@ void object_input_tick(object_t* obj, bool match_running, int32_t unlock_chars)
         if (obj->click_jump != 0) {
             if ((obj->click_right != 0 || 0.001 < obj->x_velocity) &&
                 static_cast<int8_t>(obj->jump_press) > 0) {
+                get_audio_system().on_frame_sound(7);
                 obj->frame_id1 = static_cast<uint32_t>(obj->facing) + 213U;
                 obj->dash_counter = 0;
                 obj->x_velocity = file->dash_distance;
@@ -1284,6 +1279,7 @@ void object_input_tick(object_t* obj, bool match_running, int32_t unlock_chars)
             if (obj->click_jump != 0 &&
                 (obj->click_left != 0 || obj->x_velocity < -0.001) &&
                 static_cast<int8_t>(obj->jump_press) > 0) {
+                get_audio_system().on_frame_sound(7);
                 obj->frame_id1 = 214U - static_cast<uint32_t>(obj->facing);
                 obj->dash_counter = 0;
                 obj->x_velocity = -file->dash_distance;
@@ -1308,7 +1304,7 @@ void object_input_tick(object_t* obj, bool match_running, int32_t unlock_chars)
         } else {
             obj->frame_id1 = 108;
         }
-        sync_wait_counter(obj, 0);
+        obj->wait_counter = 0;
         if (file->rowing_height < obj->y_velocity) {
             obj->y_velocity = file->rowing_height;
         }
@@ -1359,7 +1355,7 @@ void object_input_tick(object_t* obj, bool match_running, int32_t unlock_chars)
                          obj->click_up != 0 || obj->click_down != 0))) {
                 obj->frame_id1 = (wt == static_cast<int32_t>(TYPE_THROW_WEAPON) ||
                                   wt == static_cast<int32_t>(TYPE_DRINK)) ? 52 : 40;
-                sync_wait_counter(obj, 0);
+                obj->wait_counter = 0;
                 obj->y_velocity -= 1.0;
             }
         }

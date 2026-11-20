@@ -40,7 +40,7 @@ LF2/
 │   │   ├── gameplay/           # Raw combat dispatcher, hitboxes, AI & weapon attachment
 │   │   ├── graphics/           # Raw DirectDraw blitters, clipping & parallax math
 │   │   └── net/                # Raw lockstep network exchange & packet verifiers
-│   ├── Compilable/             # Self-contained, compilable legacy C suite (54 translation units + test runner, 85+ routines)
+│   ├── Compilable/             # Self-contained, compilable legacy C suite (55 translation units + test runner, 100+ routines)
 │   │   ├── include/            # legacy_types.h (typed structs), legacy_signatures.h, legacy_globals.h
 │   │   ├── app/                # Clean C routines: winmain.c, wndproc.c, battle_mode.c, etc.
 │   │   ├── audio/              # Clean C routines: sound_init.c, sound_load_wav.c, sound_play.c, bgm_manager.c
@@ -138,7 +138,7 @@ All memory structures match the exact byte layouts of the original MSVC++ 32-bit
 | [`wpoint_t`](decompiled/Compilable/include/legacy_types.h) | `0x24` | 36 | Weapon attachment & holding position |
 | [`frame_t`](decompiled/Compilable/include/legacy_types.h) | `0x178` | 376 | Animation frame state machine & hitbox arrays |
 | [`file_t`](decompiled/Compilable/include/legacy_types.h) | `0x25360` | 152,416 | Character / weapon definition file (400 frames) |
-| [`object_t`](decompiled/Compilable/include/legacy_types.h) | `0x418` | 1,048 | Monolithic entity instance in game world |
+| [`object_t`](decompiled/Compilable/include/legacy_types.h) | `0x420` | 1,056 | Monolithic entity instance in game world |
 | [`global_t`](decompiled/Compilable/include/legacy_types.h) | `0x8D8`* | 2,264* | World manager (`0x458B00` static address) |
 
 *\* Note: On 64-bit targets, pointers expand to 8 bytes, cleanly adjusting pointer table sizes in `global_t` without shifting fixed-offset member fields.*

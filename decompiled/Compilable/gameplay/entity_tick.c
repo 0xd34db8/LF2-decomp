@@ -28,12 +28,6 @@ static int32_t resolve_frame_sound_id(const frame_t *frame)
     return -1;
 }
 
-static void sync_wait_counter(object_t *obj, int32_t val)
-{
-    obj->wait_counter = val;
-    obj->cpoint_hurt = val;
-}
-
 // 0x0040E450: 5-entry input history shift register
 void lf2_input_history_push(object_t *obj, uint32_t key_code)
 {
@@ -623,10 +617,10 @@ void lf2_object_frame_advance(object_t *obj, int mode, int obj_idx)
         if (snd > -1) {
             FUN_00416fb0(obj->x, snd);
         }
-        sync_wait_counter(obj, 0);
+        obj->wait_counter = 0;
     }
 
-    sync_wait_counter(obj, obj->wait_counter + 1);
+    obj->wait_counter++;
 
     if ((int32_t)file->type >= 0 && obj->frame_id1 < MAX_FRAMES &&
         file->frames[obj->frame_id1].state == STATE_STANDING && obj->y < 0) {
@@ -642,7 +636,7 @@ void lf2_object_frame_advance(object_t *obj, int mode, int obj_idx)
         if ((obj->clone >= 0 || obj->team == 5 || obj_idx > 19) && obj->blink_time < 1) {
             obj->blink_time = 30;
         }
-        sync_wait_counter(obj, 0);
+        obj->wait_counter = 0;
     }
     if (obj->frame_id1 < MAX_FRAMES && file->frames[obj->frame_id1].state == 2000) {
         obj->facing = (obj->x_velocity <= 0.0) ? FACING_LEFT : FACING_RIGHT;
@@ -650,7 +644,7 @@ void lf2_object_frame_advance(object_t *obj, int mode, int obj_idx)
 
     if (obj->frame_id1 < MAX_FRAMES &&
         obj->wait_counter > (int32_t)file->frames[obj->frame_id1].wait) {
-        sync_wait_counter(obj, 0);
+        obj->wait_counter = 0;
         int32_t next_frame = file->frames[obj->frame_id1].next;
         if (next_frame != 0) {
             obj->frame_id1 = (uint32_t)next_frame;
@@ -933,7 +927,7 @@ void lf2_object_physics_tick(object_t *obj)
                     } else {
                         obj->frame_id1 = 219;
                     }
-                    sync_wait_counter(obj, 0);
+                    obj->wait_counter = 0;
                 } else if (0.0001 < obj->y_position && 0.0001 < obj->y_velocity &&
                            (file->frames[obj->frame_id1].state == STATE_FALLING ||
                             file->frames[obj->frame_id1].state == STATE_BURNING)) {
@@ -966,7 +960,7 @@ void lf2_object_physics_tick(object_t *obj)
                     } else {
                         obj->y_position = 0.0;
                         obj->y_velocity = 0.0;
-                        sync_wait_counter(obj, 0);
+                        obj->wait_counter = 0;
                         obj->frame_id1 = (obj->frame_id1 > 185) ? 231 : 230;
                         obj->x_velocity /= 3.0;
                     }
@@ -978,7 +972,7 @@ void lf2_object_physics_tick(object_t *obj)
                     if (obj->y_velocity <= 9.9) {
                         obj->frame_id1 = (cur->state == 1002) ? 70 : 60;
                         obj->y_velocity = 0.0;
-                        sync_wait_counter(obj, 0);
+                        obj->wait_counter = 0;
                         obj->x_velocity *= 0.5;
                     } else if (cur->state == 1002) {
                         obj->frame_id1 = 7;
@@ -991,7 +985,7 @@ void lf2_object_physics_tick(object_t *obj)
                     } else {
                         obj->frame_id1 = 60;
                         obj->y_velocity = 0.0;
-                        sync_wait_counter(obj, 0);
+                        obj->wait_counter = 0;
                         obj->x_velocity *= 0.5;
                     }
                 }
@@ -1005,7 +999,7 @@ void lf2_object_physics_tick(object_t *obj)
                     if ((obj->y_velocity <= 8.5 && -10.0 <= obj->x_velocity && obj->x_velocity <= 10.0) ||
                         (cur->state != 1002 && cur->state != 1000)) {
                         obj->y_velocity = 0.0;
-                        sync_wait_counter(obj, 0);
+                        obj->wait_counter = 0;
                         obj->x_velocity *= 0.7;
                         obj->frame_id1 = (cur->state == 1002) ? 70 : 60;
                     } else {
@@ -1038,7 +1032,7 @@ void lf2_object_physics_tick(object_t *obj)
                         }
                         obj->frame_id1 = 20;
                         obj->y_velocity = 0.0;
-                        sync_wait_counter(obj, 0);
+                        obj->wait_counter = 0;
                         obj->x_velocity *= 0.5;
                     }
                 }
@@ -1046,7 +1040,7 @@ void lf2_object_physics_tick(object_t *obj)
                 obj->y_position = 0.0;
                 obj->frame_id1 = 101;
                 obj->y_velocity = 0.0;
-                sync_wait_counter(obj, 0);
+                obj->wait_counter = 0;
                 obj->x_velocity = 0.0;
             }
         }
@@ -1221,7 +1215,7 @@ void lf2_object_input_tick(object_t *obj)
 
         if (obj->click_attack == 1 && (int8_t)obj->attack_press > 0) {
             obj->dash_counter = 0;
-            sync_wait_counter(obj, 0);
+            obj->wait_counter = 0;
             if (wtype == 0) {
                 if ((int8_t)obj->can_hit < 1) {
                     int32_t r = FUN_00417170(0x82, 2);
@@ -1256,13 +1250,13 @@ void lf2_object_input_tick(object_t *obj)
             }
         }
         if (obj->click_jump == 1 && (int8_t)obj->jump_press > 0) {
-            sync_wait_counter(obj, 0);
+            obj->wait_counter = 0;
             obj->dash_counter = 0;
             obj->frame_id1 = 210;
         }
         if (obj->click_defend == 1 && obj->defend_lock == 0 && (int8_t)obj->defend_press > 0) {
             obj->dash_counter = 0;
-            sync_wait_counter(obj, 0);
+            obj->wait_counter = 0;
             obj->frame_id1 = 110;
         }
     }
@@ -1327,7 +1321,7 @@ void lf2_object_input_tick(object_t *obj)
         }
         if (obj->click_attack == 1 && (int8_t)obj->attack_press > 0) {
             obj->dash_counter = 0;
-            sync_wait_counter(obj, 0);
+            obj->wait_counter = 0;
             obj->frame_id1 = 50;
         }
     }
@@ -1338,7 +1332,7 @@ void lf2_object_input_tick(object_t *obj)
         if (obj->click_left == 1 && obj->click_right == 0) obj->facing = FACING_LEFT;
         if (obj->click_attack != 0) {
             if (wtype == 0) {
-                sync_wait_counter(obj, 0);
+                obj->wait_counter = 0;
                 obj->frame_id1 = 80;
                 if (DAT_0044d034 != 0) {
                     int32_t cost = file->frames[80].mp;
@@ -1350,7 +1344,7 @@ void lf2_object_input_tick(object_t *obj)
                     }
                 }
             } else if (wtype % 100 == 1) {
-                sync_wait_counter(obj, 0);
+                obj->wait_counter = 0;
                 if (obj->click_left == 0 && obj->click_right == 0 &&
                     obj->click_up == 0 && obj->click_down == 0) {
                     wtype = obj->weapon_type;
@@ -1370,7 +1364,7 @@ void lf2_object_input_tick(object_t *obj)
 
     if (obj->frame_id1 < MAX_FRAMES &&
         file->frames[obj->frame_id1].state == STATE_RUNNING && wtype != TYPE_HEAVY_WEAPON) {
-        sync_wait_counter(obj, 0);
+        obj->wait_counter = 0;
         int32_t rfr = (file->running_frame_rate > 0) ? (int32_t)file->running_frame_rate : 1;
         int32_t mc = ((int32_t)obj->move_counter + 1) % (rfr * 4);
         obj->move_counter = (uint32_t)mc;
@@ -1442,7 +1436,7 @@ void lf2_object_input_tick(object_t *obj)
     if (obj->frame_id1 < MAX_FRAMES &&
         file->frames[obj->frame_id1].state == STATE_RUNNING &&
         obj->weapon_type == TYPE_HEAVY_WEAPON) {
-        sync_wait_counter(obj, 0);
+        obj->wait_counter = 0;
         int32_t rfr = (file->running_frame_rate > 0) ? (int32_t)file->running_frame_rate : 1;
         int32_t mc = ((int32_t)obj->move_counter + 1) % (rfr * 4);
         obj->move_counter = (uint32_t)mc;
@@ -1510,7 +1504,7 @@ void lf2_object_input_tick(object_t *obj)
         } else {
             obj->frame_id1 = 108;
         }
-        sync_wait_counter(obj, 0);
+        obj->wait_counter = 0;
         if (file->rowing_height < obj->y_velocity) {
             obj->y_velocity = file->rowing_height;
         }
@@ -1559,7 +1553,7 @@ void lf2_object_input_tick(object_t *obj)
                         (obj->click_left != 0 || obj->click_right != 0 ||
                          obj->click_up != 0 || obj->click_down != 0))) {
                 obj->frame_id1 = (wt == TYPE_THROW_WEAPON || wt == TYPE_DRINK) ? 52 : 40;
-                sync_wait_counter(obj, 0);
+                obj->wait_counter = 0;
                 obj->y_velocity -= 1.0;
             }
         }

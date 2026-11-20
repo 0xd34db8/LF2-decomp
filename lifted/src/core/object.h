@@ -11,7 +11,7 @@ namespace lf2 {
 #pragma pack(push, 4)
 
 // Entity / Object in the game world
-// Total Size: 0x418 (1048 bytes)
+// Total Size: 0x420 (1056 bytes)
 struct object_t {
     uint32_t        move_counter;             // 0x000
     union {
@@ -44,11 +44,13 @@ struct object_t {
     uint32_t        frame_id4;                // 0x07C
     uint8_t         facing;                   // 0x080 (0: right, 1: left)
     uint8_t         _unknown4[3];             // 0x081 - 0x084
-    int32_t         wait_counter;             // 0x084
     union {
-        int32_t     cpoint_hurt;              // 0x088
+        int32_t     cpoint_hurt;              // 0x084
+        uint32_t    _unknown7;                // 0x084
+    };
+    union {
+        int32_t     wait_counter;             // 0x088
         int32_t     in_sky;                   // 0x088
-        uint32_t    _unknown7;                // 0x088
     };
     int32_t         cpoint_catcher;           // 0x08C
     union {
@@ -209,15 +211,14 @@ struct object_t {
 #endif
     int32_t         ai_target_x;              // 0x3FC
     int32_t         ai_target_z;              // 0x400
-    union {
-        uint32_t    ai_vars_tail[5];          // 0x404 - 0x418
-        int32_t     input_history[5];         // 0x404 - 0x418 (5-entry input ring shift register)
-    };
+    uint32_t        ai_vars_tail;             // 0x404
+    int32_t         input_history[5];         // 0x408 - 0x41C (5-entry input ring shift register)
+    uint32_t        _pad_41c;                 // 0x41C - 0x420
 };
 
 #pragma pack(pop)
 
-static_assert(sizeof(object_t) == 0x418, "object_t size must be 0x418 (1048 bytes)");
+static_assert(sizeof(object_t) == 0x420, "object_t size must be 0x420 (1056 bytes)");
 static_assert(offsetof(object_t, x) == 0x010, "object_t::x offset mismatch");
 static_assert(offsetof(object_t, y) == 0x014, "object_t::y offset mismatch");
 static_assert(offsetof(object_t, z) == 0x018, "object_t::z offset mismatch");
@@ -230,8 +231,8 @@ static_assert(offsetof(object_t, z_position) == 0x068, "object_t::z_position off
 static_assert(offsetof(object_t, frame_id1) == 0x070, "object_t::frame_id1 offset mismatch");
 static_assert(offsetof(object_t, frame_id4) == 0x07C, "object_t::frame_id4 offset mismatch");
 static_assert(offsetof(object_t, facing) == 0x080, "object_t::facing offset mismatch");
-static_assert(offsetof(object_t, wait_counter) == 0x084, "object_t::wait_counter offset mismatch");
-static_assert(offsetof(object_t, in_sky) == 0x088, "object_t::in_sky offset mismatch");
+static_assert(offsetof(object_t, cpoint_hurt) == 0x084, "object_t::cpoint_hurt offset mismatch");
+static_assert(offsetof(object_t, wait_counter) == 0x088, "object_t::wait_counter offset mismatch");
 static_assert(offsetof(object_t, holding_attack) == 0x0CA, "object_t::holding_attack offset mismatch");
 static_assert(offsetof(object_t, click_attack) == 0x0D1, "object_t::click_attack offset mismatch");
 static_assert(offsetof(object_t, vrest_of_objects) == 0x0F0, "object_t::vrest_of_objects offset mismatch");
@@ -246,5 +247,6 @@ static_assert(offsetof(object_t, team) == 0x364, "object_t::team offset mismatch
 static_assert(offsetof(object_t, file) == 0x368, "object_t::file offset mismatch");
 static_assert(offsetof(object_t, ai_target_x) == 0x3FC, "object_t::ai_target_x offset mismatch");
 static_assert(offsetof(object_t, ai_target_z) == 0x400, "object_t::ai_target_z offset mismatch");
+static_assert(offsetof(object_t, input_history) == 0x408, "object_t::input_history offset mismatch");
 
 } // namespace lf2
