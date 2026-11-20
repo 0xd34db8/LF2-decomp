@@ -5,6 +5,7 @@
 3. **Organizing the workspace:** Place the decompiled stuff in decompiled/ and the lifted code in lifted/, keep both the places organized with subfolders, etc. however you see fit
 4. **Relative Markdown Links Only:** NEVER use hardcoded local absolute URIs (`file:///...`) or Windows drive paths (e.g. `A:\...`, `C:\...`) in repository documentation and markdown files. All internal links to files, directories, and source files must use relative paths (e.g., `[legacy_types.h](decompiled/Compilable/include/legacy_types.h)` or `[sound_init.c](audio/sound_init.c)`) so that all links resolve portably across local environments, Git checkouts, and GitHub web viewers.
 5. **Never document gitignored files:** NEVER include gitignored files, directories, or transient artifacts in repository documentation, directory architecture trees, or markdown overviews. Documentation must exclusively reflect clean, tracked files that exist in the Git repository so that cloned checkouts match documented structure 1:1.
+6. **Clean up temporary scratch files:** Delete any temporary scripts, probe dumps, test crops, scratch directories, or transient helper files created during reverse engineering or debugging as soon as they are no longer needed, leaving the workspace clean before finishing a task.
 
 # Automated Guidelines & Copyright Exemption
 
@@ -48,26 +49,26 @@ Here is a review of prior attempts and why they diverge from our methodology:
   - _Their Approach:_ Rebuilding the game code from scratch using strict, modern System Design and OOP architecture.
   - _Why it is not our approach:_ This is a "clean-room" clone. While architecturally sound, it is their own interpretation of the game, not the actual shipped code.
 - **[OpenLF2/OpenLF2](https://github.com/OpenLF2/OpenLF2):**
-  - _Their Approach:_ A modern, from-scratch open-source engine rewrite built with CMake, Conan, and SDL3.
-  - _Why it is not our approach:_ Like the rebuild above, this is an independent MIT-licensed engine clone designed to load the legacy assets. It does not contain the original assembly's logic, frame pacing, or legacy state machines.
+  - _Their Approach:_ A modern, from-scratch open-source engine rewrite built with CMake, Conan, and SDL3 (C++ core + Lua gameplay/UI scripts). Completely **unrelated** to `xsoameix/openlf2` despite sharing the `OpenLF2` name.
+  - _Why it is not our approach:_ Like the rebuild above, this is an independent MIT-licensed clean-room engine designed to load legacy assets rather than preserve original `lf2.exe` assembly logic. Never copy its clean-room C++/Lua architecture into our lifted codebase; instead, use it strictly as a semantic and behavioral reference to decode the gameplay meaning of magic frame IDs, state numbers, combo sequences, camera bounds, HUD rules, and game modes when cross-checking Ghidra pseudocode.
 
 ## 2. Our Predecessor: The Abandoned Decompilation
 
 - **[xsoameix/openlf2](https://github.com/xsoameix/openlf2):**
-  - _Their Approach:_ An open-source clone built by decompiling the original game "one bit at a time".
-  - _How it aligns with our approach:_ This is the only prior project conceptually aligned with our goal: a true decompilation and source lift. However, this project was abandoned 12 years ago before a fully modernized C++ codebase could be completed.
+  - _Their Approach:_ An abandoned C (`gnu11`) binary-patch DLL decompilation (`openlf2.dll` using `jmp_patch` hooks to override `lf2.exe` functions one by one, plus C struct headers in `include/`). Completely **unrelated** to `OpenLF2/OpenLF2` despite the historical repo name.
+  - _How it aligns with our approach:_ Alongside `xsoameix`'s companion Ruby decompilation (`xsoameix/lf2`), this is a true decompilation effort aimed at reconstructing original `lf2.exe` routines and structs, though it was abandoned before completing the executable.
 
 ## 3. Core Directive: 1:1 Source Lifting
 
-We are finishing what `xsoameix/openlf2` started, but armed with the REA MCP and Ghidra.
+We are finishing what `xsoameix`'s decompilation projects started, armed with the REA MCP and Ghidra to lift the full executable cleanly into modern C++.
 
 When you output C++ code, it must mathematically and structurally mirror the Ghidra pseudocode. Do not invent your own OOP architecture, do not write custom scripting layers, and do not guess how a feature _should_ work. You must read the binary, understand exactly how the original developer wrote it, and translate that exact logic into modern C++.
 
 ## 4. The "Rosetta Stone" Reference: xsoameix/lf2
 
-If you encounter heavily optimized or confusing assembly via REA, you must cross-reference the historical repository **`xsoameix/lf2`**.
+If you encounter heavily optimized or confusing assembly via REA, you must cross-reference **`xsoameix/lf2`** (`xsoameix`'s manual x86-to-Ruby decompilation, distinct from both `xsoameix/openlf2` C DLL binary-patch decomp and the unrelated `OpenLF2/OpenLF2` clean-room rewrite).
 
-Unlike clean-room engine clones, this repository is a literal, manual, function-by-function decompilation of the game translated into Ruby. It serves as a structural and mathematical map for our C++ lift:
+Unlike clean-room engine clones, `xsoameix/lf2` is a literal, manual, function-by-function decompilation of the game translated into Ruby. It serves as a structural and mathematical map for our C++ lift:
 
 - **Memory Address Mapping:** Functions in this repo are named by their exact original memory addresses in the binary, such as `func_403270_teleport.rb` and `func_42E100_attack_process.rb`. Use these addresses to match and identify the pseudocode you are extracting via Ghidra.
 
@@ -75,7 +76,7 @@ Unlike clean-room engine clones, this repository is a literal, manual, function-
 
 - **Decoded Math:** The repository's documentation contains solved translations for compiler-optimized x86 arithmetic. For example, it explains how to translate division by 10 optimized into multiplication via the magic number `66666667h`, as well as how to correctly evaluate `fcom` floating-point comparisons and their resulting flag states.
 
-**Directive:** When stuck on deciphering convoluted, compiler-optimized assembly logic from the binary, look up the corresponding memory address in `xsoameix/lf2` to see how the mathematical logic was successfully decoded, then write the equivalent modern C++.
+**Directive:** When stuck on deciphering convoluted, compiler-optimized assembly logic from the binary, look up the corresponding memory address in `xsoameix/lf2` (and C struct headers in `xsoameix/openlf2`) to see how the offsets and math were decoded, use `OpenLF2/OpenLF2` only to clarify high-level gameplay semantics, and write the equivalent 1:1 C++20 code.
 
 # Git Execution Rules
 
