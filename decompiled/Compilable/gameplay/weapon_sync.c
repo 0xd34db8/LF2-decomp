@@ -125,6 +125,9 @@ static void lf2_wpoint_sync_single(global_t *global, int32_t weapon_id)
             weapon->y_velocity = holder->y_velocity;
             weapon->x_velocity = holder->x_velocity / 3.0;
         }
+        if (-2.0 < weapon->y_position) {
+            weapon->y_position = -2.0;
+        }
     }
 
     // 4. Weapon throw impulse when wpoint->dvx != 0
@@ -164,7 +167,7 @@ static void lf2_wpoint_sync_single(global_t *global, int32_t weapon_id)
         weapon->frame_id1 = (uint32_t)FUN_00417170(0x8c, 6);
         weapon->x_velocity = (double)(FUN_00417170(0x8d, 7) - 3);
         weapon->y_velocity = (double)(-FUN_00417170(0x8e, 4));
-        weapon->z_velocity = (double)(FUN_00417170(0x8f, 5) - 2) / 3.0;
+        weapon->z_velocity = (double)(FUN_00417170(0x8f, 5) - 2) / 5.0;
     }
 }
 

@@ -15,7 +15,7 @@ static void lf2_cpoint_catch_sync_single(global_t *global, int32_t catcher_id)
         return;
     }
     object_t *catcher = global->objects[catcher_id];
-    if (!catcher || !catcher->file) return;
+    if (!catcher || !catcher->file || catcher->frame_id1 >= MAX_FRAMES) return;
 
     frame_t *catcher_frame = &catcher->file->frames[catcher->frame_id1];
     cpoint_t *cp = &catcher_frame->cpoint;
@@ -28,7 +28,7 @@ static void lf2_cpoint_catch_sync_single(global_t *global, int32_t catcher_id)
         return;
     }
     object_t *victim = global->objects[victim_id];
-    if (!victim || !victim->file) return;
+    if (!victim || !victim->file || victim->frame_id1 >= MAX_FRAMES) return;
 
     frame_t *victim_frame = &victim->file->frames[victim->frame_id1];
     if (victim->cpoint_caught != catcher_id || victim_frame->cpoint.kind != 2) {
@@ -44,11 +44,11 @@ static void lf2_cpoint_catch_sync_single(global_t *global, int32_t catcher_id)
     }
 
     int32_t dmg = cp->injury;
-    if (dmg != 0 && catcher->cpoint_hurt == 0) {
+    if (dmg != 0 && catcher->wait_counter == 0) {
         if (dmg < 1) {
             victim->hp += dmg;
             victim->dark_hp += dmg / 3;
-            catcher->cpoint_hurt = 1;
+            catcher->wait_counter = 1;
         } else {
             if (victim->armor_multiplier > 0) {
                 dmg = (dmg * 100) / victim->armor_multiplier;
@@ -60,7 +60,7 @@ static void lf2_cpoint_catch_sync_single(global_t *global, int32_t catcher_id)
             }
             victim->hp -= dmg;
             victim->dark_hp -= dmg / 3;
-            catcher->cpoint_hurt = 1;
+            catcher->wait_counter = 1;
             catcher->shaking = 2;
             victim->shaking = -3;
             victim->hp_lost += dmg;
@@ -75,7 +75,11 @@ static void lf2_cpoint_catch_sync_single(global_t *global, int32_t catcher_id)
         : (catcher->x + catcher_frame->centerx - cp->x);
     int32_t world_cy = catcher->y - catcher_frame->centery + cp->y;
 
-    frame_t *v_act_frame = &victim->file->frames[cp->vaction];
+    int32_t vact_idx = (cp->vaction < 0) ? -cp->vaction : cp->vaction;
+    if (vact_idx < 0 || vact_idx >= MAX_FRAMES || victim->frame_id1 >= MAX_FRAMES) {
+        return;
+    }
+    frame_t *v_act_frame = &victim->file->frames[vact_idx];
     frame_t *v_cur_frame = &victim->file->frames[victim->frame_id1];
     if (victim->facing == FACING_RIGHT) {
         victim->x = (v_cur_frame->centerx - v_act_frame->cpoint.x) + world_cx;
@@ -112,7 +116,7 @@ static void lf2_cpoint_chain_throw_single(global_t *global, int32_t obj_id)
         return;
     }
     object_t *obj = global->objects[obj_id];
-    if (!obj || !obj->file) return;
+    if (!obj || !obj->file || obj->frame_id4 >= MAX_FRAMES || obj->frame_id1 >= MAX_FRAMES) return;
 
     frame_t *f4 = &obj->file->frames[obj->frame_id4];
     cpoint_t *cp = &f4->cpoint;
@@ -120,9 +124,11 @@ static void lf2_cpoint_chain_throw_single(global_t *global, int32_t obj_id)
     if (cp->kind == 1 && obj->shaking >= 0) {
         int32_t victim_id = obj->cpoint_catcher;
         if (victim_id >= 0 && victim_id < MAX_OBJECTS &&
+            global->is_object_exists[victim_id] &&
             global->objects[victim_id] &&
             global->objects[victim_id]->cpoint_caught == obj_id &&
             global->objects[victim_id]->file &&
+            global->objects[victim_id]->frame_id4 < MAX_FRAMES &&
             global->objects[victim_id]->file->frames[global->objects[victim_id]->frame_id4].cpoint.kind == 2) {
             object_t *victim = global->objects[victim_id];
             if (cp->decrease > 0) {
@@ -142,18 +148,20 @@ static void lf2_cpoint_chain_throw_single(global_t *global, int32_t obj_id)
                 }
             }
 
-            if (obj->click_attack != 0 && (int8_t)obj->key_state[2] > 0 && cp->aaction != 0 &&
+            if (obj->click_attack != 0 && (int8_t)obj->attack_press > 0 && cp->aaction != 0 &&
                 ((obj->click_left == 0 && obj->click_right == 0) || cp->taction == 0)) {
                 obj->frame_id1 = (uint32_t)cp->aaction;
                 if ((int32_t)obj->frame_id1 < 0) {
                     obj->facing = 1 - obj->facing;
                     obj->frame_id1 = (uint32_t)(-(int32_t)obj->frame_id1);
                 }
-                victim->frame_id1 = (uint32_t)obj->file->frames[obj->frame_id1].cpoint.vaction;
-                victim->cpoint_hurt = 0;
-                obj->cpoint_hurt = 0;
+                if (obj->frame_id1 < MAX_FRAMES) {
+                    victim->frame_id1 = (uint32_t)obj->file->frames[obj->frame_id1].cpoint.vaction;
+                }
+                victim->wait_counter = 0;
+                obj->wait_counter = 0;
             }
-            if (obj->click_attack != 0 && (int8_t)obj->key_state[2] > 0 &&
+            if (obj->click_attack != 0 && (int8_t)obj->attack_press > 0 &&
                 (obj->click_left != 0 || obj->click_right != 0 || obj->click_up != 0 || obj->click_down != 0) &&
                 cp->taction != 0) {
                 obj->frame_id1 = (uint32_t)cp->taction;
@@ -161,26 +169,31 @@ static void lf2_cpoint_chain_throw_single(global_t *global, int32_t obj_id)
                     obj->facing = 1 - obj->facing;
                     obj->frame_id1 = (uint32_t)(-(int32_t)obj->frame_id1);
                 }
-                victim->frame_id1 = (uint32_t)obj->file->frames[obj->frame_id1].cpoint.vaction;
-                victim->cpoint_hurt = 0;
-                obj->cpoint_hurt = 0;
+                if (obj->frame_id1 < MAX_FRAMES) {
+                    victim->frame_id1 = (uint32_t)obj->file->frames[obj->frame_id1].cpoint.vaction;
+                }
+                victim->wait_counter = 0;
+                obj->wait_counter = 0;
             }
-            if (obj->click_jump != 0 && (int8_t)obj->key_state[3] > 0 && cp->jaction != 0) {
+            if (obj->click_jump != 0 && (int8_t)obj->jump_press > 0 && cp->jaction != 0) {
                 obj->frame_id1 = (uint32_t)cp->jaction;
                 if ((int32_t)obj->frame_id1 < 0) {
                     obj->facing = 1 - obj->facing;
                     obj->frame_id1 = (uint32_t)(-(int32_t)obj->frame_id1);
                 }
-                victim->frame_id1 = (uint32_t)obj->file->frames[obj->frame_id1].cpoint.vaction;
-                victim->cpoint_hurt = 0;
-                obj->cpoint_hurt = 0;
+                if (obj->frame_id1 < MAX_FRAMES) {
+                    victim->frame_id1 = (uint32_t)obj->file->frames[obj->frame_id1].cpoint.vaction;
+                }
+                victim->wait_counter = 0;
+                obj->wait_counter = 0;
             }
         } else {
             obj->frame_id1 = 0;
         }
 
 check_throw:
-        if (cp->throwvx != 0 && victim_id >= 0 && victim_id < MAX_OBJECTS && global->objects[victim_id]) {
+        if (cp->throwvx != 0 && victim_id >= 0 && victim_id < MAX_OBJECTS &&
+            global->is_object_exists[victim_id] && global->objects[victim_id]) {
             object_t *victim = global->objects[victim_id];
             if (cp->throwinjury < 1) {
                 if (cp->throwinjury == -1 && victim->file) {
@@ -200,19 +213,21 @@ check_throw:
                 victim->thrown_injury = cp->throwinjury;
             }
 
-            frame_t *f1 = &obj->file->frames[obj->frame_id1];
-            victim->y = (obj->y - f1->centery) + cp->y;
-            victim->y_position = (double)victim->y;
-            if (obj->facing == FACING_RIGHT) {
-                victim->x = (obj->x - f1->centerx) + cp->x;
-            } else {
-                victim->x = (f1->centerx - cp->x) + obj->x;
-            }
-            victim->x_position = (double)victim->x;
+            if (obj->frame_id1 < MAX_FRAMES) {
+                frame_t *f1 = &obj->file->frames[obj->frame_id1];
+                victim->y = (obj->y - f1->centery) + cp->y;
+                victim->y_position = (double)victim->y;
+                if (obj->facing == FACING_RIGHT) {
+                    victim->x = (obj->x - f1->centerx) + cp->x;
+                } else {
+                    victim->x = (f1->centerx - cp->x) + obj->x;
+                }
+                victim->x_position = (double)victim->x;
 
-            obj->frame_id1 = (uint32_t)f1->next;
-            obj->frame_id4 = obj->frame_id1;
-            obj->cpoint_hurt = 0;
+                obj->frame_id1 = (uint32_t)f1->next;
+                obj->frame_id4 = obj->frame_id1;
+            }
+            obj->wait_counter = 0;
 
             victim->x_velocity = (obj->facing == FACING_RIGHT) ? (double)cp->throwvx : (double)(-cp->throwvx);
             victim->frame_id1 = (uint32_t)cp->vaction;
@@ -226,19 +241,20 @@ check_throw:
             }
         }
 
-        if (cp->dircontrol == 1 && obj->cpoint_hurt == 2) {
+        if (cp->dircontrol == 1 && obj->wait_counter == 2) {
             if (obj->click_right != 0 && obj->click_left == 0) obj->facing = FACING_RIGHT;
             if (obj->click_right == 0 && obj->click_left != 0) obj->facing = FACING_LEFT;
         }
-        if (cp->dircontrol == -1 && obj->cpoint_hurt == 2) {
+        if (cp->dircontrol == -1 && obj->wait_counter == 2) {
             if (obj->click_right != 0 && obj->click_left == 0) obj->facing = FACING_LEFT;
             if (obj->click_right == 0 && obj->click_left != 0) obj->facing = FACING_RIGHT;
         }
     } else if (obj->file->frames[obj->frame_id1].cpoint.kind == 2) {
         int32_t c_id = obj->cpoint_caught;
-        if (c_id < 0 || c_id >= MAX_OBJECTS || !global->objects[c_id] ||
+        if (c_id < 0 || c_id >= MAX_OBJECTS || !global->is_object_exists[c_id] || !global->objects[c_id] ||
             global->objects[c_id]->cpoint_catcher != obj_id ||
             !global->objects[c_id]->file ||
+            global->objects[c_id]->frame_id1 >= MAX_FRAMES ||
             global->objects[c_id]->file->frames[global->objects[c_id]->frame_id1].cpoint.kind != 1) {
             obj->frame_id1 = 212;
             obj->y_velocity = -3.0;

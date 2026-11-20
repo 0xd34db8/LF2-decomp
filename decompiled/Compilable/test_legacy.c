@@ -515,6 +515,372 @@ int main() {
         printf("    [PASS] Phase 21 & 22 Frame Advance, Combo Recognizers, Input & Physics verified!\n");
     }
 
+    // 15. Test Phase 21: wpoint_sync (0x00417F80), cpoint_sync (0x004187B0), cpoint_chain (0x00418C30), Firzen fusion (0x004064D0)
+    printf("[*] Testing Phase 21 Weapon Sync, Cpoint Grapple/Chain, and Firzen Fusion...\n");
+    {
+        static global_t g15;
+        memset(&g15, 0, sizeof(g15));
+        in_ECX = &g15;
+
+        file_t *cfile = (file_t *)calloc(1, sizeof(file_t));
+        file_t *vfile = (file_t *)calloc(1, sizeof(file_t));
+        file_t *milk_file = (file_t *)calloc(1, sizeof(file_t));
+        file_t *beer_file = (file_t *)calloc(1, sizeof(file_t));
+        file_t *bat_file = (file_t *)calloc(1, sizeof(file_t));
+        file_t *firen_file = (file_t *)calloc(1, sizeof(file_t));
+        file_t *freeze_file = (file_t *)calloc(1, sizeof(file_t));
+        file_t *firzen_file = (file_t *)calloc(1, sizeof(file_t));
+        assert(cfile && vfile && milk_file && beer_file && bat_file && firen_file && freeze_file && firzen_file);
+
+        cfile->id = ID_RUDOLF_DAT;
+        cfile->type = TYPE_CHARACTER;
+        vfile->id = ID_DENNIS_DAT;
+        vfile->type = TYPE_CHARACTER;
+        milk_file->id = ID_MILK_DAT;
+        milk_file->type = TYPE_DRINK;
+        beer_file->id = ID_BEER_DAT;
+        beer_file->type = TYPE_DRINK;
+        bat_file->id = ID_STICK_DAT;
+        bat_file->type = TYPE_LIGHT_WEAPON;
+        firen_file->id = ID_FIREN_DAT;
+        firen_file->type = TYPE_CHARACTER;
+        freeze_file->id = ID_FREEZE_DAT;
+        freeze_file->type = TYPE_CHARACTER;
+        firzen_file->id = ID_FIRZEN_DAT;
+        firzen_file->type = TYPE_CHARACTER;
+
+        // 15a: FUN_00417f80 (Milk/Beer drinking, dual-anchor wpoint, falling -2.0 clamp, throw, kind==3 / 5.0 drop)
+        cfile->frames[10].state = STATE_DRINKING;
+        cfile->frames[10].centerx = 40;
+        cfile->frames[10].centery = 40;
+        cfile->frames[10].wpoint.kind = 1;
+        cfile->frames[10].wpoint.x = 45;
+        cfile->frames[10].wpoint.y = 30;
+        cfile->frames[10].wpoint.weaponact = 2;
+        cfile->frames[10].wpoint.cover = 0;
+
+        cfile->frames[11].state = STATE_STANDING;
+        cfile->frames[11].centerx = 40;
+        cfile->frames[11].centery = 40;
+        cfile->frames[11].wpoint.kind = 1;
+        cfile->frames[11].wpoint.x = 50;
+        cfile->frames[11].wpoint.y = 35;
+        cfile->frames[11].wpoint.weaponact = 3;
+        cfile->frames[11].wpoint.cover = 1;
+
+        cfile->frames[12].state = STATE_FALLING;
+        cfile->frames[13].state = STATE_ATTACKING;
+        cfile->frames[13].wpoint.kind = 1;
+        cfile->frames[13].wpoint.weaponact = 3;
+        cfile->frames[13].wpoint.dvx = 12;
+        cfile->frames[13].wpoint.dvy = -3;
+        cfile->frames[13].wpoint.dvz = 2;
+        cfile->frames[14].state = STATE_STANDING;
+        cfile->frames[14].wpoint.kind = 3;
+        cfile->frames[14].wpoint.weaponact = 3;
+
+        milk_file->frames[2].centerx = 10; milk_file->frames[2].centery = 15;
+        milk_file->frames[2].wpoint.x = 10; milk_file->frames[2].wpoint.y = 15;
+        beer_file->frames[2].centerx = 10; beer_file->frames[2].centery = 15;
+        beer_file->frames[2].wpoint.x = 10; beer_file->frames[2].wpoint.y = 15;
+        bat_file->frames[3].centerx = 20; bat_file->frames[3].centery = 20;
+        bat_file->frames[3].wpoint.x = 15; bat_file->frames[3].wpoint.y = 18;
+
+        object_t holder, milk, beer, bat;
+        lf2_object_init(&holder);
+        lf2_object_init(&milk);
+        lf2_object_init(&beer);
+        lf2_object_init(&bat);
+
+        holder.file = cfile;
+        holder.x = 100; holder.y = 0; holder.z = 200;
+        holder.x_position = 100.0; holder.y_position = 0.0; holder.z_position = 200.0;
+        holder.facing = FACING_RIGHT;
+        holder.frame_id1 = 10;
+        holder.hp = 400; holder.dark_hp = 450; holder.max_hp = 500; holder.mp = 100;
+        holder.weapon_type = 6;
+        holder.weapon_id = 1;
+
+        milk.file = milk_file;
+        milk.weapon_type = -6;
+        milk.holder_id = 0;
+        milk.hp = 11;
+        milk.clone = -1;
+        milk.weapon_hp = 1000;
+
+        g15.objects[0] = &holder; g15.is_object_exists[0] = 1;
+        g15.objects[1] = &milk;   g15.is_object_exists[1] = 1;
+
+        FUN_00417f80();
+        assert(milk.hp == 10);
+        assert(holder.dark_hp == 452);
+        assert(holder.hp == 404);
+        assert(milk.x == 105 && milk.y == -11 && milk.z == 201);
+
+        milk.hp = 1;
+        FUN_00417f80();
+        assert(milk.hp == 0);
+        assert(holder.weapon_type == 0 && milk.weapon_type == 0);
+        assert(holder.weapon_id == 0 && milk.holder_id == 0);
+        assert(holder.frame_id1 == 0 && milk.weapon_hp == 0);
+        assert(milk.y_velocity == -8.0);
+
+        // Beer drinking + empty toss
+        g15.is_object_exists[1] = 0;
+        beer.file = beer_file;
+        beer.weapon_type = -6;
+        beer.holder_id = 0;
+        beer.hp = 2;
+        beer.clone = -1;
+        g15.objects[2] = &beer; g15.is_object_exists[2] = 1;
+        holder.weapon_type = 6;
+        holder.weapon_id = 2;
+        holder.frame_id1 = 10;
+        holder.mp = 499;
+        FUN_00417f80();
+        assert(holder.mp == 500); // clamped
+        assert(beer.hp == 0);
+        assert(beer.y_velocity == -8.0);
+        assert(holder.weapon_type == 0 && beer.weapon_type == 0);
+        g15.is_object_exists[2] = 0;
+
+        // Dual-anchor cover==1 + falling -2.0 clamp + dvx throw + kind==3 / 5.0 drop
+        bat.file = bat_file;
+        bat.weapon_type = -1;
+        bat.holder_id = 0;
+        g15.objects[3] = &bat; g15.is_object_exists[3] = 1;
+        holder.weapon_type = 1;
+        holder.weapon_id = 3;
+        holder.frame_id1 = 11;
+        holder.z_position = 200.0;
+        FUN_00417f80();
+        assert(bat.frame_id1 == 3);
+        assert(bat.x == 115 && bat.y == -2 && bat.z == 199);
+
+        holder.frame_id1 = 12; // STATE_FALLING
+        holder.y = 40;
+        holder.x_velocity = 9.0;
+        holder.y_velocity = -4.0;
+        FUN_00417f80();
+        assert(holder.weapon_type == 0 && bat.weapon_type == 0);
+        assert(bat.x_velocity == 3.0 && bat.y_velocity == -4.0);
+        assert(bat.y_position == -2.0); // 0x4479d8 clamp
+
+        holder.y = 0;
+        holder.weapon_type = 1;
+        bat.weapon_type = -1;
+        holder.frame_id1 = 13;
+        holder.click_up = 1; holder.click_down = 0;
+        FUN_00417f80();
+        assert(bat.frame_id1 == 40);
+        assert(bat.weapon_throw_injury == 0);
+        assert(bat.x_velocity == 12.0 && bat.y_velocity == -3.0 && bat.z_velocity == -2.0);
+        assert(holder.weapon_type == 0 && bat.weapon_type == 0);
+
+        holder.weapon_type = 1;
+        bat.weapon_type = -1;
+        holder.frame_id1 = 14; // wpoint.kind == 3
+        holder.click_up = 0;
+        FUN_00417f80();
+        assert(holder.weapon_type == 0 && bat.weapon_type == 0);
+        assert(fabs(bat.z_velocity) <= 0.4 + 1e-9);
+        g15.is_object_exists[3] = 0;
+
+        // 15b: FUN_004187b0 & FUN_00418c30 (cpoint sync, injury, chain, breakout, dircontrol, throw, Rudolf transform, orphan)
+        cfile->frames[120].state = STATE_CATCHING;
+        cfile->frames[120].centerx = 40; cfile->frames[120].centery = 40;
+        cfile->frames[120].cpoint.kind = 1;
+        cfile->frames[120].cpoint.x = 60; cfile->frames[120].cpoint.y = 35;
+        cfile->frames[120].cpoint.injury = 30;
+        cfile->frames[120].cpoint.cover = 21;
+        cfile->frames[120].cpoint.vaction = 230;
+        cfile->frames[120].cpoint.aaction = 121;
+        cfile->frames[120].cpoint.taction = 122;
+        cfile->frames[120].cpoint.jaction = 123;
+        cfile->frames[120].cpoint.hurtable = 1;
+        cfile->frames[120].cpoint.decrease = -10;
+        cfile->frames[120].cpoint.dircontrol = 1;
+
+        cfile->frames[121].cpoint.kind = 1; cfile->frames[121].cpoint.vaction = 231;
+        cfile->frames[122].cpoint.kind = 1; cfile->frames[122].cpoint.vaction = 232;
+        cfile->frames[123].cpoint.kind = 1; cfile->frames[123].cpoint.vaction = 233;
+
+        cfile->frames[125].state = STATE_CATCHING;
+        cfile->frames[125].centerx = 40; cfile->frames[125].centery = 40;
+        cfile->frames[125].next = 0;
+        cfile->frames[125].cpoint.kind = 1;
+        cfile->frames[125].cpoint.x = 65; cfile->frames[125].cpoint.y = 30;
+        cfile->frames[125].cpoint.vaction = 180;
+        cfile->frames[125].cpoint.throwvx = 14;
+        cfile->frames[125].cpoint.throwvy = -8;
+        cfile->frames[125].cpoint.throwvz = 3;
+        cfile->frames[125].cpoint.throwinjury = 45;
+
+        cfile->frames[126].state = STATE_CATCHING;
+        cfile->frames[126].centerx = 40; cfile->frames[126].centery = 40;
+        cfile->frames[126].next = 0;
+        cfile->frames[126].cpoint.kind = 1;
+        cfile->frames[126].cpoint.vaction = 180;
+        cfile->frames[126].cpoint.throwvx = 10;
+        cfile->frames[126].cpoint.throwinjury = -1;
+
+        for (int f = 230; f <= 233; ++f) {
+            vfile->frames[f].centerx = 30;
+            vfile->frames[f].centery = 40;
+            vfile->frames[f].cpoint.kind = 2;
+            vfile->frames[f].cpoint.x = 30;
+            vfile->frames[f].cpoint.y = 40;
+        }
+
+        object_t catcher, victim, clone_obj;
+        lf2_object_init(&catcher);
+        lf2_object_init(&victim);
+        lf2_object_init(&clone_obj);
+
+        catcher.file = cfile;
+        catcher.owner = 0;
+        catcher.x = 200; catcher.y = 0; catcher.z = 150;
+        catcher.facing = FACING_RIGHT;
+        catcher.frame_id1 = 120; catcher.frame_id4 = 120;
+        catcher.cpoint_catcher = 1;
+        catcher.cpoint_hurtable = 300;
+        catcher.wait_counter = 0;
+
+        victim.file = vfile;
+        victim.x = 220; victim.y = 0; victim.z = 150;
+        victim.facing = FACING_RIGHT;
+        victim.frame_id1 = 230; victim.frame_id4 = 230;
+        victim.cpoint_caught = 0;
+        victim.clone = -1;
+
+        clone_obj.file = cfile;
+        clone_obj.clone = 0;
+
+        g15.objects[0] = &catcher; g15.is_object_exists[0] = 1;
+        g15.objects[1] = &victim;  g15.is_object_exists[1] = 1;
+        g15.objects[2] = &clone_obj; g15.is_object_exists[2] = 1;
+
+        FUN_004187b0();
+        assert(victim.hp == 470);
+        assert(victim.dark_hp == 490);
+        assert(catcher.wait_counter == 1);
+        assert(catcher.shaking == 2 && victim.shaking == -3);
+        assert(catcher.total_attack == 30);
+        assert(victim.z == 151); // cover % 10 == 1
+        assert(victim.facing == FACING_LEFT); // cover / 10 == 2
+        // Second call while wait_counter == 1 does not deal duplicate injury
+        victim.shaking = 0;
+        FUN_004187b0();
+        assert(victim.hp == 470);
+
+        // Chain actions + dircontrol + decrease breakout
+        catcher.shaking = 0;
+        catcher.wait_counter = 2;
+        catcher.click_left = 1; catcher.click_right = 0;
+        catcher.click_attack = 0; catcher.click_jump = 0;
+        FUN_00418c30();
+        assert(catcher.facing == FACING_LEFT);
+
+        catcher.frame_id1 = 120; catcher.frame_id4 = 120;
+        catcher.click_left = 0; catcher.click_attack = 1; catcher.attack_press = 1;
+        catcher.cpoint_hurtable = 300;
+        FUN_00418c30();
+        assert(catcher.frame_id1 == 121 && victim.frame_id1 == 231);
+        assert(catcher.wait_counter == 0 && victim.wait_counter == 0);
+
+        catcher.frame_id1 = 120; catcher.frame_id4 = 120;
+        catcher.click_left = 1; catcher.click_attack = 1; catcher.attack_press = 1;
+        catcher.cpoint_hurtable = 300;
+        FUN_00418c30();
+        assert(catcher.frame_id1 == 122 && victim.frame_id1 == 232);
+
+        catcher.frame_id1 = 120; catcher.frame_id4 = 120;
+        catcher.click_attack = 0; catcher.click_jump = 1; catcher.jump_press = 1;
+        catcher.cpoint_hurtable = 300;
+        FUN_00418c30();
+        assert(catcher.frame_id1 == 123 && victim.frame_id1 == 233);
+
+        // Breakout (cpoint_hurtable + decrease < 0)
+        catcher.frame_id1 = 120; catcher.frame_id4 = 120;
+        victim.frame_id1 = 230; victim.frame_id4 = 230;
+        catcher.click_jump = 0; catcher.click_left = 0;
+        catcher.cpoint_hurtable = 5;
+        FUN_00418c30();
+        assert(catcher.frame_id1 == 0 && victim.frame_id1 == 181);
+        assert(victim.attacks == 1 && victim.y_accl == -3.0 && victim.pic_x_gain == 4.0);
+
+        // Throw launch (frame 125)
+        catcher.frame_id1 = 125; catcher.frame_id4 = 125;
+        catcher.facing = FACING_RIGHT; catcher.click_up = 1;
+        victim.frame_id1 = 230; victim.frame_id4 = 230;
+        victim.y_velocity = 0.0; victim.z_velocity = 0.0;
+        FUN_00418c30();
+        assert(victim.x_velocity == 14.0 && victim.y_velocity == -8.0 && victim.z_velocity == -3.0);
+        assert(victim.thrown_injury == 45 && victim.frame_id1 == 180 && catcher.frame_id1 == 0);
+
+        // Rudolf transform (frame 126, throwinjury == -1)
+        catcher.file = cfile;
+        clone_obj.file = cfile;
+        catcher.frame_id1 = 126; catcher.frame_id4 = 126;
+        victim.frame_id1 = 230; victim.frame_id4 = 230;
+        FUN_00418c30();
+        assert(catcher.file == vfile);
+        assert(catcher.uid == (int32_t)ID_RUDOLF_DAT);
+        assert(catcher._unknown39 == (int32_t)ID_DENNIS_DAT);
+        assert(clone_obj.file == vfile);
+
+        // Orphan caught victim release -> 212
+        catcher.file = cfile;
+        catcher.frame_id1 = 0; catcher.frame_id4 = 0;
+        victim.frame_id1 = 230; victim.frame_id4 = 230;
+        victim.y_position = 0.0; victim.y_velocity = 0.0;
+        FUN_00418c30();
+        assert(victim.frame_id1 == 212 && victim.y_velocity == -3.0 && victim.y_position == -2.0);
+        g15.is_object_exists[2] = 0;
+
+        // 15c: FUN_004064d0 (Firen + Freeze -> Firzen fusion & defusion)
+        memset(&g15, 0, sizeof(g15));
+        g15.files[0] = firen_file;
+        g15.files[1] = freeze_file;
+        g15.files[2] = firzen_file;
+        firen_file->frames[9].state = STATE_RUNNING;
+        freeze_file->frames[9].state = STATE_RUNNING;
+
+        object_t firen, freeze;
+        lf2_object_init(&firen);
+        lf2_object_init(&freeze);
+        firen.file = firen_file;  firen.hp = 150;  firen.frame_id1 = 9;  firen.x = 120; firen.z = 200; firen.team = 1;
+        freeze.file = freeze_file; freeze.hp = 140; freeze.frame_id1 = 9; freeze.x = 100; freeze.z = 200; freeze.team = 1;
+        g15.objects[0] = &firen;  g15.is_object_exists[0] = 1;
+        g15.objects[1] = &freeze; g15.is_object_exists[1] = 1;
+
+        FUN_004064d0();
+        assert(firen.file == firzen_file);
+        assert(firen.frame_id1 == 290);
+        assert(firen.hp == 290);
+        assert(firen.mp == 500);
+        assert(firen.firen_counter == 4500);
+        assert(firen._unknown34_rest[0] == 1);
+        assert(g15.is_object_exists[1] == 0);
+
+        // Defusion back to Firen + Freeze when firen_counter reaches 0
+        firen.frame_id1 = 0;
+        firen.firen_counter = 1;
+        FUN_004064d0();
+        assert(firen._unknown34_rest[0] == -1);
+        assert(firen.file == firen_file && freeze.file == freeze_file);
+        assert(g15.is_object_exists[1] == 1);
+        assert(firen.hp == 145 && freeze.hp == 145);
+        assert(firen.frame_id1 == 112 && freeze.frame_id1 == 112);
+        assert(firen.mp == 0 && freeze.mp == 0);
+        assert(firen.firen_counter == 900);
+        assert(freeze.facing == (uint8_t)(1 - firen.facing));
+
+        free(cfile); free(vfile); free(milk_file); free(beer_file);
+        free(bat_file); free(firen_file); free(freeze_file); free(firzen_file);
+        printf("    [PASS] Phase 21 Weapon Sync, Cpoint Grapple/Chain, and Firzen Fusion verified!\n");
+    }
+
     printf("\n[SUCCESS] All Decompiled Compilable Suite Tests Passed with 100%% Parity!\n");
     return 0;
 }

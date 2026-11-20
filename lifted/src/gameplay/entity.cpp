@@ -1637,7 +1637,7 @@ void world_step_collisions(global_t* world, uint32_t mode)
         }
     }
 
-    process_firzen_fusion(world, 0);
+    world_process_firzen_fusion(world, 0);
 }
 
 // 1:1 Lift of 0x004196F0: Physics velocity/impulse averaging pass across active objects

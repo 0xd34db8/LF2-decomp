@@ -59,6 +59,7 @@ struct object_t {
     };
     union {
         int32_t     cpoint_hurtable;          // 0x094
+        int32_t     cpoint_hold_timer;        // 0x094
         uint32_t    _unknown8;                // 0x094
     };
     int32_t         weapon_type;              // 0x098
@@ -169,9 +170,20 @@ struct object_t {
         uint32_t    thrown_injury;            // 0x320
     };
     int32_t         uid;                      // 0x324
-    uint32_t        _unknown34[4];            // 0x328 - 0x338
+    union {
+        uint32_t    _unknown34[4];            // 0x328 - 0x338
+        struct {
+            int32_t fusion_state;             // 0x328 (-1: none, 1: fused Firzen)
+            int32_t fusion_partner;           // 0x32C (absorbed partner object slot)
+            int32_t fusion_self_id;           // 0x330 (original file id of slot)
+            int32_t fusion_partner_id;        // 0x334 (original file id of partner)
+        };
+    };
     uint32_t        firen_counter;            // 0x338
-    uint32_t        _unknown39;               // 0x33C
+    union {
+        uint32_t    _unknown39;               // 0x33C
+        int32_t     transformed_to_id;        // 0x33C (Rudolf transform target file id)
+    };
     uint32_t        armor_multiplier;         // 0x340
     int32_t         player_index;             // 0x344
     uint32_t        total_attack;             // 0x348
@@ -187,7 +199,15 @@ struct object_t {
     union {
         uint32_t    ai_vars[36];              // 0x36C - 0x3FC
         struct {
-            uint32_t ai_vars_body[31];        // 0x36C - 0x3E8
+            union {
+                uint32_t ai_vars_body[31];    // 0x36C - 0x3E8
+                struct {
+                    int32_t spark_count;      // 0x36C (< 10)
+                    int32_t spark_x[10];      // 0x370 - 0x398
+                    int32_t spark_y[10];      // 0x398 - 0x3C0
+                    int32_t spark_kind[10];   // 0x3C0 - 0x3E8
+                };
+            };
             int32_t  blocked_up;              // 0x3E8
             int32_t  blocked_down;            // 0x3EC
             int32_t  blocked_left;            // 0x3F0
@@ -200,7 +220,14 @@ struct object_t {
     union {
         uint32_t    ai_vars[35];              // 0x370 - 0x3FC
         struct {
-            uint32_t ai_vars_body[30];        // 0x370 - 0x3E8
+            union {
+                uint32_t ai_vars_body[30];    // 0x370 - 0x3E8
+                struct {
+                    int32_t spark_x[10];      // 0x370 - 0x398
+                    int32_t spark_y[10];      // 0x398 - 0x3C0
+                    int32_t spark_kind[10];   // 0x3C0 - 0x3E8
+                };
+            };
             int32_t  blocked_up;              // 0x3E8
             int32_t  blocked_down;            // 0x3EC
             int32_t  blocked_left;            // 0x3F0
@@ -213,7 +240,14 @@ struct object_t {
     int32_t         ai_target_z;              // 0x400
     uint32_t        ai_vars_tail;             // 0x404
     int32_t         input_history[5];         // 0x408 - 0x41C (5-entry input ring shift register)
+#if INTPTR_MAX == INT32_MAX
     uint32_t        _pad_41c;                 // 0x41C - 0x420
+#else
+    union {
+        uint32_t    _pad_41c;                 // 0x41C - 0x420
+        int32_t     spark_count;              // 0x41C (64-bit host alias for +0x36C spark_count)
+    };
+#endif
 };
 
 #pragma pack(pop)
@@ -233,6 +267,12 @@ static_assert(offsetof(object_t, frame_id4) == 0x07C, "object_t::frame_id4 offse
 static_assert(offsetof(object_t, facing) == 0x080, "object_t::facing offset mismatch");
 static_assert(offsetof(object_t, cpoint_hurt) == 0x084, "object_t::cpoint_hurt offset mismatch");
 static_assert(offsetof(object_t, wait_counter) == 0x088, "object_t::wait_counter offset mismatch");
+static_assert(offsetof(object_t, cpoint_hold_timer) == 0x094, "object_t::cpoint_hold_timer offset mismatch");
+static_assert(offsetof(object_t, fusion_state) == 0x328, "object_t::fusion_state offset mismatch");
+static_assert(offsetof(object_t, transformed_to_id) == 0x33C, "object_t::transformed_to_id offset mismatch");
+static_assert(offsetof(object_t, spark_x) == 0x370, "object_t::spark_x offset mismatch");
+static_assert(offsetof(object_t, spark_y) == 0x398, "object_t::spark_y offset mismatch");
+static_assert(offsetof(object_t, spark_kind) == 0x3C0, "object_t::spark_kind offset mismatch");
 static_assert(offsetof(object_t, holding_attack) == 0x0CA, "object_t::holding_attack offset mismatch");
 static_assert(offsetof(object_t, click_attack) == 0x0D1, "object_t::click_attack offset mismatch");
 static_assert(offsetof(object_t, vrest_of_objects) == 0x0F0, "object_t::vrest_of_objects offset mismatch");

@@ -22,8 +22,8 @@ struct global_t {
     // Lifted game logic methods
     void teleport(uint32_t teleported_id, uint32_t teleport_to);
     void does_attack_success(uint32_t attacker_id, uint32_t injured_id, uint32_t mode);
-    void attack_process(uint32_t attacker_id);
-    void process_all_attacks();
+    void attack_process(uint32_t attacker_id, int32_t counter_12 = 0);
+    void process_all_attacks(uint32_t mode = 0, int32_t counter_12 = 0);
     int32_t spawn_projectile(uint32_t owner_id, uint32_t file_id, int32_t x, int32_t y, int32_t z, double dvx, double dvy, uint8_t facing);
 };
 

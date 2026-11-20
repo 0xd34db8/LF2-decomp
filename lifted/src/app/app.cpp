@@ -2,6 +2,8 @@
 #include "app/options.h"
 #include "menu.h"
 #include "gameplay/ai.h"
+#include "gameplay/grapple.h"
+#include "gameplay/weapon.h"
 #include <iostream>
 #include <cstring>
 #include <algorithm>
@@ -1266,18 +1268,37 @@ void app_t::update_battle() {
     double d_z_min = static_cast<double>(z_min);
     double d_z_max = static_cast<double>(z_max);
     double d_stage_w = static_cast<double>(stage_w);
+    int32_t counter_12 = static_cast<int32_t>(m_frame_counter % 12);
+    uint32_t game_mode = static_cast<uint32_t>(m_selected_mode);
 
+    // 1. Physics integration, gravity & ground impact (0x0040E490)
+    for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
+        if (!m_world.is_object_exists[i]) continue;
+        object_t* obj = m_world.objects[i];
+        if (!obj || !obj->file) continue;
+        object_physics_tick(obj, counter_12);
+    }
+
+    // 2. Pre-collision wpoint sync (0x00417F80)
+    world_process_weapons(&m_world);
+
+    // 3. Collision detection, Firzen fusion & attack resolution (0x00419380 -> 0x0042E100)
+    m_world.process_all_attacks(game_mode, counter_12);
+
+    // 4. Cpoint catch chain & grapple sync (0x00418C30 -> 0x004187B0)
+    world_process_cpoint_chain(&m_world);
+    world_process_cpoint_sync(&m_world);
+
+    // 5. Holder-weapon validation & post-combat wpoint sync (0x0041BC90 -> 0x00417F80)
+    world_validate_weapon_holders(&m_world);
+    world_process_weapons(&m_world);
+
+    // 6. Stage boundary clamping & off-screen removal (0x0041B5D0)
     for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
         if (!m_world.is_object_exists[i]) continue;
         object_t* obj = m_world.objects[i];
         if (!obj || !obj->file) continue;
 
-        obj->frame_id4 = obj->frame_id3;
-        obj->frame_id3 = obj->frame_id2;
-        object_frame_advance(obj, static_cast<int32_t>(m_selected_mode), static_cast<int32_t>(i), 1, true);
-        object_physics_tick(obj, static_cast<int32_t>(m_frame_counter % 12));
-
-        // 0x0041B5D0: Authentic Z and X stage boundary clamping / off-screen removal
         if (obj->file->type == TYPE_CHARACTER) {
             if (obj->z_position < d_z_min) {
                 obj->z_position = d_z_min;
@@ -1319,9 +1340,22 @@ void app_t::update_battle() {
         obj->x = static_cast<int32_t>(obj->x_position);
     }
 
-    // Hitbox interactions & attacks
-    m_world.process_all_attacks();
+    // 7. Physics velocity & impulse averaging (0x004196F0)
     world_average_velocities(&m_world);
+
+    // 8. Frame history shift & animation timer advance (0x0040D960)
+    for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
+        if (!m_world.is_object_exists[i]) continue;
+        object_t* obj = m_world.objects[i];
+        if (!obj || !obj->file) continue;
+
+        obj->frame_id4 = obj->frame_id3;
+        obj->frame_id3 = obj->frame_id2;
+        object_frame_advance(obj, static_cast<int32_t>(m_selected_mode), static_cast<int32_t>(i), 1, true);
+        if (obj->frame_id1 == 1000 && obj->file->type != TYPE_CHARACTER) {
+            m_world.is_object_exists[i] = 0;
+        }
+    }
 
     if (m_num_fighters > 0) {
         m_camera.update_target(m_fighters[0].x);
