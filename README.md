@@ -4,79 +4,131 @@
 
 # Little Fighter 2 | Binary Reverse Engineering, Decompilation & Source Lift
 
-A complete binary reverse engineering, forensic decompilation, and modern C++ source lift of the original *Little Fighter 2* (`lf2.exe`, versions 1.9c / 2.0a, x86-32 MSVC++).
+Forensic decompilation and modern C++20 / SDL2 source lift of the original *Little Fighter 2* (`lf2.exe`, v1.9c / v2.0a, x86-32 MSVC++). Preserves authentic frame timings, hitbox mathematics, deterministic PRNG tables, and `.lfr` / lockstep protocols while shedding Win32 and DirectDraw 6 dependencies.
 
-</div>
+[Conventions](docs/CONVENTIONS.md) · [Progress Rules](docs/PROGRESS.md) · [Parity Testing](docs/PARITY_TESTING.md) · [Interactive Dashboard](https://0xd34db8.github.io/LF2-decomp/progress.html)
 
-<div align="center">
-This project is a systems programming and binary reverse engineering exercise designed to extract, lift, and preserve the authentic game logic (state machines, frame-accurate timings, hitbox collision mathematics, and data-driven file loading) while shedding legacy DirectDraw 6 and Win32 dependencies in favor of a modern cross-platform architecture.
 </div>
 
 ---
 
-## Project Scope
+## Status & Coverage
 
-The primary objective of this repository is the complete reverse engineering and forensic decompilation of the original closed-source x86-32 MSVC++ executable (`lf2.exe`). By combining **NSA Ghidra** & historical assembly mapping, this project recovers the authentic, byte-accurate algorithms, memory structures, and mathematical logic written by Marti Wong and Starsky Wong between 1999 and 2002.
+<!-- PROGRESS:START -->
+[![Decompiled](assets/progress/badge-decompiled.svg)](https://0xd34db8.github.io/LF2-decomp/progress.html) [![Lifted](assets/progress/badge-lifted.svg)](https://0xd34db8.github.io/LF2-decomp/progress.html) [![Tests](assets/progress/badge-tests.svg)](https://0xd34db8.github.io/LF2-decomp/progress.html)
 
-As a companion system, the repository also tries to provide a modernized **C++20 / SDL2 Source Lift** in [`lifted/`](lifted/), freeing the game from deprecated 1990s Win32 and DirectDraw 6 dependencies.
+[![LF2 Binary Coverage Map](assets/progress/progress.svg)](https://0xd34db8.github.io/LF2-decomp/progress.html)
+
+[Interactive Dashboard](https://0xd34db8.github.io/LF2-decomp/progress.html) | [Daily Progress History](https://0xd34db8.github.io/LF2-decomp/history.html) | [Counting Rules](docs/PROGRESS.md)
+
+| Subsystem | Total | RAW | Compilable | Lifted | Verified | Progress |
+| :--- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `app` | 45 | 34 | 32 | 27 | 22 | 60.0% |
+| `audio` | 19 | 19 | 19 | 19 | 13 | 100.0% |
+| `core` | 7 | 7 | 4 | 2 | 2 | 28.6% |
+| `data` | 25 | 19 | 19 | 17 | 16 | 68.0% |
+| `gameplay` | 38 | 38 | 37 | 37 | 36 | 97.4% |
+| `graphics` | 40 | 20 | 9 | 8 | 2 | 20.0% |
+| `net` | 7 | 2 | 3 | 2 | 1 | 28.6% |
+| **Total** | **181** | **139** | **123** | **112** | **92** | **61.9%** |
+
+<sub>Game-code denominator: `181` verified `.text` procedures (`37` static `zlib 1.1.4` functions and `24` Win32 import thunks excluded).</sub>
+<!-- PROGRESS:END -->
 
 ---
 
-<details>
-<summary><h2 style="display:inline;">Repository Architecture</h2></summary>
-<a id="repository-architecture"></a>
-
-The workspace is organized into dedicated, self-contained sub-environments to ensure complete isolation between forensic evidence, compilable legacy code, modern engine code, and project documentation:
+## Repository Architecture
 
 ```text
-LF2/
-├── assets/                     # Media documentation assets & hero banners
-├── decompiled/                 # Primary Reverse Engineering Archive
-│   ├── RAW/                    # Pristine decompiler outputs directly from Ghidra
-│   │   ├── app/                # Raw WinMain, WndProc, menu & tournament state machines
-│   │   ├── audio/              # Raw DirectSound & WAV buffer loaders
-│   │   ├── core/               # Raw PRNG table & coordinate math
-│   │   ├── data/               # Raw .dat lexers, cipher decryption & control.txt parsers
-│   │   ├── gameplay/           # Raw combat dispatcher, hitboxes, AI & weapon attachment
-│   │   ├── graphics/           # Raw DirectDraw blitters, clipping & parallax math
-│   │   └── net/                # Raw lockstep network exchange & packet verifiers
-│   ├── Compilable/             # Self-contained, compilable legacy C suite (55 library C units + test runner, 125 mapped routines)
-│   │   ├── include/            # legacy_types.h (typed structs), legacy_signatures.h, legacy_globals.h
-│   │   ├── app/                # Clean C routines: winmain.c, wndproc.c, battle_mode.c, etc.
-│   │   ├── audio/              # Clean C routines: sound_init.c, sound_load_wav.c, sound_play.c, bgm_manager.c
-│   │   ├── core/               # Clean C routines: abs.c, random.c, overlap.c, legacy_globals.c
-│   │   ├── data/               # Clean C routines: load_dat.c, save_dat.c, decrypt_dat.c, etc.
-│   │   ├── gameplay/           # Clean C routines: attack_process.c, teleport.c, ai_process.c, etc.
-│   │   ├── graphics/           # Clean C routines: draw_object.c, parallax_calc.c, clip_rect.c, etc.
-│   │   ├── net/                # Clean C routines: net_init.c, net_lockstep.c
-│   │   ├── Makefile            # Dedicated build system for compilable legacy archive
-│   │   ├── test_legacy.c       # Verification suite for data layout & decompiled math parity
-│   │   └── README.md           # Documentation, memory mapping & type registries
-│   ├── resources/              # Embedded PE resources extracted directly from lf2.exe
-│   │   ├── icon/               # Authentic 32x32 application icon (lf2.ico)
-│   │   ├── manifest/           # Original MSVC 8.0 CRT & MFC assembly dependency manifest
-│   │   └── ui/                 # 64 bitmap interface images extracted from RT_BITMAP
-│   └── README.md               # Master decompiled function registry & Ghidra address index
-├── lifted/                     # Dedicated Modern C++20 / SDL2 Source Lift
-│   ├── src/                    # Modernized game engine code
-│   │   ├── app/                # SDL2 windowing, event pump, scene transitions, fixed 30 FPS pacing
-│   │   ├── audio/              # DirectSound & DirectShow replacement via SDL2 audio pipeline, mixer & BGM streamer
-│   │   ├── core/               # Domain structures (object_t/global_t/frame_t), deterministic PRNG, replay pipeline
-│   │   ├── data/               # Lexer, Vigenère cipher decrypter & control configuration parser
-│   │   ├── gameplay/           # Combat dispatcher, hitbox intersection, entity physics & AI
-│   │   ├── graphics/           # SDL2 software renderer, parallax background & embedded UI
-│   │   └── net/                # Modern lockstep network sync & packet serialization
-│   ├── tests/                  # 16 unit test suites (+ 30-frame engine smoke verification)
+.
+├── .github/workflows/          # CI (Windows MSYS2 + Linux checks), PR delta report, and Pages deploy
+├── assets/
+│   ├── hero.png                # Repository banner
+│   └── progress/               # Auto-generated progress.svg coverage map and flat status badges
+├── decompiled/
+│   ├── functions.csv           # Canonical 242-entry .text inventory (181 game, 37 zlib, 24 thunks)
+│   ├── RAW/                    # 141 immutable Ghidra .c exports across 7 subsystems
+│   ├── Compilable/             # 55 compilable C translation units + test_legacy.c + Makefile
+│   ├── resources/              # Extracted PE icon, manifest, and 64 embedded UI bitmaps
+│   ├── verify_raw_entries.py   # Validates RAW filenames and functions.csv against VERIFIED_ENTRIES
+│   └── README.md               # Decompiled suite overview
+├── docs/
+│   ├── CONVENTIONS.md          # Annotation grammar, inventory sync, and verification contract
+│   ├── PROGRESS.md             # Counting rules, exclusions, treemap colors, and CLI commands
+│   └── PARITY_TESTING.md       # Headless verification and deterministic .lfr replay parity design
+├── lifted/
+│   ├── src/                    # Modernized C++20 / SDL2 engine across 7 subsystems
+│   ├── tests/                  # 16 standalone unit & parity test suites
 │   ├── tools/                  # Embedded UI generation pipeline (generate_embedded_ui.py)
-│   ├── third_party/            # Self-contained MinGW-w64 SDL2 development headers & libraries
-│   ├── Makefile                # Independent build system for the lifted engine
-│   └── README.md               # Documentation for the modern source lift
-├── AGENTS.md                   # Pair programming directives & architectural rules
-├── .gitignore                  # Git ignore rules
-└── README.md                   # Master repository documentation (this file)
+│   ├── third_party/            # Bundled MinGW-w64 SDL2 development headers and libraries
+│   └── Makefile                # Build & test targets for liblf2.a, lf2.exe, and all 16 test suites
+├── tools/
+│   ├── progress.py             # Progress engine, annotation linter, SVG generator, and --next finder
+│   ├── progress_history.py     # Daily first-parent Git history chart and HTML report generator
+│   └── tests/test_progress.py  # Zero-dependency unit tests for progress tooling
+├── AGENTS.md                   # Coding agent directives and verification contract
+└── README.md                   # Repository overview (this file)
 ```
 
-</details>
+---
+
+## Building & Verification
+
+### Prerequisites
+- **Windows Toolchain:** MSYS2 UCRT64 (`gcc` / `g++` 13+, `mingw32-make`, `zlib`)
+- **Python:** Python 3.10+ (standard library only, zero `pip` dependencies)
+- **SDL2:** Self-contained MinGW-w64 SDL2 headers and libraries in [`lifted/third_party/SDL2/`](lifted/third_party/SDL2/) (with `SDL2.dll` copied automatically on build)
+
+### Commands
+
+```powershell
+# 1. Verify RAW exports, functions.csv schema/sync, source annotations, and README sync
+python decompiled/verify_raw_entries.py
+python tools/progress.py --check --check-readme
+python -m unittest discover -s tools/tests -v
+
+# 2. Build and run the decompiled compilable legacy C test suite
+mingw32-make -C decompiled/Compilable test
+
+# 3. Build and run all 16 lifted unit suites + 30-frame headless SDL2 smoke test (17 checks)
+$env:SDL_VIDEODRIVER="dummy"; $env:SDL_AUDIODRIVER="dummy"; mingw32-make -C lifted test
+
+# 4. Find the next highest-priority functions to decompile or lift
+python tools/progress.py --next 15
+```
+
+In bash / MSYS2 / GitHub Actions:
+```bash
+SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy mingw32-make -C lifted test
+```
+
+### Setting Up Authentic Game Assets
+Because *Little Fighter 2* artwork, character sprites, sound effects, and stage backgrounds are proprietary freeware created by Marti Wong and Starsky Wong, they are not distributed in this repository. All unit tests, `test_legacy.exe`, and `lf2.exe --test --frames 30` run without external game assets.
+
+To run the full interactive game:
+1. Obtain an authentic *Little Fighter 2* installation (v1.9c, v2.0, or v2.0a) from [lf2.net](https://lf2.net) or [LF-Empire](https://lf-empire.de).
+2. Copy `data/`, `sprite/`, `bg/`, `sound/`, and `bgm/` into `lifted/build/`, then run `.\lifted\build\lf2.exe` (`--fullscreen` optional; `Alt + Enter` toggles fullscreen).
+
+---
+
+## Data Structure Memory Maps
+
+All memory structures match the exact byte layouts of the original MSVC++ 32-bit compilation target, verified via `static_assert` and unit test suites:
+
+| Structure | Size (Hex) | Size (Bytes) | Description |
+| :--- | :--- | :--- | :--- |
+| [`bdy_t`](decompiled/Compilable/include/legacy_types.h) | `0x28` | 40 | Bounding box / physical collision boundary |
+| [`itr_t`](decompiled/Compilable/include/legacy_types.h) | `0x50` | 80 | Interaction zone / attack hitbox / throw / catch |
+| [`opoint_t`](decompiled/Compilable/include/legacy_types.h) | `0x20` | 32 | Projectile / weapon / particle spawn coordinate |
+| [`bpoint_t`](decompiled/Compilable/include/legacy_types.h) | `0x0C` | 12 | Damage blood / impact particle coordinate |
+| [`cpoint_t`](decompiled/Compilable/include/legacy_types.h) | `0x44` | 68 | Catch & throw interaction point |
+| [`wpoint_t`](decompiled/Compilable/include/legacy_types.h) | `0x24` | 36 | Weapon attachment & holding position |
+| [`frame_t`](decompiled/Compilable/include/legacy_types.h) | `0x178` | 376 | Animation frame state machine & hitbox arrays |
+| [`file_t`](decompiled/Compilable/include/legacy_types.h) | `0x25360` | 152,416 | Character / weapon definition file (400 frames) |
+| [`object_t`](decompiled/Compilable/include/legacy_types.h) | `0x420` | 1,056 | Monolithic entity instance in game world |
+| [`global_t`](decompiled/Compilable/include/legacy_types.h) | `0x8D8`* | 2,264* | World manager (`0x458B00` static address) |
+
+*\* Note: On 64-bit targets, pointers expand to 8 bytes, cleanly adjusting pointer table sizes in `global_t` without shifting fixed-offset member fields.*
 
 ---
 
@@ -103,124 +155,6 @@ Over the last two decades, the Little Fighter 2 community has attempted several 
 3. **Dual-Track Workflow:**
    - **Forensic Decompilation ([`decompiled/`](decompiled/)):** Pristine Ghidra exports paired with a self-contained, human-readable, compilable C suite that preserves exact memory layouts and calling conventions.
    - **Modernized Source Lift ([`lifted/`](lifted/)):** Portable C++20 / SDL2 implementation shedding legacy DirectDraw 6 and Win32 dependencies while retaining 100% gameplay parity.
-
-</details>
-
----
-
-<details>
-<summary><h2 style="display:inline;">Core Directives & Verification Standards</h2></summary>
-<a id="core-directives--verification"></a>
-
-1. **Never Guess Offsets:** Every struct size and member variable offset is verified against Ghidra decompiler pseudocode and backed by compile-time `static_assert` statements.
-2. **Strict Adherence to Math:** Floating-point velocity integrations, hitbox coordinates, and frame timers are mathematically identical to the original x86 disassembly.
-3. **Dual-Target Portability:** Pointers and struct layouts are designed to maintain byte-offset parity on 32-bit compilation targets while running without memory truncation or segmentation faults on modern 64-bit systems.
-
-</details>
-
----
-
-<details>
-<summary><h2 style="display:inline;">Data Structure Memory Maps</h2></summary>
-<a id="data-structure-memory-maps"></a>
-
-All memory structures match the exact byte layouts of the original MSVC++ 32-bit compilation target, verified via `static_assert` and unit test suites:
-
-| Structure | Size (Hex) | Size (Bytes) | Description |
-| :--- | :--- | :--- | :--- |
-| [`bdy_t`](decompiled/Compilable/include/legacy_types.h) | `0x28` | 40 | Bounding box / physical collision boundary |
-| [`itr_t`](decompiled/Compilable/include/legacy_types.h) | `0x50` | 80 | Interaction zone / attack hitbox / throw / catch |
-| [`opoint_t`](decompiled/Compilable/include/legacy_types.h) | `0x20` | 32 | Projectile / weapon / particle spawn coordinate |
-| [`bpoint_t`](decompiled/Compilable/include/legacy_types.h) | `0x0C` | 12 | Damage blood / impact particle coordinate |
-| [`cpoint_t`](decompiled/Compilable/include/legacy_types.h) | `0x44` | 68 | Catch & throw interaction point |
-| [`wpoint_t`](decompiled/Compilable/include/legacy_types.h) | `0x24` | 36 | Weapon attachment & holding position |
-| [`frame_t`](decompiled/Compilable/include/legacy_types.h) | `0x178` | 376 | Animation frame state machine & hitbox arrays |
-| [`file_t`](decompiled/Compilable/include/legacy_types.h) | `0x25360` | 152,416 | Character / weapon definition file (400 frames) |
-| [`object_t`](decompiled/Compilable/include/legacy_types.h) | `0x420` | 1,056 | Monolithic entity instance in game world |
-| [`global_t`](decompiled/Compilable/include/legacy_types.h) | `0x8D8`* | 2,264* | World manager (`0x458B00` static address) |
-
-*\* Note: On 64-bit targets, pointers expand to 8 bytes, cleanly adjusting pointer table sizes in `global_t` without shifting fixed-offset member fields.*
-
-</details>
-
----
-
-<details>
-<summary><h2 style="display:inline;">Building & Verification</h2></summary>
-<a id="building--verification"></a>
-
-### Prerequisites
-- **Compiler:** Modern C/C++ toolchain (GCC 13+ / MSYS2 UCRT64 GCC 14.2+ / Clang 15+)
-- **Build Tool:** GNU `make` or `mingw32-make`
-- **SDL2:** MinGW-w64 development libraries are self-contained in [`lifted/third_party/SDL2/`](lifted/third_party/SDL2/), with `SDL2.dll` provided for runtime execution.
-
----
-
-### 1. Compilable Decompiled Legacy Suite (`decompiled/Compilable/`)
-
-Because *Little Fighter 2* artwork, sprite sheets, sound effects, and stage backgrounds are proprietary freeware created by Marti Wong and Starsky Wong, they are not distributed in this source code repository.
-
-```bash
-# Build the legacy static library (decompiled/Compilable/build/liblf2_legacy.a)
-mingw32-make -C decompiled/Compilable
-
-# Run the decompiled verification test suite
-mingw32-make -C decompiled/Compilable test
-
-# Clean legacy build artifacts
-mingw32-make -C decompiled/Compilable clean
-```
-
-**Verification Suite (`test_legacy.exe`) checks:**
-- Fast integer absolute value (`0x004034e0`), 2D overlap arithmetic (`0x004171c0`), circular PRNG & re-seed (`0x00417170` / `0x00422ac0`), and `sizeof`/`offsetof` alignment across all domain structures
-- Rudolf teleportation (`0x00403270`), key-name & VK-to-ASCII mapping (`0x00422b00` / `0x00422f60`), LF2 v2.0 replay cipher & zlib wrappers (`0x0043dd60` / `0x0043e620`), and BGM track dispatcher (`0x00402020` / `0x004025d0`)
-- Per-object input/physics tick, special-move combo recognizers (`D>R>A`, `D>U>A`, `D>D>A`, etc.), 3D AABB combat (`0x00417400`), `wpoint`/`cpoint` grapple chains, and Firzen fusion (`0x004064d0`)
-- AI controller (`0x004094b0`), `opoint` spawner (`0x00406a20`), `hit_Fa` seekers (`0x00406ba0`), weapon AI (`0x00408cb0`), and defensive rolls (`0x004034f0`)
-- Master battle frame loop (`0x0041bc90`), F1–F9 debug keys, 10-byte replay record/playback (`0x0043db40` / `0x0043dc50`), and end-of-frame spatialized sound flush (`0x00419e60`)
-
----
-
-### 2. Modernized Source Lift Engine (`lifted/`)
-
-The modernized source lift builds an independent executable and static engine library:
-
-```bash
-# Build the modernized game executable (lifted/build/lf2.exe)
-mingw32-make -C lifted
-
-# Run all 16 unit test suites and the 30-frame verification test (17 tests total)
-mingw32-make -C lifted test
-
-# Clean lifted build artifacts
-mingw32-make -C lifted clean
-```
-
-#### Running the Game:
-```bash
-# Launch from the lifted directory
-cd lifted && ./build/lf2.exe
-
-# Launch directly in fullscreen mode
-cd lifted && ./build/lf2.exe --fullscreen
-```
-
-* **Controls & Player Mapping:** Player keys are configured via `data/control.txt`.
-* **Fullscreen Toggle:** Press `Alt + Enter` to switch between windowed (794x550) and fullscreen.
-* **Secret Cheat Codes:**
-  - Type `lf2.net` on the main menu to unlock Julian, Firzen, LouisEX, and all enemy henchmen.
-  - Type `herofighter.com` to unlock function keys (`F6`–`F9`) in Stage mode.
-  - Type `ABC` to unlock the internal frame and hitbox inspector.
-
----
-
-### 3. Setting Up Authentic Game Assets
-
-Little Fighter 2 artwork, character sprites, sound effects, and stage backgrounds are proprietary freeware created by Marti Wong and Starsky Wong, and are not distributed in this repository.
-
-To run the lifted engine with full audio and visual assets:
-1. Obtain an authentic Little Fighter 2 installation (v1.9c, v2.0, or v2.0a) from [lf2.net](https://lf2.net) or [LF-Empire](https://lf-empire.de).
-2. Copy the authentic game folders (`data/`, `sprite/`, `bg/`, `sound/`, `bgm/`) into `lifted/build/` (or run `lf2.exe` directly inside an existing LF2 directory).
-3. All frontend menu and character selection UI images are pre-baked directly into the binary (`lifted/src/graphics/embedded_ui.cpp`), exactly mirroring the Win32 PE resource architecture of the original binary.
 
 </details>
 

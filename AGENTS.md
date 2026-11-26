@@ -126,3 +126,15 @@ When changes are substantial enough to warrant a commit, agents should record th
 
 - **When to Start a New Block:** Only create a separate commit block if the changes represent a completely distinct logical type (e.g. `feat:` vs `fix:`) or after a commit has been finalized by the user.
 - **Preserve Prior History:** Never delete or wipe out previous finalized commit messages already present in `.gitmessage`.
+
+# Annotation, Inventory & Verification Contract
+
+1. **Mandatory Source Annotations:** Every newly decompiled routine in `decompiled/Compilable/` and every lifted routine in `lifted/src/` MUST carry a machine-readable single-line annotation immediately above its definition (`// FUNCTION: LF2 0x004xxxxx`, `// LIFTED: LF2 0x004xxxxx`, `// VERIFIED: LF2 0x004xxxxx`, `// PARTIAL: LF2 0x004xxxxx`, or `// STUB: LF2 0x004xxxxx`). Follow the grammar and uniqueness rules in [docs/CONVENTIONS.md](docs/CONVENTIONS.md).
+2. **Evidence-Based `VERIFIED` Status:** Only use `VERIFIED` when an automated test in `lifted/tests/` directly exercises the lifted implementation's parity. Never alter files inside `decompiled/RAW/`.
+3. **Target Selection (`--next`):** Use `python tools/progress.py --next` to pick the next highest-priority target instead of guessing.
+4. **Inventory & Documentation Sync:** After adding or updating annotations or RAW exports, run `python tools/progress.py --update-readme` so `decompiled/functions.csv`, `assets/progress/*.svg`, and `README.md` stay synchronized.
+5. **Required Verification Gates:** Before declaring any decompilation or lifting task complete, all four checks must pass:
+   - `python decompiled/verify_raw_entries.py`
+   - `python tools/progress.py --check --check-readme`
+   - `mingw32-make -C decompiled/Compilable test`
+   - `SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy mingw32-make -C lifted test`
