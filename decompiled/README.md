@@ -37,7 +37,7 @@ decompiled/
 ## Suite Summary & Documentation
 
 - **[`decompiled/RAW/`](RAW/README.md):**
-  Houses the 123 pristine decompiler exports directly as emitted by Ghidra, verified 1:1 against genuine function entry points in `lf2.exe` via `verify_raw_entries.py`. Preserves raw `DAT_` pointers, synthetic registers (`in_ECX`), and original formatting without hand-written shortcuts. Serves as immutable forensic evidence for mathematical validation.
+  Houses the 141 pristine decompiler exports directly as emitted by Ghidra, verified 1:1 against genuine function entry points in `lf2.exe` via `verify_raw_entries.py`. Preserves raw `DAT_` pointers, synthetic registers (`in_ECX`), and original formatting without hand-written shortcuts. Serves as immutable forensic evidence for mathematical validation.
   *Read the full guide: [RAW/README.md](RAW/README.md)*
 
 - **[`decompiled/Compilable/`](Compilable/README.md):**
@@ -95,6 +95,7 @@ decompiled/
 | `0x0040bbf0` | Data | Frame structure constructor & zeroing | [`RAW/data`](RAW/data/func_0040bbf0_frame_ctor.c) | [`Compilable/data`](Compilable/data/frame_ctor.c) |
 | `0x0040be70` | Data | Sprite sheet UV coordinate calculation | [`RAW/data`](RAW/data/func_0040be70_calc_frame_coords.c) | [`Compilable/data`](Compilable/data/calc_frame_coords.c) |
 | `0x0040d0a0` | Data | Character `.dat` file serializer | [`RAW/data`](RAW/data/func_0040d0a0_save_dat.c) | [`Compilable/data`](Compilable/data/save_dat.c) |
+| `0x0040d940` | Data | Frame presence validation check on `.dat` slot | [`RAW/data`](RAW/data/func_0040d940_frame_present.c) | [`Compilable/data`](Compilable/data/frame_ctor.c) |
 | `0x0040d960` | Gameplay | Per-object frame timer, sound trigger & `frame.next` advancement | [`RAW/gameplay`](RAW/gameplay/func_0040d960_object_frame_advance.c) | [`Compilable/gameplay`](Compilable/gameplay/entity_tick.c) |
 | `0x0040de30` | Graphics | Sprite entity rendering, facing flip & palette blit | [`RAW/graphics`](RAW/graphics/func_0040de30_draw_entity.c) | [`Compilable/graphics`](Compilable/graphics/draw_object.c) |
 | `0x0040e170` | Gameplay | Combo timer window (`== 5`) interruption check helper | [`RAW/gameplay`](RAW/gameplay/func_0040e170_combo_timer_check.c) | [`Compilable/gameplay`](Compilable/gameplay/entity_tick.c) |
@@ -118,6 +119,17 @@ decompiled/
 | `0x00414a30` | Data | Decrypted `.dat` file exporter | [`RAW/data`](RAW/data/func_00414a30_decrypt_dat_to_file.c) | [`Compilable/data`](Compilable/data/decrypt_dat.c) |
 | `0x00414b70` | Data | Interactive `.dat` encrypt/decrypt CLI tool (`helpme`) | [`RAW/data`](RAW/data/func_00414b70_stage_dat_loader.c) | — |
 | `0x004151d0` | Graphics | Frame debugger HUD, sprite rendering dispatch & box overlay | [`RAW/graphics`](RAW/graphics/func_004151d0_frame_debugger.c) | — |
+| `0x00416c70` | App | Secret character unlock toggle (`lf2.net`) & replay unlock flag | [`RAW/app`](RAW/app/func_00416c70_unlock_chars_toggle.c) | [`Compilable/net`](Compilable/net/net_lockstep.c) |
+| `0x00416ca0` | App | Secret F-key unlock toggle (`herofighter.com`) & replay unlock flag | [`RAW/app`](RAW/app/func_00416ca0_unlock_fkeys_toggle.c) | [`Compilable/net`](Compilable/net/net_lockstep.c) |
+| `0x00416cd0` | App | F4 match exit, recording cancel & replay restoration handler | [`RAW/app`](RAW/app/func_00416cd0_fkey_f4_exit.c) | [`Compilable/net`](Compilable/net/net_lockstep.c) |
+| `0x00416dd0` | App | F1 battle pause toggle handler | [`RAW/app`](RAW/app/func_00416dd0_fkey_f1_pause.c) | [`Compilable/net`](Compilable/net/net_lockstep.c) |
+| `0x00416df0` | App | F2 single-frame step handler | [`RAW/app`](RAW/app/func_00416df0_fkey_f2_step.c) | [`Compilable/net`](Compilable/net/net_lockstep.c) |
+| `0x00416e10` | App | F3 function-key lock handler | [`RAW/app`](RAW/app/func_00416e10_fkey_f3_lock.c) | [`Compilable/net`](Compilable/net/net_lockstep.c) |
+| `0x00416e30` | App | F5 simulation speed toggle handler | [`RAW/app`](RAW/app/func_00416e30_fkey_f5_speed.c) | [`Compilable/net`](Compilable/net/net_lockstep.c) |
+| `0x00416e60` | App | F6 unlimited MP toggle handler | [`RAW/app`](RAW/app/func_00416e60_fkey_f6_mp.c) | [`Compilable/net`](Compilable/net/net_lockstep.c) |
+| `0x00416eb0` | App | F7 HP/MP full recovery handler | [`RAW/app`](RAW/app/func_00416eb0_fkey_f7_recover.c) | [`Compilable/net`](Compilable/net/net_lockstep.c) |
+| `0x00416f10` | App | F8 sky weapon drop trigger handler | [`RAW/app`](RAW/app/func_00416f10_fkey_f8_weapons.c) | [`Compilable/net`](Compilable/net/net_lockstep.c) |
+| `0x00416f60` | App | F9 destroy items / stage enemies handler | [`RAW/app`](RAW/app/func_00416f60_fkey_f9_destroy.c) | [`Compilable/net`](Compilable/net/net_lockstep.c) |
 | `0x00416fb0` | Audio | Positional audio panning calculator pass 1 | [`RAW/audio`](RAW/audio/func_00416fb0_sound_pan_calc_1.c) | [`Compilable/audio`](Compilable/audio/sound_play.c) |
 | `0x00417090` | Audio | Positional audio panning calculator pass 2 | [`RAW/audio`](RAW/audio/func_00417090_sound_pan_calc_2.c) | [`Compilable/audio`](Compilable/audio/sound_play.c) |
 | `0x00417170` | Core | 3,000-byte precomputed circular PRNG | [`RAW/core`](RAW/core/func_00417170_random.c) | [`Compilable/core`](Compilable/core/random.c) |
@@ -132,6 +144,8 @@ decompiled/
 | `0x004197a0` | Gameplay | Remote/network input unpacking & latching | [`RAW/gameplay`](RAW/gameplay/func_004197a0_input_unpack_net.c) | [`Compilable/gameplay`](Compilable/gameplay/slot_input.c) |
 | `0x004198f0` | Gameplay | Local player input latching & replay recording | [`RAW/gameplay`](RAW/gameplay/func_004198f0_input_latch_local.c) | [`Compilable/gameplay`](Compilable/gameplay/slot_input.c) |
 | `0x00419a60` | Gameplay | Master per-slot controller / AI input loop | [`RAW/gameplay`](RAW/gameplay/func_00419a60_input_ai_dispatch.c) | [`Compilable/gameplay`](Compilable/gameplay/slot_input.c) |
+| `0x00419e40` | Gameplay | Global game manager state constructor / existence reset | [`RAW/gameplay`](RAW/gameplay/func_00419e40_global_ctor.c) | [`Compilable/gameplay`](Compilable/gameplay/object_init.c) |
+| `0x00419e60` | Audio | Spatialized sound queue flush & DirectSound pan/volume dispatch | [`RAW/audio`](RAW/audio/func_00419e60_sound_flush.c) | [`Compilable/audio`](Compilable/audio/sound_play.c) |
 | `0x0041a250` | Graphics | Background update, parallax scrolling layer calculation & camera bounds | [`RAW/graphics`](RAW/graphics/func_0041a250_background_update.c) | [`Compilable/graphics`](Compilable/graphics/parallax_calc.c) |
 | `0x0041a5a0` | Graphics | Master scene rendering dispatcher & Z-sorting pass | [`RAW/graphics`](RAW/graphics/func_0041a5a0_render_scene.c) | [`Compilable/graphics`](Compilable/graphics/draw_object.c) |
 | `0x0041ae60` | Graphics | In-game HUD HP/MP gauge bar renderer | [`RAW/graphics`](RAW/graphics/func_0041ae60_render_hud_bars.c) | — |
@@ -173,8 +187,12 @@ decompiled/
 | `0x0043c780` | Graphics | Embedded UI bitmap surface loader | [`RAW/graphics`](RAW/graphics/func_0043c780_load_ui_surfaces.c) | — |
 | `0x0043cc60` | Graphics | Embedded UI secondary surface cache loader | [`RAW/graphics`](RAW/graphics/func_0043cc60_load_ui_2_surface.c) | — |
 | `0x0043cf40` | App | WinMain entry point & 30.3 FPS game loop | [`RAW/app`](RAW/app/func_0043cf40_winmain.c) | [`Compilable/app`](Compilable/app/winmain.c) |
+| `0x0043d2a0` | Data | Replay recording & playback buffer deallocator | [`RAW/data`](RAW/data/func_0043d2a0_replay_buffers_free.c) | [`Compilable/data`](Compilable/data/replay_cipher.c) |
+| `0x0043db40` | Data | Per-frame 10-byte replay input recorder | [`RAW/data`](RAW/data/func_0043db40_replay_write_frame.c) | [`Compilable/data`](Compilable/data/replay_cipher.c) |
+| `0x0043dc50` | Data | Per-frame 10-byte replay input reader | [`RAW/data`](RAW/data/func_0043dc50_replay_read_frame.c) | [`Compilable/data`](Compilable/data/replay_cipher.c) |
 | `0x0043dd60` | Data | Replay file save, zlib compression & secondary cipher | [`RAW/data`](RAW/data/func_0043dd60_replay_save.c) | [`Compilable/data`](Compilable/data/replay_cipher.c) |
-| `0x0043dfa0` | Data | Replay memory buffer state unpacking & entity restoration | [`RAW/data`](RAW/data/func_0043dfa0_replay_unpack.c) | — |
+| `0x0043df00` | Data | Replay difficulty, player name & profile string restorer | [`RAW/data`](RAW/data/func_0043df00_replay_restore_cfg.c) | [`Compilable/data`](Compilable/data/replay_cipher.c) |
+| `0x0043dfa0` | Data | Replay memory buffer state unpacking & entity restoration | [`RAW/data`](RAW/data/func_0043dfa0_replay_unpack.c) | [`Compilable/data`](Compilable/data/replay_cipher.c) |
 | `0x0043e620` | Data | Replay file load, secondary cipher de-obfuscation & inflation | [`RAW/data`](RAW/data/func_0043e620_replay_load.c) | [`Compilable/data`](Compilable/data/replay_cipher.c) |
 | `0x0043e890` | Graphics | DirectDraw surface restoration handler | [`RAW/graphics`](RAW/graphics/func_0043e890_ddraw_restore.c) | — |
 | `0x0043e9a0` | App | Game mode setup & developer cheat switches | [`RAW/app`](RAW/app/func_0043e9a0_game_mode_mgr.c) | [`Compilable/app`](Compilable/app/game_mode_mgr.c) |

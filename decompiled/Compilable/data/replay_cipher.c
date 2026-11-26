@@ -154,6 +154,248 @@ int FUN_0043e620(char *param_1) {
         return 0;
     }
 
-    DAT_004588ac = (int)(uintptr_t)uncomp_buf;
+    DAT_004588ac = (intptr_t)(uintptr_t)uncomp_buf;
     return 1;
+}
+
+// 1:1 Parity with 0x0043D280: Free single heap buffer pointer slot
+void FUN_0043d280(void *ptr_slot) {
+    if (!ptr_slot) return;
+    void **slot = (void **)ptr_slot;
+    if (*slot != NULL) {
+        free(*slot);
+        *slot = NULL;
+    }
+}
+
+// 1:1 Parity with 0x0043D2A0: Free recording (DAT_004588a8) and playback (DAT_004588ac) buffers
+void FUN_0043d2a0(void) {
+    FUN_0043d280(&DAT_004588a8);
+    FUN_0043d280(&DAT_004588ac);
+}
+
+// 1:1 Parity with 0x0043DB40: Write 10-byte per-frame input record into recording buffer
+void FUN_0043db40(const uint8_t *param_1) {
+    if (!DAT_004588a8 || !param_1) return;
+    uint8_t *dst = (uint8_t *)DAT_004588a8 + 0x2b38 + (size_t)DAT_00450b8c * 10;
+    for (int i = 0; i < 10; ++i) {
+        dst[i] = param_1[i];
+    }
+}
+
+// 1:1 Parity with 0x0043DC50: Read 10-byte per-frame input record from playback buffer
+void FUN_0043dc50(uint8_t *param_1) {
+    if (!DAT_004588ac || !param_1) return;
+    const uint8_t *src = (const uint8_t *)(uintptr_t)DAT_004588ac + 0x2b38 + (size_t)DAT_00450b8c * 10;
+    for (int i = 0; i < 10; ++i) {
+        param_1[i] = src[i];
+    }
+}
+
+// 1:1 Parity with 0x0043DF00: Restore difficulty, 8 player names, and 3 profile strings after replay
+void FUN_0043df00(void) {
+    DAT_00450c30 = DAT_0045877c;
+    for (int offset = 0; offset < 0x58; offset += 0x0b) {
+        const char *src = DAT_00458850 + offset;
+        char *dst = DAT_0044fcc0 + offset;
+        int k = 0;
+        do {
+            dst[k] = src[k];
+        } while (src[k++] != '\0' && (offset + k) < 0x58);
+    }
+    for (int i = 0; i < 100; ++i) {
+        DAT_0044fd18[i] = DAT_004587e8[i];
+        if (DAT_004587e8[i] == '\0') break;
+    }
+    for (int i = 0; i < 400; ++i) {
+        DAT_0044f900[i] = DAT_00458588[i];
+        if (DAT_00458588[i] == '\0') break;
+    }
+    for (int i = 0; i < 100; ++i) {
+        DAT_0044f890[i] = DAT_00458780[i];
+        if (DAT_00458780[i] == '\0') break;
+    }
+}
+
+// 1:1 Parity with 0x0043DFA0: Unpack replay header, config backups, 18 slots, PRNG table & random fighters
+void FUN_0043dfa0(int *param_1, char *param_2, void *param_3, void *param_4) {
+    if (!DAT_004588ac || !param_1 || !param_2 || !param_3) return;
+
+    uint8_t *buf = (uint8_t *)(uintptr_t)DAT_004588ac;
+    int32_t *u32 = (int32_t *)buf;
+    object_t **objects = (object_t **)param_3;
+    file_t **files = (file_t **)param_4;
+
+    DAT_0045877c = DAT_00450c30;
+    DAT_00450b8c = 0;
+    DAT_00450b84 = 1;
+    DAT_00450b88 = 1;
+    DAT_00450c30 = u32[0];
+    *(int32_t *)(buf + 0x630bb8) = DAT_00458428;
+    *(int32_t *)(buf + 0x630bbc) = DAT_0045842c;
+    DAT_00458428 = u32[2];
+    DAT_0045842c = u32[3];
+    DAT_00450b94 = u32[1];
+    *param_1 = u32[0x52];
+
+    // Backup & apply 8 player names (+0x14C = 0x53*4)
+    for (int offset = 0; offset < 0x58; offset += 0x0b) {
+        const char *cur = DAT_0044fcc0 + offset;
+        char *bak = DAT_00458850 + offset;
+        int k = 0;
+        do {
+            bak[k] = cur[k];
+        } while (cur[k++] != '\0' && (offset + k) < 0x58);
+
+        const char *rep_name = (const char *)(buf + 0x14c + offset);
+        char *dst_name = DAT_0044fcc0 + offset;
+        k = 0;
+        do {
+            dst_name[k] = rep_name[k];
+        } while (rep_name[k++] != '\0' && (offset + k) < 0x58);
+    }
+
+    // Backup & apply 3 profile strings (+0x630BC0, +0x630C24, +0x630DB4)
+    for (int i = 0; i < 100; ++i) {
+        DAT_004587e8[i] = DAT_0044fd18[i];
+        if (DAT_0044fd18[i] == '\0') break;
+    }
+    for (int i = 0; i < 100; ++i) {
+        DAT_0044fd18[i] = (char)buf[0x630bc0 + i];
+        if (buf[0x630bc0 + i] == '\0') break;
+    }
+    for (int i = 0; i < 400; ++i) {
+        DAT_00458588[i] = DAT_0044f900[i];
+        if (DAT_0044f900[i] == '\0') break;
+    }
+    for (int i = 0; i < 400; ++i) {
+        DAT_0044f900[i] = (char)buf[0x630c24 + i];
+        if (buf[0x630c24 + i] == '\0') break;
+    }
+    buf[0x630e17] = '\0';
+    for (int i = 0; i < 100; ++i) {
+        DAT_00458780[i] = DAT_0044f890[i];
+        if (DAT_0044f890[i] == '\0') break;
+    }
+    for (int i = 0; i < 100; ++i) {
+        DAT_0044f890[i] = (char)buf[0x630db4 + i];
+        if (buf[0x630db4 + i] == '\0') break;
+    }
+
+    DAT_0044d024 = u32[0x69];
+    memset(param_2, 0, MAX_OBJECTS);
+
+    // Restore initial 18 object slots (+0x1A8..+0x54F)
+    for (int slot = 0; slot < 18; ++slot) {
+        size_t base_off = 0x238 + (size_t)slot * 4;
+        int exists = *(int32_t *)(buf + base_off);
+        if (exists != 0 && objects[slot] != NULL) {
+            int32_t target_id = *(int32_t *)(buf + base_off - 0x48);
+            file_t *matched = NULL;
+            if (files != NULL) {
+                for (int f = 0; f < MAX_FILES; ++f) {
+                    if (files[f] != NULL && (int32_t)files[f]->id == target_id) {
+                        matched = files[f];
+                        break;
+                    }
+                }
+            }
+            if (matched != NULL) {
+                object_t *obj = objects[slot];
+                lf2_object_init(obj);
+                obj->file = matched;
+                obj->x_position = 350.0;
+                obj->weapon_hp = matched->weapon_hp;
+                obj->y_position = 0.0;
+                obj->z_position = 300.0;
+            }
+            object_t *obj = objects[slot];
+            obj->team = *(int32_t *)(buf + base_off - 0x90);
+            param_2[slot] = (char)exists;
+            obj->blink_time = *(int32_t *)(buf + base_off + 0x48);
+            obj->x = *(int32_t *)(buf + base_off + 0x90);
+            obj->y = *(int32_t *)(buf + base_off + 0xd8);
+            obj->z = *(int32_t *)(buf + base_off + 0x120);
+            obj->x_position = (double)obj->x;
+            obj->z_position = (double)obj->z;
+            obj->mp = *(int32_t *)(buf + base_off + 0x168);
+            obj->owner = *(int32_t *)(buf + base_off + 0x1b0);
+            obj->max_hp = *(int32_t *)(buf + base_off + 0x1f8);
+            obj->dark_hp = obj->max_hp;
+            obj->hp = obj->dark_hp;
+            obj->transformed_to_id = *(int32_t *)(buf + base_off + 0x240);
+            obj->player_index = *(int32_t *)(buf + base_off + 0x288);
+            obj->armor_multiplier = *(int32_t *)(buf + base_off + 0x2d0);
+        }
+    }
+
+    DAT_00450c24 = 0;
+    DAT_00450c20 = 0;
+    DAT_00450c1c = 0;
+    DAT_00450c18 = 0;
+    DAT_00450c14 = 0;
+    DAT_00450c10 = 0;
+    DAT_00450c0c = 0;
+    DAT_00450c08 = 0;
+    DAT_00450c04 = 0;
+    DAT_00450c28 = 0;
+
+    // BGM string at +0x550 (0x154 * 4)
+    for (int i = 0; i < 260; ++i) {
+        DAT_0044eed0[i] = (char)buf[0x550 + i];
+        if (buf[0x550 + i] == '\0') break;
+    }
+
+    // Battle troop tables
+    int *d5f8 = &DAT_0044d5f8;
+    int *d650 = &DAT_0044d650;
+    int *d6a8 = &DAT_0044d6a8;
+    int *d700 = &DAT_0044d700;
+    for (int k = 0; k < 20; ++k) {
+        d5f8[k] = u32[0x1d3 + k];
+        d650[k] = u32[0x1e9 + k];
+        d6a8[k] = u32[0x1ff + k];
+        d700[k] = u32[0x215 + k];
+    }
+
+    // PRNG index (+0x8C4 = 0x231*4) & 3000-byte table (+0x8C8)
+    DAT_00450bcc = u32[0x231];
+    memcpy(DAT_0044ff90, buf + 0x8c8, 3000);
+
+    // Stage random fighters (+0x1488..+0x14B4)
+    int *d324 = &DAT_0044d324;
+    for (int k = 0; k < 10; ++k) {
+        d324[k] = u32[0x522 + k];
+    }
+    DAT_0044d34c = u32[0x52c];
+    DAT_00450b90 = u32[0x52d];
+
+    DAT_0044d034 = 1;
+    DAT_00450bbc = 0;
+    DAT_00450bb0 = 0;
+    DAT_00450bb4 = 0;
+    if (*param_1 == 1) {
+        DAT_00450b9c = 0x46;
+        DAT_00450ba8 = 0;
+        DAT_00450bac = 0;
+        DAT_00450ba4 = 0;
+        DAT_0044fb6c = 0xffffffff;
+        DAT_0044f880 = 0xffffffff;
+        DAT_00450bc8 = 0;
+        DAT_00450bc4 = 0;
+    }
+    for (int i = 0; i < MAX_OBJECTS; ++i) {
+        if (param_2[i] == '\0' && objects[i] != NULL) {
+            lf2_object_init(objects[i]);
+        }
+    }
+    for (int i = 0; i < 8; ++i) {
+        if (param_2[i + 10] == '\0' && param_2[i] == '\0' && objects[i] && objects[i + 10]) {
+            objects[i]->team = objects[i + 10]->team;
+        }
+    }
+    DAT_00450c34 = 0;
+    DAT_00450bd0 = 0;
+    DAT_00450bd4 = 0;
+    DAT_00450bd8 = 0;
 }

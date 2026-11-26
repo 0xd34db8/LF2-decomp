@@ -1,3521 +1,1127 @@
 #include "legacy_types.h"
 #include "legacy_globals.h"
 #include "legacy_signatures.h"
+#include <stdlib.h>
 
+/*
+ * Virtual Address: 0x0042E100
+ * Function: lf2_attack_process / FUN_0042e100
+ * Calling Convention: __thiscall (ECX = global_t*, param_1 = attacker slot index)
+ *
+ * Description:
+ *   Clean 64-bit-safe 1:1 C11 translation of the combat attack processor.
+ *   Resolves damage, armor defense, knockdown fall states, knockback impulses,
+ *   projectile conversions/reflections, weapon drops/throws, catch grabs,
+ *   heal/forcefield/whirlwind ITRs, and hit-spark records.
+ */
 
-
-void FUN_0042e100(int param_1)
-
-
-
+static object_t *resolve_credit_owner(global_t *global, object_t *attacker)
 {
-
-  int iVar1;
-
-  double dVar2;
-
-  char cVar3;
-
-  float10 fVar4;
-
-  undefined4 uVar5;
-
-  int iVar6;
-
-  int *piVar7;
-
-  int iVar8;
-
-  int in_ecx_val = (int)(intptr_t)in_ECX;
-#define in_ECX in_ecx_val
-
-  int iVar9;
-
-  int iVar10;
-
-  int iVar11;
-
-  float10 extraout_ST0;
-
-  float10 extraout_ST0_00;
-
-  float10 extraout_ST0_01;
-
-  float10 fVar12;
-
-  undefined4 uVar13;
-
-  int *local_74;
-
-  int local_70;
-
-  int *local_68;
-
-  int local_64;
-
-  int local_5c;
-
-  int local_58 [4];
-
-  int local_48;
-
-  int local_44;
-
-  int local_40;
-
-  int local_3c;
-
-  int local_38;
-
-  int local_34;
-
-  int local_30;
-
-  int local_2c;
-
-  int local_28;
-
-  int local_24;
-
-  int local_20;
-
-  int local_1c;
-
-  int local_18;
-
-  int local_14;
-
-  int local_10;
-
-  int local_c;
-
-  
-
-  iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-  iVar1 = *(int *)(iVar10 + 0x7c) * 0x178 + 0x7a4 + *(int *)(iVar10 + 0x368);
-
-  local_5c = 0;
-
-  if (0 < *(int *)(iVar10 + 0x2e4)) {
-
-    fVar12 = (float10)0;
-
-    while( true ) {
-
-      iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-      iVar9 = (int)*(char *)(iVar10 + 0x2d0 + local_5c);
-
-      if (*(int *)(iVar1 + 0x128) + -1 < iVar9) break;
-
-      iVar8 = *(int *)(iVar10 + 0x280 + local_5c * 4);
-
-      iVar6 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-      iVar10 = *(int *)(iVar6 + 0x7c) * 0x178 + 0x7a4 + *(int *)(iVar6 + 0x368);
-
-      if (*(char *)(iVar6 + 0xf0 + param_1) < '\x01') {
-
-        if ((*(char *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0xeb) != '\0') &&
-
-           (*(int *)(*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368) + 0x6f8) == 0)) {
-
-          return;
-
-        }
-
-        iVar6 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-        if (((*(int *)(*(int *)(iVar6 + 0x7c) * 0x178 + 0x82c + *(int *)(iVar6 + 0x368)) != 2) ||
-
-            (iVar6 = *(int *)(in_ECX + 0x194 + iVar8 * 4),
-
-            *(int *)(*(int *)(in_ECX + 0x194 + *(int *)(iVar6 + 0x90) * 4) + 0x8c) != iVar8)) ||
-
-           (iVar6 = *(int *)(in_ECX + 0x194 + *(int *)(iVar6 + 0x90) * 4),
-
-           *(int *)(*(int *)(iVar6 + 0x7c) * 0x178 + 0x858 + *(int *)(iVar6 + 0x368)) != 0)) {
-
-          local_74 = (int *)(iVar9 * 0x50 + *(int *)(iVar1 + 0x130));
-
-          if ((*local_74 == 0) && (local_74[0xb] == 0x15)) {
-
-            iVar9 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-            if (*(int *)(*(int *)(iVar9 + 0x70) * 0x178 + 0x7ac + *(int *)(iVar9 + 0x368)) == 0x12)
-
-            {
-
-              return;
-
-            }
-
-            iVar9 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-            if (*(int *)(*(int *)(iVar9 + 0x70) * 0x178 + 0x7ac + *(int *)(iVar9 + 0x368)) == 0x13)
-
-            {
-
-              return;
-
-            }
-
-          }
-
-          if ((*local_74 == 5) &&
-
-             (iVar9 = *(int *)(in_ECX + 0x194 + param_1 * 4), *(int *)(iVar9 + 0x98) < 0)) {
-
-            iVar9 = *(int *)(iVar9 + 0xa0);
-
-            iVar6 = *(int *)(in_ECX + 0x194 + iVar9 * 4);
-
-            if (*(int *)(iVar6 + 0x9c) != param_1) goto LAB_0042e37e;
-
-            iVar6 = *(int *)(*(int *)(iVar6 + 0x7c) * 0x178 + 0x88c + *(int *)(iVar6 + 0x368));
-
-            if ((0 < iVar6) && (iVar9 != iVar8)) {
-
-              local_58[1] = local_74[1];
-
-              local_58[2] = local_74[2];
-
-              local_48 = local_74[4];
-
-              local_58[3] = local_74[3];
-
-              iVar9 = 5;
-
-              piVar7 = (int *)(*(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x368) + 200 +
-
-                              iVar6 * 0x50);
-
-              do {
-
-                local_58[iVar9] = piVar7[-1];
-
-                local_58[iVar9 + 1] = *piVar7;
-
-                local_58[iVar9 + 2] = piVar7[1];
-
-                local_58[iVar9 + 3] = piVar7[2];
-
-                local_58[iVar9 + 4] = piVar7[3];
-
-                iVar9 = iVar9 + 5;
-
-                piVar7 = piVar7 + 5;
-
-              } while (iVar9 < 0x14);
-
-              local_58[0] = 0;
-
-              goto LAB_0042e409;
-
-            }
-
-          }
-
-          else {
-
-LAB_0042e37e:
-
-            local_58[0] = *local_74;
-
-            local_58[1] = local_74[1];
-
-            local_58[2] = local_74[2];
-
-            local_58[3] = local_74[3];
-
-            local_48 = local_74[4];
-
-            local_44 = local_74[5];
-
-            local_40 = local_74[6];
-
-            local_3c = local_74[7];
-
-            local_38 = local_74[8];
-
-            local_34 = local_74[9];
-
-            local_30 = local_74[10];
-
-            local_2c = local_74[0xb];
-
-            local_28 = local_74[0xc];
-
-            local_24 = local_74[0xd];
-
-            local_20 = local_74[0xe];
-
-            local_1c = local_74[0xf];
-
-            local_18 = local_74[0x10];
-
-            local_14 = local_74[0x11];
-
-            local_10 = local_74[0x12];
-
-            local_c = local_74[0x13];
-
-LAB_0042e409:
-
-            local_74 = local_58;
-
-          }
-
-          if ((0 < *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 800)) && (*local_74 == 4)) {
-
-            *local_74 = 0;
-
-            iVar9 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-            if (((fVar12 < (float10)*(double *)(iVar9 + 0x40)) &&
-
-                (*(char *)(iVar9 + 0x80) == '\x01')) ||
-
-               (((float10)*(double *)(iVar9 + 0x40) < fVar12 && (*(char *)(iVar9 + 0x80) == '\0'))))
-
-            {
-
-              local_74[5] = -local_74[5];
-
-            }
-
-          }
-
-          iVar9 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-          if ((((*(int *)(iVar9 + 0x98) == 2) && (*local_74 == 0)) &&
-
-              (iVar9 = *(int *)(in_ECX + 0x194 + *(int *)(iVar9 + 0x9c) * 4),
-
-              *(int *)(iVar9 + 0xa0) == iVar8)) && (*(int *)(iVar9 + 0x98) == -2)) {
-
-            *(undefined1 *)
-
-             (*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x9c) + 0xf0 +
-
-             *(int *)(in_ECX + 0x194 + param_1 * 4)) = 0x2d;
-
-            *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x98) = 0;
-
-            iVar9 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-            *(undefined1 *)(*(int *)(iVar9 + 0x9c) + 0xf0 + iVar9) = 0x1e;
-
-            *(undefined4 *)
-
-             (*(int *)(in_ECX + 0x194 + *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x9c) * 4) +
-
-             0x98) = 0;
-
-            uVar5 = FUN_00417170(0xec,6);
-
-            *(undefined4 *)
-
-             (*(int *)(in_ECX + 0x194 + *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x9c) * 4) +
-
-             0x70) = uVar5;
-
-            *(undefined8 *)
-
-             (*(int *)(in_ECX + 0x194 + *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x9c) * 4) +
-
-             0x48) = 0xbff0000000000000;
-
-            fVar12 = (float10)0;
-
-          }
-
-          if (*(int *)(*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368) + 0x6f8) == 2) {
-
-            local_74[5] = local_74[5] / 2;
-
-            local_74[6] = local_74[6] / 2;
-
-          }
-
-          local_64 = 0;
-
-          if ((*local_74 == 9) &&
-
-             (((iVar9 = *(int *)(in_ECX + 0x194 + iVar8 * 4),
-
-               *(int *)(*(int *)(iVar9 + 0x368) + 0x6f8) == 0 ||
-
-               (*(int *)(*(int *)(iVar9 + 0x70) * 0x178 + 0x7ac + *(int *)(iVar9 + 0x368)) == 0x3ea)
-
-               ) || (iVar9 = *(int *)(in_ECX + 0x194 + iVar8 * 4),
-
-                    *(int *)(*(int *)(iVar9 + 0x70) * 0x178 + 0x7ac + *(int *)(iVar9 + 0x368)) ==
-
-                    2000)))) {
-
-            *local_74 = 0;
-
-            if (*(int *)(*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368) + 0x6f8) == 0) {
-
-              *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x2fc) = 0;
-
-              goto LAB_0042e60e;
-
-            }
-
-LAB_0042e61c:
-
-            if ((((local_74[0x10] == 100) || (iVar9 = *(int *)(iVar10 + 8), iVar9 == 8)) ||
-
-                ((iVar9 == 0xb || (((iVar9 == 0xc || (iVar9 == 0xd)) || (iVar9 == 0xe)))))) ||
-
-               ((iVar9 == 0x10 || (iVar9 == 0x12)))) {
-
-LAB_0042e812:
-
-              if ((((*(int *)(iVar10 + 8) == 7) && (local_74[0x10] < 0x3d)) &&
-
-                  ((iVar9 = *(int *)(in_ECX + 0x194 + iVar8 * 4),
-
-                   *(char *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x80) !=
-
-                   *(char *)(iVar9 + 0x80) ||
-
-                   ((((local_74[5] < 0 ||
-
-                      (iVar6 = *(int *)(*(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x368) +
-
-                                       0x6f4), iVar6 == 0x7c)) || (iVar6 == 0xdc)) ||
-
-                    ((iVar6 == 0xdd || (iVar6 == 0xde)))))))) && (0 < *(int *)(iVar9 + 0x2fc)))
-
-              goto LAB_0042fdf2;
-
-              *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0xb8) = 0x2d;
-
-              iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-              if (*(int *)(*(int *)(iVar10 + 0x368) + 0x6f4) == 300) {
-
-                if (*(int *)((*(int *)(iVar10 + 0x70) + 6) * 0x178 + *(int *)(iVar10 + 0x368)) < 1)
-
-                {
-
-                  return;
-
-                }
-
-                iVar1 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                if (**(int **)(*(int *)(iVar1 + 0x70) * 0x178 + 0x8d8 + *(int *)(iVar1 + 0x368)) <
-
-                    0x3e9) {
-
-                  return;
-
-                }
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x364) = 1;
-
-                iVar1 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                *(int *)(iVar1 + 0x70) =
-
-                     **(int **)(*(int *)(iVar1 + 0x368) + 0x8d8 + *(int *)(iVar1 + 0x70) * 0x178) +
-
-                     -1000;
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0xb4) = 3;
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0xb4) = 0xfffffffd;
-
-                return;
-
-              }
-
-              iVar9 = *(int *)(*(int *)(iVar10 + 0x368) + 0x6f8);
-
-              if (iVar9 != 6) {
-
-                iVar6 = local_74[0x11];
-
-                if (0 < *(int *)(iVar10 + 0x340)) {
-
-                  iVar6 = (iVar6 * 100) / *(int *)(iVar10 + 0x340);
-
-                }
-
-                iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                iVar11 = *(int *)(iVar10 + 0x2fc);
-
-                if (((0 < iVar11) && (iVar11 <= iVar6)) &&
-
-                   ((iVar9 == 0 && (*(int *)(iVar10 + 0x2f4) == -1)))) {
-
-                  piVar7 = (int *)(*(int *)(in_ECX + 0x194 +
-
-                                           *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x354)
-
-                                           * 4) + 0x358);
-
-                  *piVar7 = *piVar7 + 1;
-
-                  iVar10 = *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x344);
-
-                  if ((0 < iVar10) && (iVar10 < 3)) {
-
-                    *(int *)(&DAT_00451b60 +
-
-                            *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x344) * 4) =
-
-                         *(int *)(&DAT_00451b60 +
-
-                                 *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x344) * 4) + 1;
-
-                  }
-
-                }
-
-                piVar7 = (int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x2fc);
-
-                *piVar7 = *piVar7 - iVar6;
-
-                iVar10 = (int)((ulonglong)((longlong)iVar6 * 0x55555555) >> 0x20) - iVar6;
-
-                piVar7 = (int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x300);
-
-                *piVar7 = *piVar7 + ((iVar10 >> 1) - (iVar10 >> 0x1f));
-
-                piVar7 = (int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x34c);
-
-                *piVar7 = *piVar7 + iVar6;
-
-                iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                if ((*(int *)(*(int *)(iVar10 + 0x368) + 0x6f8) == 0) &&
-
-                   (*(int *)(iVar10 + 0x2f4) == -1)) {
-
-                  piVar7 = (int *)(*(int *)(in_ECX + 0x194 +
-
-                                           *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x354)
-
-                                           * 4) + 0x348);
-
-                  *piVar7 = *piVar7 + iVar6;
-
-                }
-
-                iVar10 = *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x344);
-
-                if ((0 < iVar10) && (iVar10 < 3)) {
-
-                  (&DAT_00451b68)[*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x344)] =
-
-                       (&DAT_00451b68)[*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x344)] +
-
-                       iVar6;
-
-                }
-
-              }
-
-              iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-              if ((*(int *)(iVar10 + 0x2fc) < 1) || (local_74[0xb] == 4)) {
-
-                *(undefined4 *)(iVar10 + 0xb0) = 0x50;
-
-              }
-
-              iVar10 = *(int *)(*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368) + 0x6f8);
-
-              if (((((iVar10 == 1) || (iVar10 == 2)) || (iVar10 == 4)) || (iVar10 == 6)) &&
-
-                 (piVar7 = (int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x31c),
-
-                 *piVar7 = *piVar7 - local_74[0x11], local_74[0x10] == 100)) {
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x31c) = 0xffffffff;
-
-              }
-
-              if ((*(int *)(*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368) + 0x6f8) != 2) ||
-
-                 (0x28 < local_74[7])) {
-
-                piVar7 = (int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x20);
-
-                *piVar7 = *piVar7 + 1;
-
-              }
-
-              iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-              if (local_74[7] == 0) {
-
-                piVar7 = (int *)(iVar10 + 0xb0);
-
-                *piVar7 = *piVar7 + 0x14;
-
-              }
-
-              else {
-
-                piVar7 = (int *)(iVar10 + 0xb0);
-
-                *piVar7 = *piVar7 + local_74[7];
-
-              }
-
-              iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-              if (((*(int *)(*(int *)(iVar10 + 0x78) * 0x178 + 0x7ac + *(int *)(iVar10 + 0x368)) ==
-
-                    0xd) || (*(int *)(*(int *)(iVar10 + 0x7c) * 0x178 + 0x7ac +
-
-                                     *(int *)(iVar10 + 0x368)) == 0xc)) ||
-
-                 ((iVar10 = *(int *)(*(int *)(iVar10 + 0x368) + 0x6f8), iVar10 == 1 ||
-
-                  (((iVar10 == 4 || (iVar10 == 6)) || (iVar10 == 2)))))) {
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0xb0) = 0x50;
-
-              }
-
-              iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-              iVar9 = *(int *)(iVar10 + 0xb0);
-
-              if ((iVar9 < 0x3d) || (*(int *)(*(int *)(iVar10 + 0x368) + 0x6f8) == 3)) {
-
-                if ((iVar9 < 0x29) || (*(int *)(*(int *)(iVar10 + 0x368) + 0x6f8) == 3)) {
-
-                  if ((iVar9 < 0x15) || (*(int *)(*(int *)(iVar10 + 0x368) + 0x6f8) == 3)) {
-
-                    if ((0 < iVar9) && (*(int *)(*(int *)(iVar10 + 0x368) + 0x6f8) != 3)) {
-
-                      *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x70) = 0xdc;
-
-                      *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0xb0) = 0x14;
-
-                      iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                      if (*(int *)(iVar10 + 0x14) < 0) {
-
-                        *(uint *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x70) =
-
-                             (uint)(*(char *)(iVar10 + 0x80) ==
-
-                                   *(char *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x80)) * 2 +
-
-                             0xde;
-
-                      }
-
-                    }
-
-                  }
-
-                  else {
-
-                    *(uint *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x70) =
-
-                         (uint)(*(char *)(iVar10 + 0x80) ==
-
-                               *(char *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x80)) * 2 + 0xde;
-
-                    *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0xb0) = 0x28;
-
-                    iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                    if (*(int *)(iVar10 + 0x14) < 0) {
-
-                      *(undefined4 *)(iVar10 + 0xb0) = 0x50;
-
-                    }
-
-                  }
-
-                }
-
-                else {
-
-                  *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x70) = 0xe2;
-
-                  *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0xb0) = 0x3c;
-
-                  iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                  if (*(int *)(iVar10 + 0x14) < 0) {
-
-                    *(undefined4 *)(iVar10 + 0xb0) = 0x50;
-
-                  }
-
-                }
-
-              }
-
-              else {
-
-                *(undefined4 *)(iVar10 + 0xb0) = 0x50;
-
-              }
-
-              iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-              iVar9 = *(int *)(iVar10 + 0x368);
-
-              if ((*(int *)(iVar9 + 0x6f8) == 3) && (iVar9 = *(int *)(iVar9 + 0xac), -1 < iVar9)) {
-
-                FUN_00416fb0(*(undefined4 *)(iVar10 + 0x10),iVar9);
-
-                fVar12 = (float10)0;
-
-              }
-
-              iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-              iVar9 = *(int *)(*(int *)(iVar10 + 0x368) + 0x6f8);
-
-              if (iVar9 == 0) {
-
-                if (local_74[0xb] == 0) {
-
-                  if (*(int *)(iVar10 + 0xb0) == 0x50) {
-
-                    uVar13 = *(undefined4 *)(iVar10 + 0x10);
-
-                    uVar5 = 2;
-
-                  }
-
-                  else {
-
-                    uVar5 = 0;
-
-                    if (*(int *)(iVar10 + 0xb0) == 0x3c) {
-
-                      uVar13 = *(undefined4 *)(iVar10 + 0x10);
-
-                    }
-
-                    else {
-
-                      uVar13 = *(undefined4 *)(iVar10 + 0x10);
-
-                    }
-
-                  }
-
-                  FUN_00417090(uVar13,uVar5);
-
-                  fVar12 = (float10)0;
-
-                }
-
-                if (local_74[0xb] == 1) {
-
-                  iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                  uVar5 = *(undefined4 *)(iVar10 + 0x10);
-
-                  local_64 = 1;
-
-                  if (*(int *)(iVar10 + 0xb0) == 0x50) {
-
-                    FUN_00417090(uVar5,0xc);
-
-                    uVar5 = 2;
-
-                  }
-
-                  else {
-
-                    FUN_00417090(uVar5,0xb);
-
-                    uVar5 = 0;
-
-                  }
-
-                  FUN_00417090(*(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x10),uVar5);
-
-                  goto LAB_0042ed75;
-
-                }
-
-              }
-
-              else if ((0 < iVar9) && (-1 < *(int *)(*(int *)(iVar10 + 0x368) + 0xa4))) {
-
-                iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                FUN_00416fb0(*(undefined4 *)(iVar10 + 0x10),
-
-                             *(undefined4 *)(*(int *)(iVar10 + 0x368) + 0xa4));
-
-LAB_0042ed75:
-
-                fVar12 = (float10)0;
-
-              }
-
-              iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-              if ((((*(int *)(iVar10 + 0xb0) != 0x50) || (5.0 <= *(double *)(iVar10 + 0x40))) ||
-
-                  (*(double *)(iVar10 + 0x40) <= -5.0)) || (local_74[5] != 0)) {
-
-                iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-                if (*(int *)(*(int *)(iVar10 + 0x70) * 0x178 + 0x7ac + *(int *)(iVar10 + 0x368)) ==
-
-                    2000) {
-
-                  iVar9 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                  if (*(int *)(iVar10 + 0x10) < *(int *)(iVar9 + 0x10)) {
-
-                    dVar2 = (double)local_74[5];
-
-LAB_0042ee5b:
-
-                    *(double *)(iVar9 + 0x28) = dVar2 + *(double *)(iVar9 + 0x28);
-
-                  }
-
-                  else {
-
-                    *(double *)(iVar9 + 0x28) = *(double *)(iVar9 + 0x28) - (double)local_74[5];
-
-                  }
-
-                }
-
-                else {
-
-                  iVar9 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                  iVar6 = *(int *)(*(int *)(iVar9 + 0x368) + 0x6f8);
-
-                  if ((iVar6 == 4) || (iVar6 == 6)) {
-
-                    iVar6 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                    dVar2 = *(double *)(iVar6 + 0x40) * 0.55;
-
-                    if ((float10)*(double *)(iVar6 + 0x40) < fVar12) {
-
-                      dVar2 = -(*(double *)(iVar9 + 0x40) * 0.55);
-
-                    }
-
-                    if (((dVar2 < (double)local_74[5]) ||
-
-                        ((cVar3 = *(char *)(iVar10 + 0x80), cVar3 == '\0' &&
-
-                         (fVar12 < (float10)*(double *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x28)
-
-                         )))) || ((cVar3 == '\x01' &&
-
-                                  ((float10)*(double *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x28)
-
-                                   < fVar12)))) {
-
-                      if (*(char *)(iVar10 + 0x80) == '\0') {
-
-                        iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                        *(double *)(iVar10 + 0x28) =
-
-                             (double)local_74[5] + *(double *)(iVar10 + 0x28);
-
-                      }
-
-                      if (*(char *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x80) == '\x01') {
-
-                        iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                        *(double *)(iVar10 + 0x28) =
-
-                             *(double *)(iVar10 + 0x28) - (double)local_74[5];
-
-                      }
-
-                    }
-
-                    else if (((cVar3 == '\x01') &&
-
-                             (fVar12 < (float10)*(double *)
-
-                                                 (*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x40))) ||
-
-                            ((cVar3 == '\0' &&
-
-                             ((float10)*(double *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x40) <
-
-                              fVar12)))) {
-
-                      iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                      *(double *)(iVar10 + 0x28) = -(*(double *)(iVar10 + 0x40) * 0.55);
-
-                    }
-
-                    iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-                    if ((*(int *)(*(int *)(iVar10 + 0x368) + 0x6f4) == 100) &&
-
-                       (*(int *)(iVar10 + 0x98) < 0)) {
-
-                      iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                      *(double *)(iVar10 + 0x28) = *(double *)(iVar10 + 0x28) * 2.5;
-
-                      FUN_00417090(*(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x10),0xd)
-
-                      ;
-
-                      fVar12 = (float10)0;
-
-                      iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                      if ((fVar12 < (float10)*(double *)(iVar10 + 0x28)) &&
-
-                         (*(double *)(iVar10 + 0x28) < 10.0)) {
-
-                        *(undefined8 *)(iVar10 + 0x28) = 0x4024000000000000;
-
-                      }
-
-                      iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                      if (((float10)*(double *)(iVar10 + 0x28) < fVar12) &&
-
-                         (-10.0 < *(double *)(iVar10 + 0x28))) {
-
-                        *(undefined8 *)(iVar10 + 0x28) = 0xc024000000000000;
-
-                      }
-
-                    }
-
-                  }
-
-                  else if ((local_74[0xb] == 0x16) || (local_74[0xb] == 0x17)) {
-
-                    dVar2 = (double)local_74[5];
-
-                    iVar9 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                    if (*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x10) <=
-
-                        *(int *)(iVar10 + 0x10)) goto LAB_0042ee5b;
-
-                    *(double *)(iVar9 + 0x28) = *(double *)(iVar9 + 0x28) - dVar2;
-
-                  }
-
-                  else {
-
-                    if (*(char *)(iVar10 + 0x80) == '\0') {
-
-                      iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                      *(double *)(iVar10 + 0x28) = (double)local_74[5] + *(double *)(iVar10 + 0x28);
-
-                    }
-
-                    if (*(char *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x80) == '\x01') {
-
-                      iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                      *(double *)(iVar10 + 0x28) = *(double *)(iVar10 + 0x28) - (double)local_74[5];
-
-                    }
-
-                  }
-
-                }
-
-              }
-
-              else {
-
-                iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-                if (*(int *)(*(int *)(iVar10 + 0x70) * 0x178 + 0x7ac + *(int *)(iVar10 + 0x368)) ==
-
-                    2000) {
-
-                  iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                  *(double *)(iVar10 + 0x28) = *(double *)(iVar10 + 0x28) + 5.0;
-
-                }
-
-                else {
-
-                  iVar9 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                  *(double *)(iVar9 + 0x28) =
-
-                       (double)(*(char *)(iVar10 + 0x80) * -2 + 1) * 5.0 + *(double *)(iVar9 + 0x28)
-
-                  ;
-
-                }
-
-              }
-
-              iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-              if ((*(int *)(*(int *)(iVar10 + 0x70) * 0x178 + 0x7ac + *(int *)(iVar10 + 0x368)) ==
-
-                   3000) &&
-
-                 (((iVar9 = *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368),
-
-                   *(int *)(iVar9 + 0x6f8) == 0 ||
-
-                   (*(int *)(*(int *)(iVar10 + 0x368) + 0x6f4) != 0xd1)) ||
-
-                  ((((iVar9 = *(int *)(iVar9 + 0x6f4), iVar9 != 200 &&
-
-                     (((iVar9 != 0xcb && (iVar9 != 0xcd)) && (iVar9 != 0xce)))) &&
-
-                    (((iVar9 != 0xcf && (iVar9 != 0xd7)) && (iVar9 != 0xd8)))) &&
-
-                   ((iVar9 != 0xd1 ||
-
-                    (*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x70) != 0x28)))))))) {
-
-                *(undefined4 *)(iVar10 + 0x70) = 10;
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x88) = 0;
-
-                *(double *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x40) = (double)fVar12;
-
-                iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-                *(double *)(iVar10 + 0x50) =
-
-                     (double)*(int *)(*(int *)(iVar10 + 0x70) * 0x178 + 0x7bc +
-
-                                     *(int *)(iVar10 + 0x368));
-
-              }
-
-              iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-              if (*(int *)(iVar10 + 0xb0) == 0x50) {
-
-                iVar10 = *(int *)(*(int *)(iVar10 + 0x368) + 0x6f8);
-
-                if (local_74[6] == 0) {
-
-                  if (((iVar10 != 2) && (iVar10 != 3)) || (0x28 < local_74[7])) {
-
-                    iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                    *(double *)(iVar10 + 0x30) = *(double *)(iVar10 + 0x30) - 7.0;
-
-                  }
-
-                }
-
-                else {
-
-                  if (((iVar10 != 2) && (iVar10 != 3)) || (0x28 < local_74[7])) {
-
-                    iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                    *(double *)(iVar10 + 0x30) = (double)local_74[6] + *(double *)(iVar10 + 0x30);
-
-                  }
-
-                  iVar10 = FUN_004450d0();
-
-                  fVar12 = extraout_ST0;
-
-                  if (0 < iVar10) {
-
-                    *(undefined8 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x30) =
-
-                         0x4028000000000000;
-
-                  }
-
-                }
-
-                iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                if (((*(char *)(iVar10 + 0x80) == '\0') &&
-
-                    ((float10)*(double *)(iVar10 + 0x28) <= fVar12)) ||
-
-                   ((*(char *)(iVar10 + 0x80) == '\x01' &&
-
-                    (fVar4 = (float10)*(double *)(iVar10 + 0x28),
-
-                    (!NAN(fVar12) && !NAN(fVar4)) && fVar12 < fVar4 != (fVar12 == fVar4))))) {
-
-                  *(undefined4 *)(iVar10 + 0x70) = 0xb4;
-
-                }
-
-                else {
-
-                  *(undefined4 *)(iVar10 + 0x70) = 0xba;
-
-                }
-
-                iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                if ((0 < *(int *)(iVar10 + 0x98)) &&
-
-                   (iVar8 == *(int *)(*(int *)(in_ECX + 0x194 + *(int *)(iVar10 + 0x9c) * 4) + 0xa0)
-
-                   )) {
-
-                  *(undefined1 *)
-
-                   (*(int *)(iVar10 + 0x9c) + 0xf0 + *(int *)(in_ECX + 0x194 + param_1 * 4)) = 0x2d;
-
-                  iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                  *(undefined1 *)(*(int *)(iVar10 + 0x9c) + 0xf0 + iVar10) = 0x1e;
-
-                }
-
-              }
-
-              iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-              if (-1 < *(int *)(iVar10 + 0xb4)) {
-
-                *(undefined4 *)(iVar10 + 0xb4) = 3;
-
-              }
-
-              *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0xb4) = 0xfffffffd;
-
-              if ((local_74[8] < 4) && (local_74[9] == 0)) {
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0xec) = 4;
-
-              }
-
-              else {
-
-                *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0xec) = local_74[8];
-
-              }
-
-              if (0 < local_74[9]) {
-
-                *(char *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0xf0 + param_1) = (char)local_74[9]
-
-                ;
-
-              }
-
-              iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-              if ((((*(int *)(*(int *)(iVar10 + 0x7c) * 0x178 + 0x82c + *(int *)(iVar10 + 0x368)) ==
-
-                     2) && (iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4),
-
-                           *(int *)(*(int *)(in_ECX + 0x194 + *(int *)(iVar10 + 0x90) * 4) + 0x8c)
-
-                           == iVar8)) && (*(int *)(iVar10 + 0xb0) != 0x50)) &&
-
-                 (*(int *)(*(int *)(iVar10 + 0x7c) * 0x178 + 0x838 + *(int *)(iVar10 + 0x368)) != 0)
-
-                 ) {
-
-                if (*(char *)(iVar10 + 0x80) ==
-
-                    *(char *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x80)) {
-
-                  *(undefined4 *)(iVar10 + 0x70) =
-
-                       *(undefined4 *)
-
-                        (*(int *)(iVar10 + 0x7c) * 0x178 + 0x83c + *(int *)(iVar10 + 0x368));
-
-                }
-
-                else {
-
-                  *(undefined4 *)(iVar10 + 0x70) =
-
-                       *(undefined4 *)
-
-                        (*(int *)(iVar10 + 0x7c) * 0x178 + 0x838 + *(int *)(iVar10 + 0x368));
-
-                }
-
-              }
-
-              iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-              if (*(int *)(iVar10 + 0xb0) == 0x50) {
-
-                *(undefined4 *)(iVar10 + 0xb0) = 0;
-
-              }
-
-              iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-              if (*(int *)(iVar10 + 0x98) < 0) {
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + *(int *)(iVar10 + 0xa0) * 4) + 0xb4) =
-
-                     *(undefined4 *)(iVar10 + 0xb4);
-
-              }
-
-              iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-              if (*(int *)(*(int *)(iVar10 + 0x70) * 0x178 + 0x7ac + *(int *)(iVar10 + 0x368)) ==
-
-                  0x3ea) {
-
-                uVar5 = FUN_00417170(0xee,0x10);
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x70) = uVar5;
-
-                *(double *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x40) =
-
-                     -(*(double *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x28) * 0.5);
-
-                *(undefined8 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x48) = 0xc010000000000000;
-
-                iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-                if ((*(int *)(*(int *)(iVar10 + 0x368) + 0x6f8) == 4) &&
-
-                   (iVar9 = *(int *)(in_ECX + 0x194 + iVar8 * 4),
-
-                   *(int *)(*(int *)(iVar9 + 0x368) + 0x6f8) == 4)) {
-
-                  *(double *)(iVar10 + 0x28) = -*(double *)(iVar9 + 0x28);
-
-                }
-
-                fVar12 = (float10)0;
-
-              }
-
-              iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-              if (*(int *)(*(int *)(iVar10 + 0x368) + 0x6f8) == 1) {
-
-                *(undefined1 *)(iVar10 + 0xeb) = 1;
-
-                uVar5 = FUN_00417170(0xef,0x10);
-
-                fVar12 = (float10)0;
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x70) = uVar5;
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x364) =
-
-                     *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x364);
-
-              }
-
-              iVar10 = *(int *)(*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368) + 0x6f8);
-
-              if ((iVar10 == 4) || (iVar10 == 6)) {
-
-                *(undefined1 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0xf0 + iVar8) = 0x1e;
-
-                *(undefined1 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0xeb) = 1;
-
-                uVar5 = FUN_00417170(0xf0,0x10);
-
-                fVar12 = (float10)0;
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x70) = uVar5;
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x364) =
-
-                     *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x364);
-
-              }
-
-              iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-              if (*(int *)(*(int *)(iVar10 + 0x368) + 0x6f8) == 2) {
-
-                *(undefined1 *)(iVar10 + 0xeb) = 1;
-
-                iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-                if (*(int *)(iVar10 + 0x98) == -2) {
-
-                  if ((local_74[7] < 0x29) && (local_74[0xb] != 4)) {
-
-                    *(undefined1 *)
-
-                     (*(int *)(in_ECX + 0x194 + *(int *)(iVar10 + 0xa0) * 4) + 0xf0 + iVar8) = 3;
-
-                  }
-
-                  else {
-
-                    *(undefined1 *)
-
-                     (*(int *)(in_ECX + 0x194 + *(int *)(iVar10 + 0xa0) * 4) + 0xf0 + iVar8) = 0x13;
-
-                  }
-
-                }
-
-                else if (*(int *)(*(int *)(iVar10 + 0x368) + 0x6f8) != 2) {
-
-                  if ((local_74[7] < 0x29) && (local_74[0xb] != 4)) {
-
-                    *(undefined1 *)(iVar10 + 0xf0 + iVar8) = 3;
-
-                  }
-
-                  else {
-
-                    *(undefined1 *)(iVar10 + 0xf0 + iVar8) = 0x13;
-
-                  }
-
-                }
-
-                *(undefined1 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x80) =
-
-                     *(undefined1 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x80);
-
-                if (((local_74[7] < 0x29) &&
-
-                    (iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4), -1 < *(int *)(iVar10 + 0x14)))
-
-                   && (local_74[0xb] != 4)) {
-
-                  *(undefined4 *)(iVar10 + 0x70) = 0x14;
-
-                }
-
-                else {
-
-                  uVar5 = FUN_00417170(0xf1,6);
-
-                  fVar12 = (float10)0;
-
-                  *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x70) = uVar5;
-
-                }
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x364) =
-
-                     *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x364);
-
-              }
-
-              if ((*(int *)(*(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x368) + 0x6f4) ==
-
-                   0xc9) &&
-
-                 (*(int *)(*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368) + 0x6f8) == 0)) {
-
-                *(undefined1 *)(param_1 + 4 + in_ECX) = 0;
-
-              }
-
-              iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-              if ((*(int *)(*(int *)(iVar10 + 0x368) + 0x6f4) == 0xd6) &&
-
-                 (*(int *)(*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368) + 0x6f8) == 0)) {
-
-                *(undefined4 *)(iVar10 + 0x2fc) = 0;
-
-              }
-
-              iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-              if (*(int *)(*(int *)(iVar10 + 0x368) + 0x6f8) == 3) {
-
-                if ((*(int *)(*(int *)(iVar10 + 0x70) * 0x178 + 0x7ac + *(int *)(iVar10 + 0x368)) !=
-
-                     0xbbd) &&
-
-                   ((iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4),
-
-                    *(int *)(*(int *)(iVar10 + 0x70) * 0x178 + 0x7ac + *(int *)(iVar10 + 0x368)) !=
-
-                    0xbbe || (iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4),
-
-                             *(int *)(*(int *)(iVar10 + 0x70) * 0x178 + 0x7ac +
-
-                                     *(int *)(iVar10 + 0x368)) == 0xbbd)))) {
-
-                  iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-                  if (*(int *)(iVar10 + 0x98) < 0) {
-
-                    *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x364) =
-
-                         *(undefined4 *)
-
-                          (*(int *)(in_ECX + 0x194 + *(int *)(iVar10 + 0xa0) * 4) + 0x364);
-
-                    *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x354) =
-
-                         *(undefined4 *)
-
-                          (*(int *)(in_ECX + 0x194 +
-
-                                   *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0xa0) * 4) +
-
-                          0x354);
-
-                  }
-
-                  else {
-
-                    *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x364) =
-
-                         *(undefined4 *)(iVar10 + 0x364);
-
-                    *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x354) =
-
-                         *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x354);
-
-                  }
-
-                  *(undefined1 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0xeb) = 1;
-
-                  *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x88) = 0;
-
-                  *(double *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x30) = (double)fVar12;
-
-                  *(double *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x28) = (double)fVar12;
-
-                  *(double *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x38) = (double)fVar12;
-
-                  iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-                  if ((*(int *)(*(int *)(iVar10 + 0x368) + 0x6f4) == 0xd1) &&
-
-                     ((((iVar9 = *(int *)(*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368) +
-
-                                         0x6f4), iVar9 == 200 || (iVar9 == 0xcb)) || (iVar9 == 0xcd)
-
-                       ) || (((iVar9 == 0xce || (iVar9 == 0xcf)) ||
-
-                             ((iVar9 == 0xd7 || (iVar9 == 0xd8)))))))) {
-
-                    *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x364) =
-
-                         *(undefined4 *)(iVar10 + 0x364);
-
-                    *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x354) =
-
-                         *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x354);
-
-                    *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368) =
-
-                         *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x368);
-
-                    *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x70) = 0x28;
-
-                    *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x74) = 0x28;
-
-                    *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x78) = 0x28;
-
-                  }
-
-                  else if (((*(int *)(*(int *)(iVar10 + 0x368) + 0x6f8) == 0) ||
-
-                           (*(int *)(iVar10 + 0x98) < 0)) &&
-
-                          ((local_74[0xb] != 2 && (local_74[0xb] != 0x14)))) {
-
-                    *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x70) = 0x1e;
-
-                    if ((*(int *)(*(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x368) + 0x6f4)
-
-                         == 8) &&
-
-                       ((((((iVar10 = *(int *)(*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368
-
-                                                       ) + 0x6f4), iVar10 == 200 || (iVar10 == 0xcb)
-
-                            ) || (iVar10 == 0xcd)) || ((iVar10 == 0xce || (iVar10 == 0xcf)))) ||
-
-                         (iVar10 == 0xd7)) || (iVar10 == 0xd8)))) {
-
-                      local_68 = *(int **)(in_ECX + 0x7d4);
-
-                      piVar7 = local_68 + 0x13608e0;
-
-                      iVar10 = 0;
-
-                      if (0 < *piVar7) {
-
-                        do {
-
-                          if (*(int *)(*local_68 + 0x6f4) == 0xd1) {
-
-                            *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368) =
-
-                                 *(undefined4 *)(*(int *)(in_ECX + 0x7d4) + iVar10 * 4);
-
-                            iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                            *(undefined4 *)(iVar10 + 0x74) = *(undefined4 *)(iVar10 + 0x70);
-
-                            iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                            *(undefined4 *)(iVar10 + 0x78) = *(undefined4 *)(iVar10 + 0x70);
-
-                            break;
-
-                          }
-
-                          iVar10 = iVar10 + 1;
-
-                          local_68 = local_68 + 1;
-
-                        } while (iVar10 < *piVar7);
-
-                      }
-
-                    }
-
-                  }
-
-                  else {
-
-                    *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x70) = 0x14;
-
-                  }
-
-                  iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-                  piVar7 = *(int **)(in_ECX + 0x194 + iVar8 * 4);
-
-                  if (*(int *)(iVar10 + 0x98) < 0) {
-
-                    *piVar7 = *(int *)(iVar10 + 0xa0);
-
-                    if ((*(int *)(*(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x368) + 0x6f4)
-
-                         == 0xd5) &&
-
-                       ((((iVar10 = *(int *)(*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368)
-
-                                            + 0x6f4), iVar10 == 200 || (iVar10 == 0xcb)) ||
-
-                         ((iVar10 == 0xcd ||
-
-                          (((iVar10 == 0xce || (iVar10 == 0xcf)) || (iVar10 == 0xd7)))))) ||
-
-                        (iVar10 == 0xd8)))) {
-
-                      local_68 = *(int **)(in_ECX + 0x7d4);
-
-                      piVar7 = local_68 + 0x13608e0;
-
-                      iVar10 = 0;
-
-                      if (0 < *piVar7) {
-
-                        do {
-
-                          if (*(int *)(*local_68 + 0x6f4) == 0xd1) {
-
-                            *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368) =
-
-                                 *(undefined4 *)(*(int *)(in_ECX + 0x7d4) + iVar10 * 4);
-
-                            iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                            *(undefined4 *)(iVar10 + 0x74) = *(undefined4 *)(iVar10 + 0x70);
-
-                            iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                            *(undefined4 *)(iVar10 + 0x78) = *(undefined4 *)(iVar10 + 0x70);
-
-                            break;
-
-                          }
-
-                          iVar10 = iVar10 + 1;
-
-                          local_68 = local_68 + 1;
-
-                        } while (iVar10 < *piVar7);
-
-                      }
-
-                      *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x364) =
-
-                           *(undefined4 *)
-
-                            (*(int *)(in_ECX + 0x194 +
-
-                                     *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0xa0) * 4) +
-
-                            0x364);
-
-                      *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x354) =
-
-                           *(undefined4 *)
-
-                            (*(int *)(in_ECX + 0x194 +
-
-                                     *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0xa0) * 4) +
-
-                            0x354);
-
-                    }
-
-                  }
-
-                  else {
-
-                    *piVar7 = param_1;
-
-                  }
-
-                }
-
-                iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                if (((*(int *)(*(int *)(iVar10 + 0x70) * 0x178 + 0x7ac + *(int *)(iVar10 + 0x368))
-
-                      == 0xbbd) &&
-
-                    (iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4),
-
-                    *(int *)(*(int *)(iVar10 + 0x70) * 0x178 + 0x7ac + *(int *)(iVar10 + 0x368)) ==
-
-                    0xbbd)) ||
-
-                   ((iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4),
-
-                    *(int *)(*(int *)(iVar10 + 0x70) * 0x178 + 0x7ac + *(int *)(iVar10 + 0x368)) ==
-
-                    0xbbe && (iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4),
-
-                             *(int *)(*(int *)(iVar10 + 0x70) * 0x178 + 0x7ac +
-
-                                     *(int *)(iVar10 + 0x368)) == 0xbbe)))) {
-
-                  *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x70) = 0x14;
-
-                  *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x88) = 0;
-
-                  *(double *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x30) = (double)fVar12;
-
-                  *(double *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x28) = (double)fVar12;
-
-                  *(double *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x38) = (double)fVar12;
-
-                  *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x70) = 0x14;
-
-                  *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x88) = 0;
-
-                  *(double *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x30) = (double)fVar12;
-
-                  *(double *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x28) = (double)fVar12;
-
-                  *(double *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x38) = (double)fVar12;
-
-                }
-
-                iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-                if (*(int *)(iVar10 + 0x98) < 0) {
-
-                  iVar10 = *(int *)(in_ECX + 0x194 + *(int *)(iVar10 + 0xa0) * 4);
-
-                  if (0 < *(int *)(iVar10 + 0xb4)) {
-
-                    *(int *)(iVar10 + 0xb4) = -*(int *)(iVar10 + 0xb4);
-
-                  }
-
-                }
-
-                else if (0 < *(int *)(iVar10 + 0xb4)) {
-
-                  *(int *)(iVar10 + 0xb4) = -*(int *)(iVar10 + 0xb4);
-
-                }
-
-              }
-
-              if (((local_74[0xb] == 3) || (local_74[0xb] == 0x1e)) &&
-
-                 ((iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4),
-
-                  *(int *)(*(int *)(iVar10 + 0x368) + 0x6f8) == 0 &&
-
-                  (*(int *)(*(int *)(iVar10 + 0x78) * 0x178 + 0x7ac + *(int *)(iVar10 + 0x368)) !=
-
-                   0xd)))) {
-
-                *(undefined4 *)(iVar10 + 0x70) = 200;
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x88) = 0;
-
-                FUN_00417090(*(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x10),0xe);
-
-                fVar12 = (float10)0;
-
-              }
-
-              iVar10 = local_74[0xb];
-
-              if (((((iVar10 == 2) || (iVar10 == 0x15)) || (iVar10 == 0x16)) ||
-
-                  ((iVar10 == 0x14 &&
-
-                   (iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4),
-
-                   *(int *)(*(int *)(iVar10 + 0x78) * 0x178 + 0x7ac + *(int *)(iVar10 + 0x368)) !=
-
-                   0x12)))) &&
-
-                 (iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4),
-
-                 *(int *)(*(int *)(iVar10 + 0x368) + 0x6f8) == 0)) {
-
-                *(undefined4 *)(iVar10 + 0x70) = 0xcb;
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x88) = 0;
-
-                FUN_00417090(*(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x10),0x10);
-
-                fVar12 = (float10)0;
-
-                iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                fVar4 = (float10)*(double *)(iVar10 + 0x28);
-
-                if ((NAN(fVar12) || NAN(fVar4)) || fVar12 < fVar4 == (fVar12 == fVar4)) {
-
-                  *(undefined1 *)(iVar10 + 0x80) = 0;
-
-                }
-
-                else {
-
-                  *(undefined1 *)(iVar10 + 0x80) = 1;
-
-                }
-
-              }
-
-              if (local_74[0xb] == 0x17) {
-
-                FUN_00417090(*(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x10),0x10);
-
-                fVar12 = (float10)0;
-
-              }
-
-              goto LAB_0043187a;
-
-            }
-
-            iVar9 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-            iVar6 = *(int *)(*(int *)(iVar9 + 0x368) + 0x6f4);
-
-            if ((iVar6 == 0x25) && (*(int *)(iVar9 + 0xb8) < 0x10)) {
-
-              iVar9 = local_74[0xb];
-
-              if (((iVar9 / 10 == 2) || (iVar9 / 10 == 3)) ||
-
-                 ((iVar9 == 2 ||
-
-                  (((iVar9 == 3 ||
-
-                    (iVar9 = *(int *)(*(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x368) +
-
-                                     0x6f4), iVar9 == 0xd6)) || (iVar9 == 0xd0))))))
-
-              goto LAB_0042e6ec;
-
-            }
-
-            else {
-
-LAB_0042e6ec:
-
-              if ((iVar6 == 6) && (*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0xb8) < 2)) {
-
-                iVar9 = local_74[0xb];
-
-                if ((iVar9 / 10 != 2) &&
-
-                   ((((iVar9 / 10 != 3 && (iVar9 != 2)) &&
-
-                     ((iVar9 != 3 &&
-
-                      ((iVar9 = *(int *)(*(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x368) +
-
-                                        0x6f4), iVar9 != 0xd6 && (iVar9 != 0xd0)))))) &&
-
-                    ((iVar9 = *(int *)(in_ECX + 0x194 + iVar8 * 4), *(int *)(iVar9 + 0x70) < 0x14 ||
-
-                     (((*(int *)(*(int *)(iVar9 + 0x70) * 0x178 + 0x7ac + *(int *)(iVar9 + 0x368))
-
-                        == 5 || (*(int *)(*(int *)(iVar9 + 0x70) * 0x178 + 0x7ac +
-
-                                         *(int *)(iVar9 + 0x368)) == 4)) ||
-
-                      (*(int *)(*(int *)(iVar9 + 0x70) * 0x178 + 0x7ac + *(int *)(iVar9 + 0x368)) ==
-
-                       7)))))))) goto LAB_0042fdf2;
-
-              }
-
-              if (((iVar6 != 0x34) || (0xf < *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0xb8)))
-
-                 || ((iVar9 = *(int *)(*(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x368) +
-
-                                      0x6f4), iVar9 == 0xd6 || (iVar9 == 0xd0)))) goto LAB_0042e812;
-
-            }
-
-LAB_0042fdf2:
-
-            iVar9 = *local_74;
-
-            if ((iVar9 != 0) ||
-
-               (iVar6 = *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368),
-
-               *(int *)(iVar6 + 0x6f8) != 0)) goto LAB_0043056e;
-
-            iVar9 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-            iVar11 = *(int *)(iVar9 + 0x368);
-
-            if (*(int *)(iVar11 + 0x6f8) == 3) {
-
-              iVar6 = *(int *)(iVar11 + 0xac);
-
-              if (-1 < iVar6) {
-
-                FUN_00416fb0(*(undefined4 *)(iVar9 + 0x10),iVar6);
-
-                goto LAB_0042fe80;
-
-              }
-
-            }
-
-            else {
-
-              iVar9 = *(int *)(iVar6 + 0x6f4);
-
-              if ((iVar9 == 0x25) || (iVar9 == 6)) {
-
-                FUN_00417090(*(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x10),0x11);
-
-              }
-
-              else {
-
-                FUN_00417090(*(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x10),1);
-
-              }
-
-LAB_0042fe80:
-
-              fVar12 = (float10)0;
-
-            }
-
-            iVar9 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-            iVar6 = *(int *)(*(int *)(iVar9 + 0x368) + 0x6f8);
-
-            if (iVar6 != 6) {
-
-              iVar9 = *(int *)(iVar9 + 0x340);
-
-              iVar11 = local_74[0x11];
-
-              if (0 < iVar9) {
-
-                iVar11 = (iVar11 * 100) / iVar9;
-
-              }
-
-              iVar9 = *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x2fc);
-
-              if ((((0 < iVar9) && (iVar9 <= iVar11 / 10)) && (iVar6 == 0)) &&
-
-                 (*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x2f4) == -1)) {
-
-                piVar7 = (int *)(*(int *)(in_ECX + 0x194 +
-
-                                         *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x354) *
-
-                                         4) + 0x358);
-
-                *piVar7 = *piVar7 + 1;
-
-                iVar9 = *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x344);
-
-                if ((0 < iVar9) && (iVar9 < 3)) {
-
-                  *(int *)(&DAT_00451b60 +
-
-                          *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x344) * 4) =
-
-                       *(int *)(&DAT_00451b60 +
-
-                               *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x344) * 4) + 1;
-
-                }
-
-              }
-
-              iVar11 = iVar11 / 10;
-
-              piVar7 = (int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x2fc);
-
-              *piVar7 = *piVar7 - iVar11;
-
-              iVar9 = (int)((ulonglong)((longlong)iVar11 * 0x55555555) >> 0x20) - iVar11;
-
-              piVar7 = (int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x300);
-
-              *piVar7 = *piVar7 + ((iVar9 >> 1) - (iVar9 >> 0x1f));
-
-              piVar7 = (int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x34c);
-
-              *piVar7 = *piVar7 + iVar11;
-
-              iVar9 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-              if ((*(int *)(*(int *)(iVar9 + 0x368) + 0x6f8) == 0) &&
-
-                 (*(int *)(iVar9 + 0x2f4) == -1)) {
-
-                piVar7 = (int *)(*(int *)(in_ECX + 0x194 +
-
-                                         *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x354) *
-
-                                         4) + 0x348);
-
-                *piVar7 = *piVar7 + iVar11;
-
-              }
-
-              iVar9 = *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x344);
-
-              if ((0 < iVar9) && (iVar9 < 3)) {
-
-                (&DAT_00451b68)[*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x344)] =
-
-                     (&DAT_00451b68)[*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x344)] +
-
-                     iVar11;
-
-              }
-
-            }
-
-            iVar9 = *(int *)(*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368) + 0x6f8);
-
-            if (((((iVar9 == 1) || (iVar9 == 2)) || (iVar9 == 4)) || (iVar9 == 6)) &&
-
-               (piVar7 = (int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x31c),
-
-               *piVar7 = *piVar7 - local_74[0x11], local_74[0x10] == 100)) {
-
-              *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x31c) = 0xffffffff;
-
-            }
-
-            iVar9 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-            if (*(int *)(iVar9 + 0x2fc) < 1) {
-
-              *(undefined4 *)(iVar9 + 0xb0) = 0x50;
-
-            }
-
-            *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x88) = 0;
-
-            piVar7 = (int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0xb8);
-
-            *piVar7 = *piVar7 + local_74[0x10];
-
-            piVar7 = (int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x20);
-
-            *piVar7 = *piVar7 + 1;
-
-            *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0xb4) = 3;
-
-            *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0xb4) = 0xfffffffb;
-
-            iVar9 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-            if (*(int *)(iVar9 + 0x14) == 0) {
-
-              if ((*(int *)(iVar9 + 0xb8) < 0x1f) || (*(int *)(iVar10 + 8) != 7)) {
-
-                if (*(int *)(iVar9 + 0x70) == 0x6e) {
-
-                  *(undefined4 *)(iVar9 + 0x70) = 0x6f;
-
-                }
-
-              }
-
-              else {
-
-                *(undefined4 *)(iVar9 + 0x70) = 0x70;
-
-              }
-
-              iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-              if (((*(int *)(iVar10 + 0xb0) != 0x50) || (3.0 <= *(double *)(iVar10 + 0x40))) ||
-
-                 ((*(double *)(iVar10 + 0x40) <= -3.0 || (local_74[5] != 0)))) {
-
-                iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-                if (*(int *)(*(int *)(iVar10 + 0x70) * 0x178 + 0x7ac + *(int *)(iVar10 + 0x368)) ==
-
-                    2000) {
-
-                  dVar2 = (double)local_74[5];
-
-                  iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                  if (*(int *)(iVar10 + 0x10) <=
-
-                      *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x10)) goto LAB_0043037d;
-
-                  *(double *)(iVar10 + 0x28) = dVar2 + *(double *)(iVar10 + 0x28);
-
-                }
-
-                else if ((local_74[0xb] == 0x16) || (local_74[0xb] == 0x17)) {
-
-                  dVar2 = (double)local_74[5];
-
-                  iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                  if (*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x10) <=
-
-                      *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x10)) goto LAB_0043027b;
-
-                  *(double *)(iVar10 + 0x28) = *(double *)(iVar10 + 0x28) - dVar2;
-
-                }
-
-                else {
-
-                  if (*(char *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x80) == '\0') {
-
-                    iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                    *(double *)(iVar10 + 0x28) =
-
-                         (double)(local_74[5] / 2) + *(double *)(iVar10 + 0x28);
-
-                  }
-
-                  if (*(char *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x80) == '\x01') {
-
-                    iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                    dVar2 = (double)-(local_74[5] / 2);
-
-LAB_0043027b:
-
-                    *(double *)(iVar10 + 0x28) = dVar2 + *(double *)(iVar10 + 0x28);
-
-                  }
-
-                }
-
-              }
-
-              else {
-
-                iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-                iVar9 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-                if (*(int *)(*(int *)(iVar10 + 0x70) * 0x178 + 0x7ac + *(int *)(iVar10 + 0x368)) ==
-
-                    2000) {
-
-                  iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                  if (*(int *)(iVar9 + 0x10) < *(int *)(iVar10 + 0x10)) {
-
-                    *(double *)(iVar10 + 0x28) = *(double *)(iVar10 + 0x28) + 6.0;
-
-                  }
-
-                  else {
-
-                    *(double *)(iVar10 + 0x28) = *(double *)(iVar10 + 0x28) - 6.0;
-
-                  }
-
-                }
-
-                else {
-
-                  iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                  *(double *)(iVar10 + 0x28) =
-
-                       (double)(*(char *)(iVar9 + 0x80) * -2 + 1) * 3.0 + *(double *)(iVar10 + 0x28)
-
-                  ;
-
-                }
-
-              }
-
-            }
-
-            else {
-
-              iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-              if ((((*(int *)(iVar10 + 0xb0) != 0x50) || (6.0 <= *(double *)(iVar10 + 0x40))) ||
-
-                  (*(double *)(iVar10 + 0x40) <= -6.0)) || (5 < local_74[5])) {
-
-                if ((local_74[0xb] != 0x16) && (local_74[0xb] != 0x17)) {
-
-                  if (*(char *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x80) == '\0') {
-
-                    *(double *)(iVar10 + 0x28) = (double)local_74[5] + *(double *)(iVar10 + 0x28);
-
-                  }
-
-                  if (*(char *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x80) == '\x01') {
-
-                    iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                    dVar2 = (double)local_74[5];
-
-LAB_0043037d:
-
-                    *(double *)(iVar10 + 0x28) = *(double *)(iVar10 + 0x28) - dVar2;
-
-                  }
-
-                  goto LAB_0043030f;
-
-                }
-
-                dVar2 = (double)local_74[5];
-
-                if (*(int *)(iVar10 + 0x10) <=
-
-                    *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x10)) goto LAB_00430309;
-
-                dVar2 = *(double *)(iVar10 + 0x28) - dVar2;
-
-              }
-
-              else {
-
-                dVar2 = (double)(*(char *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x80) * -2 + 1)
-
-                        * 6.0;
-
-LAB_00430309:
-
-                dVar2 = dVar2 + *(double *)(iVar10 + 0x28);
-
-              }
-
-              *(double *)(iVar10 + 0x28) = dVar2;
-
-            }
-
-LAB_0043030f:
-
-            if ((local_74[8] < 4) && (local_74[9] == 0)) {
-
-              *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0xec) = 4;
-
-            }
-
-            else {
-
-              *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0xec) = local_74[8];
-
-              iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-              if (0xc < *(int *)(iVar10 + 0xec)) {
-
-                *(undefined4 *)(iVar10 + 0xec) = 0xc;
-
-              }
-
-            }
-
-            if (0 < local_74[9]) {
-
-              iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-              if (local_74[9] < 5) {
-
-                *(undefined1 *)(iVar10 + 0xf0 + param_1) = 4;
-
-              }
-
-              else {
-
-                *(char *)(iVar10 + 0xf0 + param_1) = (char)local_74[9];
-
-                iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                if ('\f' < *(char *)(iVar10 + 0xf0 + param_1)) {
-
-                  *(undefined1 *)(iVar10 + 0xf0 + param_1) = 0xc;
-
-                }
-
-              }
-
-            }
-
-            iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-            if (*(int *)(iVar10 + 0x98) < 0) {
-
-              *(undefined4 *)(*(int *)(in_ECX + 0x194 + *(int *)(iVar10 + 0xa0) * 4) + 0xb4) =
-
-                   *(undefined4 *)(iVar10 + 0xb4);
-
-            }
-
-            iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-            if (*(int *)(*(int *)(iVar10 + 0x70) * 0x178 + 0x7ac + *(int *)(iVar10 + 0x368)) ==
-
-                0x3ea) {
-
-              uVar5 = FUN_00417170(0xf3,0x10);
-
-              *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x70) = uVar5;
-
-              *(double *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x40) =
-
-                   -(*(double *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x28) * 0.5);
-
-              *(undefined8 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x48) = 0xc010000000000000;
-
-              iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-              *(double *)(iVar10 + 0x50) = *(double *)(iVar10 + 0x50) / -1.5;
-
-              fVar12 = (float10)0;
-
-            }
-
-            iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-            if (*(int *)(*(int *)(iVar10 + 0x70) * 0x178 + 0x7ac + *(int *)(iVar10 + 0x368)) == 2000
-
-               ) {
-
-              iVar9 = *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x10);
-
-              iVar6 = *(int *)(iVar10 + 0x10);
-
-              iVar11 = iVar6 - iVar9;
-
-              if (iVar9 < iVar6) {
-
-                if (fVar12 <= (float10)*(double *)(iVar10 + 0x40)) {
-
-                  iVar6 = *(int *)(iVar10 + 0x10);
-
-                  iVar11 = iVar6 - iVar9;
-
-                  goto LAB_004304f7;
-
-                }
-
-              }
-
-              else {
-
-LAB_004304f7:
-
-                if ((SBORROW4(iVar6,iVar9) == iVar11 < 0) ||
-
-                   ((float10)*(double *)(iVar10 + 0x40) <= fVar12)) goto LAB_00430520;
-
-              }
-
-              *(double *)(iVar10 + 0x40) = *(double *)(iVar10 + 0x40) / 2.5;
-
-              iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-              *(double *)(iVar10 + 0x50) = *(double *)(iVar10 + 0x50) / 2.5;
-
-            }
-
-LAB_00430520:
-
-            iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-            if (*(int *)(*(int *)(iVar10 + 0x368) + 0x7ac + *(int *)(iVar10 + 0x70) * 0x178) == 3000
-
-               ) {
-
-              *(undefined4 *)(iVar10 + 0x70) = 10;
-
-              *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x88) = 0;
-
-              *(double *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x40) = (double)fVar12;
-
-            }
-
-          }
-
-          else {
-
-LAB_0042e60e:
-
-            iVar9 = *local_74;
-
-            if (iVar9 == 0) goto LAB_0042e61c;
-
-LAB_0043056e:
-
-            if (iVar9 == 6) {
-
-              *(undefined1 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0xea) = 3;
-
-            }
-
-            else if (iVar9 == 1) {
-
-              *(double *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x40) = (double)fVar12;
-
-              *(double *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x40) = (double)fVar12;
-
-              iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-              *(bool *)(iVar10 + 0x80) =
-
-                   *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x10) < *(int *)(iVar10 + 0x10);
-
-              *(char *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x80) =
-
-                   '\x01' - *(char *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x80);
-
-              *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x70) = local_74[0xc];
-
-              *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x70) = local_74[0xe];
-
-              iVar10 = *(int *)(*(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x368) + 0x830 +
-
-                               local_74[0xc] * 0x178);
-
-              iVar9 = *(int *)(*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368) + 0x830 +
-
-                              local_74[0xe] * 0x178);
-
-              iVar6 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-              *(double *)(iVar6 + 0x58) = (double)*(int *)(iVar6 + 0x10);
-
-              iVar6 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-              *(double *)(iVar6 + 0x60) = (double)*(int *)(iVar6 + 0x14);
-
-              iVar6 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-              if (*(char *)(iVar6 + 0x80) == '\0') {
-
-                *(double *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x58) =
-
-                     (double)(((*(int *)(iVar6 + 0x10) -
-
-                               *(int *)(local_74[0xc] * 0x178 + 0x7f4 + *(int *)(iVar6 + 0x368))) -
-
-                              *(int *)(local_74[0xe] * 0x178 + 0x7f4 + *(int *)(iVar6 + 0x368))) +
-
-                              iVar9 + iVar10);
-
-                iVar10 = (*(int *)(*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368) + 0x7f8 +
-
-                                  local_74[0xe] * 0x178) -
-
-                         *(int *)(*(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x368) + 0x7f8 +
-
-                                 local_74[0xc] * 0x178)) +
-
-                         *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x14);
-
-              }
-
-              else {
-
-                *(double *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x58) =
-
-                     (double)(((*(int *)(local_74[0xc] * 0x178 + 0x7f4 + *(int *)(iVar6 + 0x368)) +
-
-                                *(int *)(local_74[0xe] * 0x178 + 0x7f4 + *(int *)(iVar6 + 0x368)) +
-
-                               *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x10)) - iVar9) -
-
-                             iVar10);
-
-                iVar10 = (*(int *)(*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368) + 0x7f8 +
-
-                                  local_74[0xe] * 0x178) -
-
-                         *(int *)(*(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x368) + 0x7f8 +
-
-                                 local_74[0xc] * 0x178)) +
-
-                         *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x14);
-
-              }
-
-              *(double *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x60) = (double)iVar10;
-
-              iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-              dVar2 = ((double)*(int *)(iVar10 + 0x10) - *(double *)(iVar10 + 0x58)) * 0.5;
-
-              *(double *)(iVar10 + 0x58) = *(double *)(iVar10 + 0x58) + dVar2;
-
-              iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-              *(double *)(iVar10 + 0x58) = dVar2 + *(double *)(iVar10 + 0x58);
-
-              uVar5 = FUN_004450d0();
-
-              *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x10) = uVar5;
-
-              uVar5 = FUN_004450d0();
-
-              *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x10) = uVar5;
-
-              *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x8c) = iVar8;
-
-              *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x90) = param_1;
-
-              *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x94) = 300;
-
-              *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0xb0) = 0;
-
-              fVar12 = extraout_ST0_00;
-
-            }
-
-            else if ((iVar9 == 7) &&
-
-                    (iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4), *(int *)(iVar10 + 0x98) == 0))
-
-            {
-
-              *(undefined4 *)(iVar10 + 0x98) = 1;
-
-              *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x98) = 0xffffffff;
-
-              *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x364) =
-
-                   *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x364);
-
-              *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x9c) = iVar8;
-
-              *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0xa0) = param_1;
-
-              *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x354) = param_1;
-
-              piVar7 = (int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x35c);
-
-              *piVar7 = *piVar7 + 1;
-
-              iVar10 = *(int *)(*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368) + 0x6f4);
-
-              if ((iVar10 == 0x78) || (iVar10 == 0x7c)) {
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x98) = 0x65;
-
-              }
-
-              if (*(int *)(*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368) + 0x6f8) == 4) {
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x98) = 4;
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x98) = 0xfffffffc;
-
-              }
-
-              iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-              if (*(int *)(*(int *)(iVar10 + 0x368) + 0x6f8) == 6) {
-
-                if (*(int *)(iVar10 + 0x2fc) < 1) {
-
-                  *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x98) = 4;
-
-                  *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x31c) = 0;
-
-                }
-
-                else {
-
-                  *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x98) = 6;
-
-                }
-
-                *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x98) =
-
-                     -*(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x98);
-
-              }
-
-            }
-
-            else if (iVar9 == 2) {
-
-              if (*(int *)(*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368) + 0x6f8) == 1) {
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x70) = 0x73;
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x98) = 1;
-
-                iVar10 = *(int *)(*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368) + 0x6f4);
-
-                if ((iVar10 == 0x78) || (iVar10 == 0x7c)) {
-
-                  *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x98) = 0x65;
-
-                }
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x98) = 0xffffffff;
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x364) =
-
-                     *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x364);
-
-                *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x9c) = iVar8;
-
-                *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0xa0) = param_1;
-
-                *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x354) = param_1;
-
-                piVar7 = (int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x35c);
-
-                *piVar7 = *piVar7 + 1;
-
-              }
-
-              if (*(int *)(*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368) + 0x6f8) == 4) {
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x70) = 0x73;
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x98) = 4;
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x98) = 0xfffffffc;
-
-                *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x9c) = iVar8;
-
-                *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0xa0) = param_1;
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x364) =
-
-                     *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x364);
-
-                *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x354) = param_1;
-
-                piVar7 = (int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x35c);
-
-                *piVar7 = *piVar7 + 1;
-
-              }
-
-              if (*(int *)(*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368) + 0x6f8) == 6) {
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x70) = 0x73;
-
-                if (*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x2fc) < 1) {
-
-                  *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x98) = 4;
-
-                  *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x31c) = 0;
-
-                }
-
-                else {
-
-                  *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x98) = 6;
-
-                }
-
-                *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x98) =
-
-                     -*(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x98);
-
-                *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x9c) = iVar8;
-
-                *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0xa0) = param_1;
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x364) =
-
-                     *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x364);
-
-                *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x354) = param_1;
-
-                piVar7 = (int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x35c);
-
-                *piVar7 = *piVar7 + 1;
-
-              }
-
-              if (*(int *)(*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368) + 0x6f8) == 2) {
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x70) = 0x74;
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x98) = 2;
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x98) = 0xfffffffe;
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x364) =
-
-                     *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x364);
-
-                *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x9c) = iVar8;
-
-                *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0xa0) = param_1;
-
-                *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x354) = param_1;
-
-                piVar7 = (int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x35c);
-
-                *piVar7 = *piVar7 + 1;
-
-              }
-
-              *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x88) = 0;
-
-            }
-
-            else if (iVar9 == 8) {
-
-              *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0xe0) = local_74[0x11] + 1000;
-
-              *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x70) = local_74[5];
-
-              *(undefined8 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x58) =
-
-                   *(undefined8 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x58);
-
-              *(double *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x68) =
-
-                   *(double *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x68) + 1.0;
-
-            }
-
-            else if (iVar9 == 9) {
-
-              iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-              iVar9 = *(int *)(iVar10 + 0x368);
-
-              iVar6 = *(int *)(iVar9 + 0x6f8);
-
-              if (iVar6 == 3) {
-
-                iVar9 = *(int *)(iVar9 + 0xac);
-
-                if (-1 < iVar9) {
-
-                  FUN_00416fb0(*(undefined4 *)(iVar10 + 0x10),iVar9);
-
-                  fVar12 = (float10)0;
-
-                }
-
-                iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                if (*(int *)(*(int *)(iVar10 + 0x70) * 0x178 + 0x7ac + *(int *)(iVar10 + 0x368)) ==
-
-                    0xbbd) {
-
-                  *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0xb4) = 0xfffffffd;
-
-                  *(undefined1 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0xeb) = 1;
-
-                  *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x70) = 0x28;
-
-                }
-
-                else {
-
-                  *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0xb4) = 0xfffffffd;
-
-                  *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x364) =
-
-                       *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x364);
-
-                  *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x354) =
-
-                       *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x354);
-
-                  *(undefined1 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0xeb) = 1;
-
-                  *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x354) =
-
-                       *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x354);
-
-                  *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x70) = 0x1e;
-
-                  *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x88) = 0;
-
-                  *(double *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x30) = (double)fVar12;
-
-                  *(double *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x48) = (double)fVar12;
-
-                  *(double *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x28) = (double)fVar12;
-
-                  *(double *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x40) = (double)fVar12;
-
-                  *(double *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x38) = (double)fVar12;
-
-                  *(double *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x50) = (double)fVar12;
-
-                  **(int **)(in_ECX + 0x194 + iVar8 * 4) = param_1;
-
-                }
-
-              }
-
-              else if (iVar6 == 0) {
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x2fc) = 0;
-
-              }
-
-            }
-
-            else if ((iVar9 == 10) ||
-
-                    ((iVar9 == 0xb && (*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 800) < 0))))
-
-            {
-
-              iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-              iVar9 = *(int *)(*(int *)(iVar10 + 0x368) + 0x6f8);
-
-              if (iVar9 == 0) {
-
-                *(undefined4 *)(iVar10 + 800) = 0xffffffec;
-
-                iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                if (((*(int *)(*(int *)(iVar10 + 0x368) + 0x6f8) == 0) &&
-
-                    (*(int *)(iVar10 + 0x2f4) == -1)) && (DAT_00450bd0 == 0)) {
-
-                  piVar7 = (int *)(*(int *)(in_ECX + 0x194 +
-
-                                           *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x354)
-
-                                           * 4) + 0x348);
-
-                  *piVar7 = *piVar7 + 0xb;
-
-                }
-
-                iVar10 = *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x344);
-
-                if ((0 < iVar10) && (iVar10 < 3)) {
-
-                  (&DAT_00451b68)[iVar10] = (&DAT_00451b68)[iVar10] + 0xb;
-
-                }
-
-                iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                *(double *)(iVar10 + 0x28) = *(double *)(iVar10 + 0x40) / 1.07;
-
-                iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                *(undefined8 *)(iVar10 + 0x40) = *(undefined8 *)(iVar10 + 0x28);
-
-                iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                *(double *)(iVar10 + 0x38) = *(double *)(iVar10 + 0x50) / 1.07;
-
-                iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                *(undefined8 *)(iVar10 + 0x50) = *(undefined8 *)(iVar10 + 0x38);
-
-                *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x70) = 0xb6;
-
-LAB_00431517:
-
-                iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                if (-3 < *(int *)(iVar10 + 0x14)) {
-
-                  *(undefined4 *)(iVar10 + 0x14) = 0xfffffffe;
-
-                  *(undefined8 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x48) = 0xc018000000000000;
-
-                }
-
-                iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                if (*(double *)(iVar10 + 0x48) <= -6.0) goto LAB_0043187a;
-
-                dVar2 = *(double *)(iVar10 + 0x48) - 3.0;
-
-              }
-
-              else {
-
-                if ((((iVar9 == 1) || (iVar9 == 4)) || (iVar9 == 6)) &&
-
-                   ((iVar6 = *(int *)(*(int *)(iVar10 + 0x368) + 0x6f4), iVar6 != 0xc9 &&
-
-                    (iVar6 != 0xca)))) {
-
-                  if (*(int *)(*(int *)(iVar10 + 0x70) * 0x178 + 0x7ac + *(int *)(iVar10 + 0x368))
-
-                      != 1000) {
-
-                    *(undefined4 *)(iVar10 + 0x70) = 0;
-
-                  }
-
-                  iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                  *(double *)(iVar10 + 0x28) = *(double *)(iVar10 + 0x40) / 1.07;
-
-                  iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                  *(undefined8 *)(iVar10 + 0x40) = *(undefined8 *)(iVar10 + 0x28);
-
-                  iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                  dVar2 = *(double *)(iVar10 + 0x50) / 1.07;
-
-LAB_00431507:
-
-                  *(double *)(iVar10 + 0x38) = dVar2;
-
-                  iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                  *(undefined8 *)(iVar10 + 0x50) = *(undefined8 *)(iVar10 + 0x38);
-
-                  goto LAB_00431517;
-
-                }
-
-                if (iVar9 != 2) goto LAB_0043187a;
-
-                if (*(int *)(*(int *)(iVar10 + 0x70) * 0x178 + 0x7ac + *(int *)(iVar10 + 0x368)) !=
-
-                    2000) {
-
-                  *(undefined4 *)(iVar10 + 0x70) = 0;
-
-                }
-
-                iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                *(double *)(iVar10 + 0x28) = *(double *)(iVar10 + 0x40) / 1.07;
-
-                iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                *(undefined8 *)(iVar10 + 0x40) = *(undefined8 *)(iVar10 + 0x28);
-
-                iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                dVar2 = *(double *)(iVar10 + 0x50) / 1.07;
-
-LAB_00431816:
-
-                *(double *)(iVar10 + 0x38) = dVar2;
-
-                iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                *(undefined8 *)(iVar10 + 0x50) = *(undefined8 *)(iVar10 + 0x38);
-
-                iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                if (-3 < *(int *)(iVar10 + 0x14)) {
-
-                  *(undefined4 *)(iVar10 + 0x14) = 0xfffffffe;
-
-                  *(undefined8 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x48) = 0xc018000000000000;
-
-                }
-
-                iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                if (*(double *)(iVar10 + 0x48) <= -6.0) goto LAB_0043187a;
-
-                dVar2 = *(double *)(iVar10 + 0x48) - 2.3;
-
-              }
-
-              *(double *)(iVar10 + 0x48) = dVar2;
-
-              iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-              *(undefined8 *)(iVar10 + 0x30) = *(undefined8 *)(iVar10 + 0x48);
-
-            }
-
-            else if (iVar9 == 3) {
-
-              *(double *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x40) = (double)fVar12;
-
-              *(double *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x40) = (double)fVar12;
-
-              iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-              *(bool *)(iVar10 + 0x80) =
-
-                   *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x10) < *(int *)(iVar10 + 0x10);
-
-              *(char *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x80) =
-
-                   '\x01' - *(char *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x80);
-
-              *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x70) = local_74[0xc];
-
-              *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x70) = local_74[0xe];
-
-              iVar10 = *(int *)(*(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x368) + 0x830 +
-
-                               local_74[0xc] * 0x178);
-
-              iVar9 = *(int *)(*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368) + 0x830 +
-
-                              local_74[0xe] * 0x178);
-
-              iVar6 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-              *(double *)(iVar6 + 0x58) = (double)*(int *)(iVar6 + 0x10);
-
-              iVar6 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-              *(double *)(iVar6 + 0x60) = (double)*(int *)(iVar6 + 0x14);
-
-              iVar6 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-              if (*(char *)(iVar6 + 0x80) == '\0') {
-
-                *(double *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x58) =
-
-                     (double)(((*(int *)(iVar6 + 0x10) -
-
-                               *(int *)(local_74[0xc] * 0x178 + 0x7f4 + *(int *)(iVar6 + 0x368))) -
-
-                              *(int *)(local_74[0xe] * 0x178 + 0x7f4 + *(int *)(iVar6 + 0x368))) +
-
-                              iVar9 + iVar10);
-
-                iVar10 = (*(int *)(*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368) + 0x7f8 +
-
-                                  local_74[0xe] * 0x178) -
-
-                         *(int *)(*(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x368) + 0x7f8 +
-
-                                 local_74[0xc] * 0x178)) +
-
-                         *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x14);
-
-              }
-
-              else {
-
-                *(double *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x58) =
-
-                     (double)(((*(int *)(local_74[0xc] * 0x178 + 0x7f4 + *(int *)(iVar6 + 0x368)) +
-
-                                *(int *)(local_74[0xe] * 0x178 + 0x7f4 + *(int *)(iVar6 + 0x368)) +
-
-                               *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x10)) - iVar9) -
-
-                             iVar10);
-
-                iVar10 = (*(int *)(*(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x368) + 0x7f8 +
-
-                                  local_74[0xe] * 0x178) -
-
-                         *(int *)(*(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x368) + 0x7f8 +
-
-                                 local_74[0xc] * 0x178)) +
-
-                         *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x14);
-
-              }
-
-              *(double *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x60) = (double)iVar10;
-
-              iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-              dVar2 = ((double)*(int *)(iVar10 + 0x10) - *(double *)(iVar10 + 0x58)) * 0.5;
-
-              *(double *)(iVar10 + 0x58) = *(double *)(iVar10 + 0x58) + dVar2;
-
-              iVar10 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-              *(double *)(iVar10 + 0x58) = dVar2 + *(double *)(iVar10 + 0x58);
-
-              uVar5 = FUN_004450d0();
-
-              *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x10) = uVar5;
-
-              uVar5 = FUN_004450d0();
-
-              *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x10) = uVar5;
-
-              *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x8c) = iVar8;
-
-              *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x90) = param_1;
-
-              *(undefined4 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x94) = 300;
-
-              *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0xb0) = 0;
-
-              fVar12 = extraout_ST0_01;
-
-            }
-
-            else if (iVar9 == 0xe) {
-
-              iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-              iVar9 = *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x10);
-
-              if ((iVar9 <= *(int *)(iVar10 + 0x10) + 5) ||
-
-                 (((float10)*(double *)(iVar10 + 0x40) <= fVar12 &&
-
-                  ((float10)*(double *)(iVar10 + 0x28) <= fVar12)))) {
-
-                if ((iVar9 < *(int *)(iVar10 + 0x10) + -5) &&
-
-                   (((float10)*(double *)(iVar10 + 0x40) < fVar12 ||
-
-                    ((float10)*(double *)(iVar10 + 0x28) < fVar12)))) {
-
-                  *(undefined4 *)(iVar10 + 0x3f0) = 1;
-
-                }
-
-              }
-
-              else {
-
-                *(undefined4 *)(iVar10 + 0x3f4) = 1;
-
-              }
-
-              iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-              iVar9 = *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x18);
-
-              if ((iVar9 <= *(int *)(iVar10 + 0x18) + 2) ||
-
-                 (((float10)*(double *)(iVar10 + 0x50) <= fVar12 &&
-
-                  ((float10)*(double *)(iVar10 + 0x38) <= fVar12)))) {
-
-                if ((iVar9 < *(int *)(iVar10 + 0x18) + -2) &&
-
-                   (((float10)*(double *)(iVar10 + 0x50) < fVar12 ||
-
-                    ((float10)*(double *)(iVar10 + 0x38) < fVar12)))) {
-
-                  *(undefined4 *)(iVar10 + 1000) = 1;
-
-                }
-
-              }
-
-              else {
-
-                *(undefined4 *)(iVar10 + 0x3ec) = 1;
-
-              }
-
-            }
-
-            else if ((iVar9 == 0xf) || (iVar9 == 0x10)) {
-
-              iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-              iVar6 = *(int *)(*(int *)(iVar10 + 0x368) + 0x6f8);
-
-              if (iVar6 == 0) {
-
-                if (iVar9 == 0x10) {
-
-                  iVar9 = local_74[0x11];
-
-                  if (0 < *(int *)(iVar10 + 0x340)) {
-
-                    iVar9 = (iVar9 * 100) / *(int *)(iVar10 + 0x340);
-
-                    iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                  }
-
-                  if (((0 < *(int *)(iVar10 + 0x2fc)) && (*(int *)(iVar10 + 0x2fc) <= iVar9)) &&
-
-                     (*(int *)(iVar10 + 0x2f4) == -1)) {
-
-                    piVar7 = (int *)(*(int *)(in_ECX + 0x194 +
-
-                                             *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x354
-
-                                                     ) * 4) + 0x358);
-
-                    *piVar7 = *piVar7 + 1;
-
-                    iVar10 = *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x344);
-
-                    if ((0 < iVar10) && (iVar10 < 3)) {
-
-                      *(int *)(&DAT_00451b60 + iVar10 * 4) =
-
-                           *(int *)(&DAT_00451b60 + iVar10 * 4) + 1;
-
-                    }
-
-                  }
-
-                  piVar7 = (int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x2fc);
-
-                  *piVar7 = *piVar7 - iVar9;
-
-                  iVar10 = (int)((ulonglong)((longlong)iVar9 * 0x55555555) >> 0x20) - iVar9;
-
-                  piVar7 = (int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x300);
-
-                  *piVar7 = *piVar7 + ((iVar10 >> 1) - (iVar10 >> 0x1f));
-
-                  piVar7 = (int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x34c);
-
-                  *piVar7 = *piVar7 + iVar9;
-
-                  iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                  if ((*(int *)(*(int *)(iVar10 + 0x368) + 0x6f8) == 0) &&
-
-                     (*(int *)(iVar10 + 0x2f4) == -1)) {
-
-                    piVar7 = (int *)(*(int *)(in_ECX + 0x194 +
-
-                                             *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x354
-
-                                                     ) * 4) + 0x348);
-
-                    *piVar7 = *piVar7 + iVar9;
-
-                  }
-
-                  iVar10 = *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x344);
-
-                  if ((0 < iVar10) && (iVar10 < 3)) {
-
-                    (&DAT_00451b68)[iVar10] = (&DAT_00451b68)[iVar10] + iVar9;
-
-                  }
-
-                  *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x70) = 200;
-
-                  *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x88) = 0;
-
-                  FUN_00417090(*(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x10),0xe);
-
-                  if (0 < local_74[9]) {
-
-                    *(char *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0xf0 + param_1) =
-
-                         (char)local_74[9];
-
-                  }
-
-                  iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                  if (*(int *)(iVar10 + 0x98) == 2) {
-
-                    iVar10 = *(int *)(iVar10 + 0x9c);
-
-                    iVar9 = *(int *)(in_ECX + 0x194 + iVar10 * 4);
-
-                    if ((*(int *)(iVar9 + 0xa0) == iVar8) && (*(int *)(iVar9 + 0x98) == -2)) {
-
-                      *(undefined1 *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0xf0 + iVar10) = 0x2d
-
-                      ;
-
-                      *(undefined4 *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x98) = 0;
-
-                      iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                      *(undefined1 *)(*(int *)(iVar10 + 0x9c) + 0xf0 + iVar10) = 0x1e;
-
-                      *(undefined4 *)
-
-                       (*(int *)(in_ECX + 0x194 +
-
-                                *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x9c) * 4) + 0x98) =
-
-                           0;
-
-                      uVar5 = FUN_00417170(0xf4,6);
-
-                      *(undefined4 *)
-
-                       (*(int *)(in_ECX + 0x194 +
-
-                                *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x9c) * 4) + 0x70) =
-
-                           uVar5;
-
-                      *(undefined8 *)
-
-                       (*(int *)(in_ECX + 0x194 +
-
-                                *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x9c) * 4) + 0x48) =
-
-                           0xbff0000000000000;
-
-                    }
-
-                  }
-
-                  fVar12 = (float10)0;
-
-                }
-
-                if (*local_74 == 0xf) {
-
-                  iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                  dVar2 = *(double *)(iVar10 + 0x40);
-
-                  if (*(int *)(iVar10 + 0x10) <=
-
-                      *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x10)) goto LAB_004314ca;
-
-                  dVar2 = dVar2 - 1.0;
-
-                  goto LAB_004314d0;
-
-                }
-
-              }
-
-              else {
-
-                if ((((iVar6 == 1) || (iVar6 == 4)) || (iVar6 == 6)) &&
-
-                   ((iVar9 = *(int *)(*(int *)(iVar10 + 0x368) + 0x6f4), iVar9 != 0xc9 &&
-
-                    (iVar9 != 0xca)))) {
-
-                  if (*(int *)(*(int *)(iVar10 + 0x70) * 0x178 + 0x7ac + *(int *)(iVar10 + 0x368))
-
-                      != 1000) {
-
-                    *(undefined4 *)(iVar10 + 0x70) = 0;
-
-                  }
-
-                  iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                  dVar2 = *(double *)(iVar10 + 0x40);
-
-                  if (*(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x10) <
-
-                      *(int *)(iVar10 + 0x10)) {
-
-                    dVar2 = dVar2 - 1.0;
-
-                  }
-
-                  else {
-
-LAB_004314ca:
-
-                    dVar2 = dVar2 + 1.0;
-
-                  }
-
-LAB_004314d0:
-
-                  *(double *)(iVar10 + 0x28) = dVar2;
-
-                  iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                  *(undefined8 *)(iVar10 + 0x40) = *(undefined8 *)(iVar10 + 0x28);
-
-                  iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                  if (*(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x18) <
-
-                      *(int *)(iVar10 + 0x18)) {
-
-                    dVar2 = *(double *)(iVar10 + 0x50) - 0.5;
-
-                  }
-
-                  else {
-
-                    dVar2 = *(double *)(iVar10 + 0x50) + 0.5;
-
-                  }
-
-                  goto LAB_00431507;
-
-                }
-
-                if (iVar6 == 2) {
-
-                  if (*(int *)(*(int *)(iVar10 + 0x70) * 0x178 + 0x7ac + *(int *)(iVar10 + 0x368))
-
-                      != 2000) {
-
-                    *(undefined4 *)(iVar10 + 0x70) = 0;
-
-                  }
-
-                  iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                  if (*(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x10) <
-
-                      *(int *)(iVar10 + 0x10)) {
-
-                    dVar2 = *(double *)(iVar10 + 0x40) - 1.0;
-
-                  }
-
-                  else {
-
-                    dVar2 = *(double *)(iVar10 + 0x40) + 1.0;
-
-                  }
-
-                  *(double *)(iVar10 + 0x28) = dVar2;
-
-                  iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                  *(undefined8 *)(iVar10 + 0x40) = *(undefined8 *)(iVar10 + 0x28);
-
-                  iVar10 = *(int *)(in_ECX + 0x194 + iVar8 * 4);
-
-                  if (*(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x18) <
-
-                      *(int *)(iVar10 + 0x18)) {
-
-                    dVar2 = *(double *)(iVar10 + 0x50) - 0.5;
-
-                  }
-
-                  else {
-
-                    dVar2 = *(double *)(iVar10 + 0x50) + 0.5;
-
-                  }
-
-                  goto LAB_00431816;
-
-                }
-
-              }
-
-            }
-
-          }
-
-LAB_0043187a:
-
-          if (*local_74 == 0) {
-
-            iVar10 = *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x18);
-
-            iVar9 = *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x18);
-
-            local_70 = iVar8;
-
-            if ((iVar10 <= iVar9) && (*(char *)(param_1 + 4 + in_ECX) != '\0')) {
-
-              if (iVar10 < iVar9) {
-
-                local_70 = param_1;
-
-              }
-
-              else if (iVar8 < param_1) {
-
-                local_70 = param_1;
-
-              }
-
-            }
-
-            iVar10 = *(int *)(in_ECX + 0x194 + local_70 * 4);
-
-            iVar9 = *(int *)(iVar10 + 0x36c);
-
-            if (iVar9 < 10) {
-
-              *(int *)(iVar10 + 0x36c) = iVar9 + 1;
-
-              iVar10 = *(int *)(in_ECX + 0x194 + local_70 * 4);
-
-              iVar9 = *(int *)(iVar10 + 0x36c) + -1;
-
-              if (local_74[7] < 0x3d) {
-
-                local_64 = local_64 * 0x14 + 10;
-
-              }
-
-              else {
-
-                local_64 = local_64 * 0x14;
-
-              }
-
-              *(int *)(iVar10 + 0x3c0 + iVar9 * 4) = local_64;
-
-              iVar6 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-              iVar10 = iVar9 * 4 + 0x370;
-
-              iVar11 = *(int *)(iVar6 + 0x70) * 0x178;
-
-              if (*(char *)(iVar6 + 0x80) == '\0') {
-
-                *(int *)(iVar10 + *(int *)(in_ECX + 0x194 + local_70 * 4)) =
-
-                     (*(int *)(iVar6 + 0x10) - *(int *)(iVar11 + 0x7f4 + *(int *)(iVar6 + 0x368))) +
-
-                     local_74[3] + local_74[1];
-
-                piVar7 = (int *)(iVar10 + *(int *)(in_ECX + 0x194 + local_70 * 4));
-
-                iVar6 = *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x10);
-
-                if (iVar6 < *piVar7) goto LAB_004319da;
-
-              }
-
-              else {
-
-                *(int *)(iVar10 + *(int *)(in_ECX + 0x194 + local_70 * 4)) =
-
-                     ((*(int *)(iVar11 + 0x7f4 + *(int *)(iVar6 + 0x368)) - local_74[3]) -
-
-                     local_74[1]) + *(int *)(iVar6 + 0x10);
-
-                piVar7 = (int *)(iVar10 + *(int *)(in_ECX + 0x194 + local_70 * 4));
-
-                iVar6 = *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x10);
-
-                if (*piVar7 < iVar6) {
-
-LAB_004319da:
-
-                  *piVar7 = iVar6;
-
-                }
-
-              }
-
-              iVar6 = *(int *)(in_ECX + 0x194 + param_1 * 4);
-
-              iVar11 = *(int *)(*(int *)(iVar6 + 0x70) * 0x178 + 0x7f8 + *(int *)(iVar6 + 0x368));
-
-              iVar8 = *(int *)(*(int *)(in_ECX + 0x194 + iVar8 * 4) + 0x14);
-
-              local_64 = (local_74[4] / 2 + *(int *)(iVar6 + 0x14) + local_74[2]) - iVar11;
-
-              iVar11 = iVar8 - iVar11;
-
-              if ((local_64 < iVar11) || (iVar11 = iVar8, iVar8 < local_64)) {
-
-                local_64 = (local_64 + iVar11) / 2;
-
-              }
-
-              iVar8 = rand();
-
-              *(int *)(*(int *)(in_ECX + 0x194 + local_70 * 4) + 0x398 + iVar9 * 4) =
-
-                   iVar8 % 9 + *(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x18) + -4 +
-
-                   local_64;
-
-              piVar7 = (int *)(*(int *)(in_ECX + 0x194 + local_70 * 4) + iVar10);
-
-              iVar10 = rand();
-
-              fVar12 = (float10)0;
-
-              *piVar7 = *piVar7 + iVar10 % 9 + -4;
-
-            }
-
-          }
-
-        }
-
-      }
-
-      local_5c = local_5c + 1;
-
-      if (*(int *)(*(int *)(in_ECX + 0x194 + param_1 * 4) + 0x2e4) <= local_5c) {
-
-        return;
-
-      }
-
+    if (attacker->owner >= 0 && attacker->owner < MAX_OBJECTS &&
+        global->objects[attacker->owner] != NULL) {
+        return global->objects[attacker->owner];
     }
-
-  }
-
-  return;
-
+    return attacker;
 }
 
+static bool is_convertible_energy_ball(uint32_t fid)
+{
+    return (fid == ID_JOHN_BALL_DAT || fid == ID_DEEP_BALL_DAT ||
+            fid == ID_DENNIS_BALL_DAT || fid == ID_WOODY_BALL_DAT ||
+            fid == ID_DAVIS_BALL_DAT || fid == ID_DENNIS_CHASE_DAT ||
+            fid == ID_JACK_BALL_DAT);
+}
 
+static void trigger_weapon_item_sound(int32_t world_x, int32_t sound_id, uint32_t sound_tag)
+{
+    if (sound_id >= 0) {
+        FUN_00416fb0(world_x, sound_id);
+    } else if (sound_tag != 0) {
+        FUN_00416fb0(world_x, (int32_t)sound_tag);
+    }
+}
 
+static void apply_catch_grab(object_t *attacker, int32_t attacker_id,
+                             object_t *injured, int32_t injured_id,
+                             const itr_t *eff)
+{
+    injured->x_velocity = 0.0;
+    attacker->x_velocity = 0.0;
+    attacker->facing = (injured->x < attacker->x) ? FACING_LEFT : FACING_RIGHT;
+    injured->facing = (uint8_t)(1U - attacker->facing);
+
+    uint32_t c_act = (eff->catching_act1 < MAX_FRAMES) ? eff->catching_act1 : 0;
+    uint32_t v_act = (eff->caught_act1 < MAX_FRAMES) ? eff->caught_act1 : 0;
+    attacker->frame_id1 = c_act;
+    injured->frame_id1 = v_act;
+
+    const frame_t *af = &attacker->file->frames[c_act];
+    const frame_t *vf = &injured->file->frames[v_act];
+    int32_t att_cx = af->cpoint.x;
+    int32_t inj_cx = vf->cpoint.x;
+
+    attacker->x_position = (double)attacker->x;
+    attacker->y_position = (double)attacker->y;
+
+    if (attacker->facing == FACING_RIGHT) {
+        injured->x_position = (double)((attacker->x - af->centerx - vf->centerx) + inj_cx + att_cx);
+    } else {
+        injured->x_position = (double)((af->centerx + vf->centerx + attacker->x - inj_cx) - att_cx);
+    }
+    injured->y_position = (double)((vf->centery - af->centery) + attacker->y);
+
+    double half_shift = ((double)injured->x - injured->x_position) * 0.5;
+    injured->x_position += half_shift;
+    attacker->x_position += half_shift;
+    injured->x = (int32_t)injured->x_position;
+    attacker->x = (int32_t)attacker->x_position;
+
+    attacker->cpoint_catcher = injured_id;
+    injured->cpoint_caught = attacker_id;
+    attacker->cpoint_hurtable = 300;
+    injured->fall = 0;
+}
+
+static bool should_defend_with_armor(const object_t *attacker, const object_t *injured,
+                                     const frame_t *inj_f1, const itr_t *eff)
+{
+    uint32_t inj_f4_id = (injured->frame_id4 < MAX_FRAMES) ? injured->frame_id4 : injured->frame_id1;
+    uint32_t inj_s4 = injured->file->frames[inj_f4_id].state;
+    if (eff->bdefend == 100 || inj_s4 == 8 || inj_s4 == 11 || inj_s4 == 12 ||
+        inj_s4 == 13 || inj_s4 == 14 || inj_s4 == 16 || inj_s4 == 18) {
+        return false;
+    }
+
+    uint32_t inj_fid = injured->file->id;
+    uint32_t att_fid = attacker->file->id;
+    bool elem_or_pierce = (eff->effect / 10 == 2 || eff->effect / 10 == 3 ||
+                           eff->effect == 2 || eff->effect == 3 ||
+                           att_fid == ID_JOHN_BISCUIT_DAT || att_fid == ID_HENRY_ARROW2_DAT);
+
+    if (inj_fid == ID_KNIGHT_DAT && injured->bdefend < 16 && !elem_or_pierce) {
+        return true;
+    }
+    if (inj_fid == ID_LOUIS_DAT && injured->bdefend < 2 && !elem_or_pierce &&
+        (injured->frame_id1 < 20 || inj_f1->state == 5 || inj_f1->state == 4 || inj_f1->state == 7)) {
+        return true;
+    }
+    if (inj_fid == ID_JULIAN_DAT && injured->bdefend <= 15 &&
+        att_fid != ID_JOHN_BISCUIT_DAT && att_fid != ID_HENRY_ARROW2_DAT) {
+        return true;
+    }
+    return false;
+}
+
+static bool is_defended_hit(const object_t *attacker, const object_t *injured,
+                            const frame_t *inj_f1, const frame_t *inj_f4, const itr_t *eff)
+{
+    if (should_defend_with_armor(attacker, injured, inj_f1, eff)) {
+        return true;
+    }
+
+    uint32_t att_fid = attacker->file->id;
+    if (inj_f4->state == STATE_DEFENDING && (int32_t)eff->bdefend < 61 &&
+        (attacker->facing != injured->facing || eff->dvx < 0 ||
+         att_fid == ID_BOOMERANG_DAT || att_fid == ID_JAN_CHASE_DAT ||
+         att_fid == ID_FIRZEN_CHASEF_DAT || att_fid == ID_FIRZEN_CHASEI_DAT) &&
+        injured->hp > 0) {
+        return true;
+    }
+    return false;
+}
+
+static void apply_weapon_rebound_and_stick_boost(object_t *attacker, object_t *injured, const itr_t *eff)
+{
+    double dvx_d = (double)eff->dvx;
+    double scaled_vx = (injured->x_velocity < 0.0)
+        ? -(injured->x_velocity * 0.55)
+        : (injured->x_velocity * 0.55);
+
+    if (scaled_vx < dvx_d ||
+        (attacker->facing == FACING_RIGHT && injured->pic_x_gain > 0.0) ||
+        (attacker->facing == FACING_LEFT && injured->pic_x_gain < 0.0)) {
+        if (attacker->facing == FACING_RIGHT) injured->pic_x_gain += dvx_d;
+        if (attacker->facing == FACING_LEFT) injured->pic_x_gain -= dvx_d;
+    } else if ((attacker->facing == FACING_LEFT && injured->x_velocity > 0.0) ||
+               (attacker->facing == FACING_RIGHT && injured->x_velocity < 0.0)) {
+        injured->pic_x_gain = -(injured->x_velocity * 0.55);
+    }
+
+    if (attacker->file->id == ID_STICK_DAT && attacker->weapon_type < 0) {
+        injured->pic_x_gain *= 2.5;
+        FUN_00417090(injured->x, 13);
+        if (injured->pic_x_gain > 0.0 && injured->pic_x_gain < 10.0) injured->pic_x_gain = 10.0;
+        if (injured->pic_x_gain < 0.0 && injured->pic_x_gain > -10.0) injured->pic_x_gain = -10.0;
+    }
+}
+
+static void apply_struck_projectile_reaction(global_t *global, object_t *attacker,
+                                             int32_t attacker_id, object_t *injured)
+{
+    const frame_t *att_f1 = &attacker->file->frames[attacker->frame_id1];
+    const frame_t *inj_f1 = &injured->file->frames[injured->frame_id1];
+    uint32_t inj_state = inj_f1->state;
+    uint32_t att_state = att_f1->state;
+
+    if (inj_state != 3005 && (inj_state != 3006 || att_state == 3005)) {
+        if (attacker->weapon_type < 0 && attacker->holder_id >= 0 &&
+            attacker->holder_id < MAX_OBJECTS && global->objects[attacker->holder_id]) {
+            object_t *holder = global->objects[attacker->holder_id];
+            injured->team = holder->team;
+            injured->owner = holder->owner;
+        } else {
+            injured->team = attacker->team;
+            injured->owner = attacker->owner;
+        }
+
+        injured->flag_eb = 1;
+        injured->wait_counter = 0;
+        injured->y_accl = 0.0;
+        injured->pic_x_gain = 0.0;
+        injured->z_accl = 0.0;
+
+        uint32_t att_fid = attacker->file->id;
+        uint32_t inj_fid = injured->file->id;
+        if (att_fid == ID_FREEZE_BALL_DAT && is_convertible_energy_ball(inj_fid)) {
+            injured->team = attacker->team;
+            injured->owner = attacker->owner;
+            injured->file = attacker->file;
+            injured->frame_id1 = 40;
+            injured->frame_id2 = 40;
+            injured->frame_id3 = 40;
+        } else {
+            if ((attacker->file->type == TYPE_CHARACTER || attacker->weapon_type < 0) &&
+                att_f1->itrs_size > 0 && att_f1->itrs &&
+                att_f1->itrs[0].effect != EFFECT_FIRE && att_f1->itrs[0].effect != EFFECT_FLAME) {
+                injured->frame_id1 = 30;
+                if (att_fid == ID_FREEZE_DAT && is_convertible_energy_ball(inj_fid)) {
+                    for (uint32_t k = 0; k < MAX_FILES; ++k) {
+                        if (global->files[k] && global->files[k]->id == ID_FREEZE_BALL_DAT) {
+                            injured->file = global->files[k];
+                            injured->frame_id2 = injured->frame_id1;
+                            injured->frame_id3 = injured->frame_id1;
+                            break;
+                        }
+                    }
+                }
+            } else {
+                injured->frame_id1 = 20;
+            }
+
+            if (attacker->weapon_type < 0) {
+                injured->move_counter = (uint32_t)attacker->holder_id;
+                if (att_fid == ID_ICE_SWORD_DAT && is_convertible_energy_ball(inj_fid) &&
+                    attacker->holder_id >= 0 && attacker->holder_id < MAX_OBJECTS &&
+                    global->objects[attacker->holder_id]) {
+                    object_t *holder = global->objects[attacker->holder_id];
+                    for (uint32_t k = 0; k < MAX_FILES; ++k) {
+                        if (global->files[k] && global->files[k]->id == ID_FREEZE_BALL_DAT) {
+                            injured->file = global->files[k];
+                            injured->frame_id2 = injured->frame_id1;
+                            injured->frame_id3 = injured->frame_id1;
+                            break;
+                        }
+                    }
+                    injured->team = holder->team;
+                    injured->owner = holder->owner;
+                }
+            } else {
+                injured->move_counter = (uint32_t)attacker_id;
+            }
+        }
+    }
+
+    if ((injured->file->frames[injured->frame_id1].state == 3005 && att_state == 3005) ||
+        (injured->file->frames[injured->frame_id1].state == 3006 && att_state == 3006)) {
+        injured->frame_id1 = 20;
+        injured->wait_counter = 0;
+        injured->y_accl = 0.0;
+        injured->pic_x_gain = 0.0;
+        injured->z_accl = 0.0;
+
+        attacker->frame_id1 = 20;
+        attacker->wait_counter = 0;
+        attacker->y_accl = 0.0;
+        attacker->pic_x_gain = 0.0;
+        attacker->z_accl = 0.0;
+    }
+
+    if (attacker->weapon_type < 0 && attacker->holder_id >= 0 &&
+        attacker->holder_id < MAX_OBJECTS && global->objects[attacker->holder_id]) {
+        if (global->objects[attacker->holder_id]->shaking > 0) {
+            global->objects[attacker->holder_id]->shaking = -global->objects[attacker->holder_id]->shaking;
+        }
+    } else if (attacker->shaking > 0) {
+        attacker->shaking = -attacker->shaking;
+    }
+}
+
+static void record_hit_spark(global_t *global,
+                             object_t *attacker, uint32_t attacker_id,
+                             object_t *injured, int32_t injured_id,
+                             const itr_t *eff, int32_t is_bleed)
+{
+    int32_t spark_owner_idx = injured_id;
+    if (injured->z <= attacker->z && global->is_object_exists[attacker_id] != 0) {
+        if (injured->z < attacker->z || injured_id < (int32_t)attacker_id) {
+            spark_owner_idx = (int32_t)attacker_id;
+        }
+    }
+    object_t *so = global->objects[spark_owner_idx];
+    if (!so || so->ai_vars[0] < 0 || so->ai_vars[0] >= 9) return;
+
+    int32_t idx = so->ai_vars[0];
+    so->ai_vars[0] = idx + 1;
+    so->ai_vars[21 + idx] = is_bleed * 20 + ((eff->fall < 61) ? 10 : 0);
+
+    const frame_t *att_f1 = &attacker->file->frames[attacker->frame_id1];
+    int32_t sx;
+    if (attacker->facing == FACING_RIGHT) {
+        sx = (attacker->x - att_f1->centerx) + eff->w + eff->x;
+        if (injured->x < sx) sx = injured->x;
+    } else {
+        sx = ((att_f1->centerx - eff->w) - eff->x) + attacker->x;
+        if (sx < injured->x) sx = injured->x;
+    }
+
+    int32_t sy = (eff->h / 2 + attacker->y + eff->y) - att_f1->centery;
+    int32_t min_y = injured->y - att_f1->centery;
+    if (sy < min_y || injured->y < sy) {
+        int32_t clamp_y = (sy < min_y) ? min_y : injured->y;
+        sy = (sy + clamp_y) / 2;
+    }
+
+    so->ai_vars[1 + idx] = sx + FUN_00417170(0, 9) - 4;
+    so->ai_vars[11 + idx] = sy + attacker->z + FUN_00417170(0, 9) - 4;
+}
+
+static bool apply_plain_hit(global_t *global,
+                            object_t *attacker, uint32_t attacker_id,
+                            object_t *injured, int32_t injured_id,
+                            const itr_t *eff, int32_t *out_is_bleed)
+{
+    injured->bdefend = 45;
+    uint32_t injured_fid = injured->file->id;
+    const frame_t *inj_f1 = &injured->file->frames[injured->frame_id1];
+    const frame_t *inj_f3 = (injured->frame_id3 < MAX_FRAMES)
+        ? &injured->file->frames[injured->frame_id3]
+        : inj_f1;
+    const frame_t *inj_f4 = &injured->file->frames[injured->frame_id4];
+    const frame_t *att_f1 = &attacker->file->frames[attacker->frame_id1];
+
+    if (injured_fid == ID_CRIMINAL_DAT) {
+        if (inj_f1->bdys_size < 1 || !inj_f1->bdys || inj_f1->bdys[0].kind < 1001) {
+            return false;
+        }
+        injured->team = 1;
+        uint32_t rescued_frame = inj_f1->bdys[0].kind - 1000;
+        injured->frame_id1 = (rescued_frame < MAX_FRAMES) ? rescued_frame : 0;
+        attacker->shaking = 3;
+        injured->shaking = -3;
+        return false;
+    }
+
+    uint32_t injured_type = injured->file->type;
+    if (injured_type != TYPE_DRINK) {
+        int32_t dmg = eff->injury;
+        if (injured->armor_multiplier > 0) {
+            dmg = (dmg * 100) / injured->armor_multiplier;
+        }
+        object_t *credit = resolve_credit_owner(global, attacker);
+        if (injured->hp > 0 && injured->hp <= dmg &&
+            injured_type == TYPE_CHARACTER && injured->clone == -1) {
+            credit->kills++;
+            if (credit->player_index >= 0 && credit->player_index < 8) {
+                DAT_00451b60_arr[credit->player_index]++;
+            }
+        }
+        injured->hp -= dmg;
+        injured->dark_hp -= dmg / 3;
+        injured->hp_lost += dmg;
+        if (injured_type == TYPE_CHARACTER && injured->clone == -1) {
+            credit->total_attack += dmg;
+            if (credit->player_index >= 0 && credit->player_index < 8) {
+                DAT_00451b68_arr[credit->player_index] += dmg;
+            }
+        }
+    }
+
+    if (injured->hp < 1 || eff->effect == EFFECT_SHINING) {
+        injured->fall = 80;
+    }
+
+    if (injured_type == TYPE_LIGHT_WEAPON || injured_type == TYPE_HEAVY_WEAPON ||
+        injured_type == TYPE_THROW_WEAPON || injured_type == TYPE_DRINK) {
+        injured->weapon_hp -= eff->injury;
+        if (eff->bdefend == 100) {
+            injured->weapon_hp = -1;
+        }
+    }
+
+    if (injured_type != TYPE_HEAVY_WEAPON || eff->fall > 40) {
+        injured->attacks++;
+    }
+
+    injured->fall += (eff->fall == 0) ? 20 : eff->fall;
+
+    if (inj_f3->state == STATE_ICE || inj_f4->state == STATE_FALLING ||
+        injured_type == TYPE_LIGHT_WEAPON || injured_type == TYPE_THROW_WEAPON ||
+        injured_type == TYPE_DRINK || injured_type == TYPE_HEAVY_WEAPON) {
+        injured->fall = 80;
+    }
+
+    if (injured_type != TYPE_ATTACK) {
+        if (injured->fall > 60) {
+            injured->fall = 80;
+        } else if (injured->fall > 40) {
+            injured->frame_id1 = 226;
+            injured->fall = 60;
+            if (injured->y < 0) injured->fall = 80;
+        } else if (injured->fall > 20) {
+            injured->frame_id1 = (injured->facing == attacker->facing) ? 224 : 222;
+            injured->fall = 40;
+            if (injured->y < 0) injured->fall = 80;
+        } else if (injured->fall > 0) {
+            injured->frame_id1 = 220;
+            injured->fall = 20;
+            if (injured->y < 0) {
+                injured->frame_id1 = (injured->facing == attacker->facing) ? 224 : 222;
+            }
+        }
+    }
+
+    if (attacker->file->type == TYPE_ATTACK) {
+        trigger_weapon_item_sound(attacker->x, attacker->file->weapon_broken_sound_id, attacker->file->weapon_broken_sound);
+    }
+    if (injured_type == TYPE_CHARACTER) {
+        if (eff->effect == EFFECT_PUNCH) {
+            FUN_00417090(injured->x, (injured->fall == 80) ? 2 : 0);
+        } else if (eff->effect == EFFECT_BLEED) {
+            *out_is_bleed = 1;
+            FUN_00417090(injured->x, (injured->fall == 80) ? 12 : 11);
+            FUN_00417090(injured->x, (injured->fall == 80) ? 2 : 0);
+        }
+    } else if (injured_type > 0) {
+        trigger_weapon_item_sound(injured->x, injured->file->weapon_hit_sound_id, injured->file->weapon_hit_sound);
+    }
+
+    if (injured->fall == 80 && injured->x_velocity > -5.0 &&
+        injured->x_velocity < 5.0 && eff->dvx == 0) {
+        if (att_f1->state == 2000) {
+            injured->pic_x_gain += 5.0;
+        } else {
+            injured->pic_x_gain += (attacker->facing == FACING_RIGHT) ? 5.0 : -5.0;
+        }
+    } else if (att_f1->state == 2000) {
+        if (attacker->x < injured->x) injured->pic_x_gain += (double)eff->dvx;
+        else injured->pic_x_gain -= (double)eff->dvx;
+    } else if (injured_type == TYPE_THROW_WEAPON || injured_type == TYPE_DRINK) {
+        apply_weapon_rebound_and_stick_boost(attacker, injured, eff);
+    } else if (eff->effect == 22 || eff->effect == 23) {
+        if (injured->x <= attacker->x) injured->pic_x_gain += (double)eff->dvx;
+        else injured->pic_x_gain -= (double)eff->dvx;
+    } else {
+        if (attacker->facing == FACING_RIGHT) injured->pic_x_gain += (double)eff->dvx;
+        else injured->pic_x_gain -= (double)eff->dvx;
+    }
+
+    if (att_f1->state == 3000 &&
+        (injured_type == TYPE_CHARACTER ||
+         attacker->file->id != ID_FREEZE_BALL_DAT ||
+         (!is_convertible_energy_ball(injured_fid) &&
+          !(injured_fid == ID_FREEZE_BALL_DAT && injured->frame_id1 != 40)))) {
+        attacker->frame_id1 = 10;
+        attacker->wait_counter = 0;
+        attacker->x_velocity = 0.0;
+        attacker->z_velocity = (double)attacker->file->frames[10].dvz;
+    }
+
+    if (injured->fall == 80) {
+        if (eff->dvy == 0) {
+            if ((injured_type != TYPE_HEAVY_WEAPON && injured_type != TYPE_ATTACK) || eff->fall > 40) {
+                injured->y_accl -= 7.0;
+            }
+        } else {
+            if ((injured_type != TYPE_HEAVY_WEAPON && injured_type != TYPE_ATTACK) || eff->fall > 40) {
+                injured->y_accl += (double)eff->dvy;
+            }
+            if ((int32_t)((double)injured->y + injured->y_accl) > 0) {
+                injured->y_accl = 12.0;
+            }
+        }
+
+        if ((injured->facing == FACING_RIGHT && injured->pic_x_gain <= 0.0) ||
+            (injured->facing == FACING_LEFT && injured->pic_x_gain >= 0.0)) {
+            injured->frame_id1 = 180;
+        } else {
+            injured->frame_id1 = 186;
+        }
+
+        if (injured->weapon_type > 0 && injured->weapon_id >= 0 &&
+            injured->weapon_id < MAX_OBJECTS &&
+            global->objects[injured->weapon_id] &&
+            injured_id == global->objects[injured->weapon_id]->holder_id) {
+            attacker->vrest_of_objects[injured->weapon_id] = 45;
+            injured->vrest_of_objects[injured->weapon_id] = 30;
+        }
+    }
+
+    if (attacker->shaking >= 0) attacker->shaking = 3;
+    injured->shaking = -3;
+
+    attacker->arest = (eff->arest < 4 && eff->vrest == 0) ? 4 : (int32_t)eff->arest;
+    if (eff->vrest > 0) {
+        injured->vrest_of_objects[attacker_id] = (uint8_t)eff->vrest;
+    }
+
+    if (inj_f4->cpoint.kind == 2 && injured->fall != 80 && inj_f4->cpoint.fronthurtact != 0) {
+        int32_t c_id = injured->cpoint_caught;
+        if (c_id >= 0 && c_id < MAX_OBJECTS && global->objects[c_id] &&
+            global->objects[c_id]->cpoint_catcher == injured_id) {
+            int32_t h_act = (injured->facing == attacker->facing)
+                ? inj_f4->cpoint.backhurtact
+                : inj_f4->cpoint.fronthurtact;
+            if (h_act >= 0 && h_act < MAX_FRAMES) {
+                injured->frame_id1 = (uint32_t)h_act;
+            }
+        }
+    }
+
+    if (injured->fall == 80) injured->fall = 0;
+
+    if (attacker->weapon_type < 0 && attacker->holder_id >= 0 &&
+        attacker->holder_id < MAX_OBJECTS && global->objects[attacker->holder_id]) {
+        global->objects[attacker->holder_id]->shaking = attacker->shaking;
+    }
+
+    if (att_f1->state == 1002) {
+        attacker->frame_id1 = (uint32_t)FUN_00417170(0xee, 16);
+        attacker->x_velocity = -(injured->pic_x_gain * 0.5);
+        attacker->y_velocity = -4.0;
+        if (attacker->file->type == TYPE_THROW_WEAPON && injured_type == TYPE_THROW_WEAPON) {
+            attacker->pic_x_gain = -injured->pic_x_gain;
+        }
+    }
+
+    if (injured_type == TYPE_LIGHT_WEAPON) {
+        injured->flag_eb = 1;
+        injured->frame_id1 = (uint32_t)FUN_00417170(0xef, 16);
+        injured->team = attacker->team;
+    }
+    if (injured_type == TYPE_THROW_WEAPON || injured_type == TYPE_DRINK) {
+        attacker->vrest_of_objects[injured_id] = 30;
+        injured->flag_eb = 1;
+        injured->frame_id1 = (uint32_t)FUN_00417170(0xf0, 16);
+        injured->team = attacker->team;
+    }
+    if (injured_type == TYPE_HEAVY_WEAPON) {
+        injured->flag_eb = 1;
+        uint8_t h_vrest = (eff->fall < 41 && eff->effect != EFFECT_SHINING) ? 3 : 19;
+        if (attacker->weapon_type == -2 && attacker->holder_id >= 0 &&
+            attacker->holder_id < MAX_OBJECTS && global->objects[attacker->holder_id]) {
+            global->objects[attacker->holder_id]->vrest_of_objects[injured_id] = h_vrest;
+        } else if (attacker->file->type != TYPE_HEAVY_WEAPON) {
+            attacker->vrest_of_objects[injured_id] = h_vrest;
+        }
+        injured->facing = attacker->facing;
+        if (eff->fall < 41 && injured->y >= 0 && eff->effect != EFFECT_SHINING) {
+            injured->frame_id1 = 20;
+        } else {
+            injured->frame_id1 = (uint32_t)FUN_00417170(0xf1, 6);
+        }
+        injured->team = attacker->team;
+    }
+
+    if (attacker->file->id == ID_HENRY_ARROW1_DAT && injured_type == TYPE_CHARACTER) {
+        global->is_object_exists[attacker_id] = 0;
+    }
+    if (attacker->file->id == ID_JOHN_BISCUIT_DAT && injured_type == TYPE_CHARACTER) {
+        attacker->hp = 0;
+    }
+
+    if (injured_type == TYPE_ATTACK) {
+        apply_struck_projectile_reaction(global, attacker, (int32_t)attacker_id, injured);
+    }
+
+    if ((eff->effect == EFFECT_COLUMN || eff->effect == EFFECT_FREEZE) &&
+        injured_type == TYPE_CHARACTER && inj_f3->state != STATE_ICE) {
+        injured->frame_id1 = 200;
+        injured->wait_counter = 0;
+        FUN_00417090(injured->x, 14);
+    }
+    if ((eff->effect == EFFECT_FIRE || eff->effect == EFFECT_FIREN_EXPLODE || eff->effect == EFFECT_JULIAN_EXPLODE ||
+         (eff->effect == EFFECT_FLAME && inj_f3->state != STATE_BURNING)) &&
+        injured_type == TYPE_CHARACTER) {
+        injured->frame_id1 = 203;
+        injured->wait_counter = 0;
+        FUN_00417090(injured->x, 16);
+        injured->facing = (injured->pic_x_gain < 0.0) ? FACING_RIGHT : FACING_LEFT;
+    }
+    if (eff->effect == 23) {
+        FUN_00417090(injured->x, 16);
+    }
+
+    return true;
+}
+
+static void apply_defended_hit(global_t *global,
+                             object_t *attacker, uint32_t attacker_id,
+                             object_t *injured,
+                             const itr_t *eff)
+{
+    const frame_t *att_f1 = &attacker->file->frames[attacker->frame_id1];
+    const frame_t *inj_f4 = &injured->file->frames[injured->frame_id4];
+    uint32_t injured_fid = injured->file->id;
+    uint32_t injured_type = injured->file->type;
+
+    if (attacker->file->type == TYPE_ATTACK) {
+        trigger_weapon_item_sound(attacker->x, attacker->file->weapon_broken_sound_id, attacker->file->weapon_broken_sound);
+    } else if (injured_fid == ID_KNIGHT_DAT || injured_fid == ID_LOUIS_DAT) {
+        FUN_00417090(injured->x, 17);
+    } else {
+        FUN_00417090(injured->x, 1);
+    }
+
+    if (injured_type != TYPE_DRINK) {
+        int32_t scaled = eff->injury;
+        if (injured->armor_multiplier > 0) {
+            scaled = (scaled * 100) / injured->armor_multiplier;
+        }
+        int32_t dmg10 = scaled / 10;
+        object_t *credit = resolve_credit_owner(global, attacker);
+        if (injured->hp > 0 && injured->hp <= dmg10 &&
+            injured_type == TYPE_CHARACTER && injured->clone == -1) {
+            credit->kills++;
+            if (credit->player_index >= 0 && credit->player_index < 8) {
+                DAT_00451b60_arr[credit->player_index]++;
+            }
+        }
+        injured->hp -= dmg10;
+        injured->dark_hp -= dmg10 / 3;
+        injured->hp_lost += dmg10;
+        if (injured_type == TYPE_CHARACTER && injured->clone == -1) {
+            credit->total_attack += dmg10;
+            if (credit->player_index >= 0 && credit->player_index < 8) {
+                DAT_00451b68_arr[credit->player_index] += dmg10;
+            }
+        }
+    }
+
+    if (injured_type == TYPE_LIGHT_WEAPON || injured_type == TYPE_HEAVY_WEAPON ||
+        injured_type == TYPE_THROW_WEAPON || injured_type == TYPE_DRINK) {
+        injured->weapon_hp -= eff->injury;
+        if (eff->bdefend == 100) injured->weapon_hp = -1;
+    }
+
+    if (injured->hp < 1) injured->fall = 80;
+
+    injured->wait_counter = 0;
+    injured->bdefend += (int32_t)eff->bdefend;
+    injured->attacks++;
+    attacker->shaking = 3;
+    injured->shaking = -5;
+
+    if (injured->y == 0) {
+        if (injured->bdefend >= 31 && inj_f4->state == STATE_DEFENDING) {
+            injured->frame_id1 = 112;
+        } else if (injured->frame_id1 == 110) {
+            injured->frame_id1 = 111;
+        }
+
+        if (injured->fall == 80 && injured->x_velocity > -3.0 &&
+            injured->x_velocity < 3.0 && eff->dvx == 0) {
+            if (att_f1->state == 2000) injured->pic_x_gain += (attacker->x < injured->x) ? 6.0 : -6.0;
+            else injured->pic_x_gain += (attacker->facing == FACING_RIGHT) ? 3.0 : -3.0;
+        } else if (att_f1->state == 2000) {
+            if (injured->x <= attacker->x) injured->pic_x_gain -= (double)eff->dvx;
+            else injured->pic_x_gain += (double)eff->dvx;
+        } else if (eff->effect == 22 || eff->effect == 23) {
+            if (injured->x <= attacker->x) injured->pic_x_gain += (double)eff->dvx;
+            else injured->pic_x_gain -= (double)eff->dvx;
+        } else {
+            if (attacker->facing == FACING_RIGHT) injured->pic_x_gain += (double)(eff->dvx / 2);
+            else injured->pic_x_gain -= (double)(eff->dvx / 2);
+        }
+    } else {
+        if (injured->fall == 80 && injured->x_velocity > -6.0 &&
+            injured->x_velocity < 6.0 && eff->dvx <= 5) {
+            injured->pic_x_gain += (attacker->facing == FACING_RIGHT) ? 6.0 : -6.0;
+        } else if (eff->effect == 22 || eff->effect == 23) {
+            if (injured->x <= attacker->x) injured->pic_x_gain += (double)eff->dvx;
+            else injured->pic_x_gain -= (double)eff->dvx;
+        } else {
+            if (attacker->facing == FACING_RIGHT) injured->pic_x_gain += (double)eff->dvx;
+            else injured->pic_x_gain -= (double)eff->dvx;
+        }
+    }
+
+    if (eff->arest < 4 && eff->vrest == 0) attacker->arest = 4;
+    else attacker->arest = (eff->arest < 12) ? (int32_t)eff->arest : 12;
+
+    if (eff->vrest > 0) {
+        int32_t vr = (eff->vrest < 5) ? 4 : ((eff->vrest < 12) ? (int32_t)eff->vrest : 12);
+        injured->vrest_of_objects[attacker_id] = (uint8_t)vr;
+    }
+
+    if (attacker->weapon_type < 0 && attacker->holder_id >= 0 &&
+        attacker->holder_id < MAX_OBJECTS && global->objects[attacker->holder_id]) {
+        global->objects[attacker->holder_id]->shaking = attacker->shaking;
+    }
+
+    if (att_f1->state == 1002) {
+        attacker->frame_id1 = (uint32_t)FUN_00417170(0xf3, 16);
+        attacker->x_velocity = -(injured->pic_x_gain * 0.5);
+        attacker->y_velocity = -4.0;
+        attacker->z_velocity /= -1.5;
+    }
+    if (att_f1->state == 2000 &&
+        ((injured->x < attacker->x && attacker->x_velocity >= 0.0) ||
+         (attacker->x <= injured->x && attacker->x_velocity <= 0.0)) &&
+        attacker->x_velocity > 0.0) {
+        attacker->x_velocity /= 2.5;
+        attacker->z_velocity /= 2.5;
+    }
+    if (att_f1->state == 3000) {
+        attacker->frame_id1 = 10;
+        attacker->wait_counter = 0;
+        attacker->x_velocity = 0.0;
+    }
+}
+
+static void apply_non_zero_itr(global_t *global,
+                               object_t *attacker, uint32_t attacker_id,
+                               object_t *injured, int32_t injured_id,
+                               const itr_t *eff)
+{
+    uint32_t kind = eff->kind;
+    uint32_t injured_type = injured->file->type;
+
+    if (kind == ITR_KIND_SUPER_PUNCH) {
+        injured->can_hit = 3;
+        return;
+    }
+
+    if (kind == ITR_KIND_CATCH_INJURED || kind == ITR_KIND_CATCH) {
+        apply_catch_grab(attacker, (int32_t)attacker_id, injured, injured_id, eff);
+        return;
+    }
+
+    if (kind == ITR_KIND_ROWING_PICK && attacker->weapon_type == 0) {
+        attacker->weapon_type = 1;
+        injured->weapon_type = -1;
+        injured->team = attacker->team;
+        attacker->weapon_id = injured_id;
+        injured->holder_id = (int32_t)attacker_id;
+        injured->owner = (int32_t)attacker_id;
+        attacker->get_weapon_counter++;
+        uint32_t inj_fid = injured->file->id;
+        if (inj_fid == ID_KNIFE_DAT || inj_fid == ID_BOOMERANG_DAT) {
+            attacker->weapon_type = 101;
+        }
+        if (injured_type == TYPE_THROW_WEAPON) {
+            attacker->weapon_type = 4;
+            injured->weapon_type = -4;
+        } else if (injured_type == TYPE_DRINK) {
+            if (injured->hp < 1) {
+                attacker->weapon_type = 4;
+                injured->weapon_hp = 0;
+            } else {
+                attacker->weapon_type = 6;
+            }
+            injured->weapon_type = -attacker->weapon_type;
+        }
+        return;
+    }
+
+    if (kind == ITR_KIND_PICKUP_WEAPON) {
+        if (injured_type == TYPE_LIGHT_WEAPON) {
+            attacker->frame_id1 = 115;
+            attacker->weapon_type = (injured->file->id == ID_KNIFE_DAT || injured->file->id == ID_BOOMERANG_DAT) ? 101 : 1;
+            injured->weapon_type = -1;
+        } else if (injured_type == TYPE_THROW_WEAPON) {
+            attacker->frame_id1 = 115;
+            attacker->weapon_type = 4;
+            injured->weapon_type = -4;
+        } else if (injured_type == TYPE_DRINK) {
+            attacker->frame_id1 = 115;
+            if (injured->hp < 1) {
+                attacker->weapon_type = 4;
+                injured->weapon_hp = 0;
+            } else {
+                attacker->weapon_type = 6;
+            }
+            injured->weapon_type = -attacker->weapon_type;
+        } else if (injured_type == TYPE_HEAVY_WEAPON) {
+            attacker->frame_id1 = 116;
+            attacker->weapon_type = 2;
+            injured->weapon_type = -2;
+        } else {
+            return;
+        }
+        injured->team = attacker->team;
+        attacker->weapon_id = injured_id;
+        injured->holder_id = (int32_t)attacker_id;
+        injured->owner = (int32_t)attacker_id;
+        attacker->get_weapon_counter++;
+        attacker->wait_counter = 0;
+        return;
+    }
+
+    if (kind == ITR_KIND_HEAL) {
+        injured->curing_hp = eff->injury + 1000;
+        if (eff->dvx >= 0 && eff->dvx < MAX_FRAMES) {
+            attacker->frame_id1 = (uint32_t)eff->dvx;
+        }
+        attacker->x_position = injured->x_position;
+        attacker->z_position = injured->z_position + 1.0;
+        return;
+    }
+
+    if (kind == ITR_KIND_FORCEFIELD) {
+        if (injured_type == TYPE_ATTACK) {
+            trigger_weapon_item_sound(injured->x, injured->file->weapon_broken_sound_id, injured->file->weapon_broken_sound);
+            if (injured->file->frames[injured->frame_id1].state == 3005) {
+                attacker->shaking = -3;
+                injured->flag_eb = 1;
+                injured->frame_id1 = 40;
+            } else {
+                attacker->shaking = -3;
+                injured->team = attacker->team;
+                injured->owner = attacker->owner;
+                injured->flag_eb = 1;
+                injured->frame_id1 = 30;
+                injured->wait_counter = 0;
+                injured->y_accl = 0.0;
+                injured->y_velocity = 0.0;
+                injured->pic_x_gain = 0.0;
+                injured->x_velocity = 0.0;
+                injured->z_accl = 0.0;
+                injured->z_velocity = 0.0;
+                injured->move_counter = attacker_id;
+            }
+        } else if (injured_type == TYPE_CHARACTER) {
+            attacker->hp = 0;
+        }
+        return;
+    }
+
+    if (kind == ITR_KIND_FLUTE ||
+        (kind == ITR_KIND_FLOAT && injured->thrown_injury < 0)) {
+        if (injured_type == TYPE_CHARACTER) {
+            injured->thrown_injury = -20;
+            if (injured->clone == -1 && DAT_00450bd0 == 0) {
+                object_t *credit = resolve_credit_owner(global, attacker);
+                credit->total_attack += 11;
+                if (credit->player_index >= 0 && credit->player_index < 8) {
+                    DAT_00451b68_arr[credit->player_index] += 11;
+                }
+            }
+            injured->pic_x_gain = injured->x_velocity / 1.07;
+            injured->x_velocity = injured->pic_x_gain;
+            injured->z_accl = injured->z_velocity / 1.07;
+            injured->z_velocity = injured->z_accl;
+            injured->frame_id1 = 182;
+            if (injured->y > -3) {
+                injured->y = -2;
+                injured->y_velocity = -6.0;
+            }
+            if (injured->y_velocity > -6.0) {
+                injured->y_velocity -= 3.0;
+                injured->y_accl = injured->y_velocity;
+            }
+        } else if (injured_type == TYPE_LIGHT_WEAPON || injured_type == TYPE_THROW_WEAPON ||
+                   injured_type == TYPE_DRINK) {
+            uint32_t inj_fid = injured->file->id;
+            if (inj_fid != ID_HENRY_ARROW1_DAT && inj_fid != ID_RUDOLF_WEAPON_DAT) {
+                if (injured->file->frames[injured->frame_id1].state != 1000) injured->frame_id1 = 0;
+                injured->pic_x_gain = injured->x_velocity / 1.07;
+                injured->x_velocity = injured->pic_x_gain;
+                injured->z_accl = injured->z_velocity / 1.07;
+                injured->z_velocity = injured->z_accl;
+                if (injured->y > -3) { injured->y = -2; injured->y_velocity = -6.0; }
+                if (injured->y_velocity > -6.0) {
+                    injured->y_velocity -= 3.0;
+                    injured->y_accl = injured->y_velocity;
+                }
+            }
+        } else if (injured_type == TYPE_HEAVY_WEAPON) {
+            if (injured->file->frames[injured->frame_id1].state != 2000) injured->frame_id1 = 0;
+            injured->pic_x_gain = injured->x_velocity / 1.07;
+            injured->x_velocity = injured->pic_x_gain;
+            injured->z_accl = injured->z_velocity / 1.07;
+            injured->z_velocity = injured->z_accl;
+            if (injured->y > -3) { injured->y = -2; injured->y_velocity = -6.0; }
+            if (injured->y_velocity > -6.0) {
+                injured->y_velocity -= 2.3;
+                injured->y_accl = injured->y_velocity;
+            }
+        }
+        return;
+    }
+
+    if (kind == ITR_KIND_FREEZE) {
+        if (attacker->x <= injured->x + 5 ||
+            (injured->x_velocity <= 0.0 && injured->pic_x_gain <= 0.0)) {
+            if (attacker->x < injured->x - 5 &&
+                (injured->x_velocity < 0.0 || injured->pic_x_gain < 0.0)) {
+                injured->blocked_left = 1;
+            }
+        } else {
+            injured->blocked_right = 1;
+        }
+        if (attacker->z <= injured->z + 2 ||
+            (injured->z_velocity <= 0.0 && injured->z_accl <= 0.0)) {
+            if (attacker->z < injured->z - 2 &&
+                (injured->z_velocity < 0.0 || injured->z_accl < 0.0)) {
+                injured->blocked_up = 1;
+            }
+        } else {
+            injured->blocked_down = 1;
+        }
+        return;
+    }
+
+    if (kind == ITR_KIND_FLY || kind == ITR_KIND_FREEZE) {
+        if (injured_type == TYPE_CHARACTER) {
+            if (kind == ITR_KIND_FREEZE) {
+                int32_t dmg = eff->injury;
+                if (injured->armor_multiplier > 0) dmg = (dmg * 100) / injured->armor_multiplier;
+                object_t *credit = resolve_credit_owner(global, attacker);
+                if (injured->hp > 0 && injured->hp <= dmg && injured->clone == -1) {
+                    credit->kills++;
+                    if (credit->player_index >= 0 && credit->player_index < 8) {
+                        DAT_00451b60_arr[credit->player_index]++;
+                    }
+                }
+                injured->hp -= dmg;
+                injured->dark_hp -= dmg / 3;
+                injured->hp_lost += dmg;
+                if (injured->clone == -1) {
+                    credit->total_attack += dmg;
+                    if (credit->player_index >= 0 && credit->player_index < 8) {
+                        DAT_00451b68_arr[credit->player_index] += dmg;
+                    }
+                }
+                injured->frame_id1 = 200;
+                injured->wait_counter = 0;
+                FUN_00417090(injured->x, 14);
+                if ((int32_t)eff->vrest > 0) {
+                    injured->vrest_of_objects[attacker_id] = (uint8_t)eff->vrest;
+                }
+                if (injured->weapon_type == 2 && injured->weapon_id >= 0 &&
+                    injured->weapon_id < MAX_OBJECTS && global->objects[injured->weapon_id]) {
+                    int32_t wid = injured->weapon_id;
+                    object_t *w = global->objects[wid];
+                    if (w->holder_id == injured_id && w->weapon_type == -2) {
+                        attacker->vrest_of_objects[wid] = 45;
+                        injured->weapon_type = 0;
+                        injured->vrest_of_objects[wid] = 30;
+                        w->weapon_type = 0;
+                        w->frame_id1 = (uint32_t)FUN_00417170(0xf4, 6);
+                        w->y_velocity = -1.0;
+                    }
+                }
+            }
+            if (kind == 15) {
+                injured->pic_x_gain = (injured->x <= attacker->x)
+                    ? (injured->x_velocity + 1.0)
+                    : (injured->x_velocity - 1.0);
+                injured->x_velocity = injured->pic_x_gain;
+                injured->z_accl = (attacker->z < injured->z)
+                    ? (injured->z_velocity - 0.5)
+                    : (injured->z_velocity + 0.5);
+                injured->z_velocity = injured->z_accl;
+                injured->frame_id1 = 182;
+                if (injured->y > -3) { injured->y = -2; injured->y_velocity = -6.0; }
+                if (injured->y_velocity > -6.0) {
+                    injured->y_velocity -= 3.0;
+                    injured->y_accl = injured->y_velocity;
+                }
+            }
+        } else if (injured_type == TYPE_LIGHT_WEAPON || injured_type == TYPE_THROW_WEAPON ||
+                   injured_type == TYPE_DRINK) {
+            uint32_t inj_fid = injured->file->id;
+            if (inj_fid != ID_HENRY_ARROW1_DAT && inj_fid != ID_RUDOLF_WEAPON_DAT) {
+                if (injured->file->frames[injured->frame_id1].state != 1000) injured->frame_id1 = 0;
+                injured->pic_x_gain = (attacker->x < injured->x)
+                    ? (injured->x_velocity - 1.0)
+                    : (injured->x_velocity + 1.0);
+                injured->x_velocity = injured->pic_x_gain;
+                injured->z_accl = (attacker->z < injured->z)
+                    ? (injured->z_velocity - 0.5)
+                    : (injured->z_velocity + 0.5);
+                injured->z_velocity = injured->z_accl;
+                if (injured->y > -3) { injured->y = -2; injured->y_velocity = -6.0; }
+                if (injured->y_velocity > -6.0) {
+                    injured->y_velocity -= 3.0;
+                    injured->y_accl = injured->y_velocity;
+                }
+            }
+        } else if (injured_type == TYPE_HEAVY_WEAPON) {
+            if (injured->file->frames[injured->frame_id1].state != 2000) injured->frame_id1 = 0;
+            injured->pic_x_gain = (attacker->x < injured->x)
+                ? (injured->x_velocity - 1.0)
+                : (injured->x_velocity + 1.0);
+            injured->x_velocity = injured->pic_x_gain;
+            injured->z_accl = (attacker->z < injured->z)
+                ? (injured->z_velocity - 0.5)
+                : (injured->z_velocity + 0.5);
+            injured->z_velocity = injured->z_accl;
+            if (injured->y > -3) { injured->y = -2; injured->y_velocity = -6.0; }
+            if (injured->y_velocity > -6.0) {
+                injured->y_velocity -= 2.3;
+                injured->y_accl = injured->y_velocity;
+            }
+        }
+    }
+}
+
+void lf2_attack_process(global_t *global, int attacker_id)
+{
+    if (!global || attacker_id < 0 || attacker_id >= MAX_OBJECTS || !global->is_object_exists[attacker_id]) {
+        return;
+    }
+
+    object_t *attacker = global->objects[attacker_id];
+    if (!attacker || !attacker->file || attacker->successful_attacks < 1) {
+        return;
+    }
+
+    uint32_t a_frame_id4 = (attacker->frame_id4 < MAX_FRAMES) ? attacker->frame_id4 : attacker->frame_id1;
+    if (a_frame_id4 >= MAX_FRAMES || attacker->frame_id1 >= MAX_FRAMES) {
+        return;
+    }
+    const frame_t *a_frame4 = &attacker->file->frames[a_frame_id4];
+
+    for (int32_t hit_idx = 0; hit_idx < attacker->successful_attacks && hit_idx < 20; ++hit_idx) {
+        int32_t itr_idx = (int8_t)attacker->itr_of_attack[hit_idx];
+        if (itr_idx < 0 || (uint32_t)itr_idx >= a_frame4->itrs_size || !a_frame4->itrs) {
+            break;
+        }
+
+        int32_t injured_id = attacker->injured_of_attack[hit_idx];
+        if (injured_id < 0 || injured_id >= MAX_OBJECTS || !global->objects[injured_id]) {
+            continue;
+        }
+
+        object_t *injured = global->objects[injured_id];
+        if (!injured->file || injured->frame_id1 >= MAX_FRAMES || injured->frame_id4 >= MAX_FRAMES) {
+            continue;
+        }
+
+        if ((int8_t)injured->vrest_of_objects[attacker_id] > 0) {
+            continue;
+        }
+
+        if (attacker->flag_eb != 0 && injured->file->type == TYPE_CHARACTER) {
+            return;
+        }
+
+        const frame_t *inj_f4 = &injured->file->frames[injured->frame_id4];
+        const frame_t *inj_f1 = &injured->file->frames[injured->frame_id1];
+        if (inj_f4->cpoint.kind == 2) {
+            int32_t c_id = injured->cpoint_caught;
+            if (c_id >= 0 && c_id < MAX_OBJECTS && global->objects[c_id] &&
+                global->objects[c_id]->cpoint_catcher == injured_id && global->objects[c_id]->file &&
+                global->objects[c_id]->frame_id4 < MAX_FRAMES &&
+                global->objects[c_id]->file->frames[global->objects[c_id]->frame_id4].cpoint.hurtable == 0) {
+                continue;
+            }
+        }
+
+        const itr_t *raw_itr = &a_frame4->itrs[itr_idx];
+        if (raw_itr->kind == ITR_KIND_NORMAL && raw_itr->effect == EFFECT_FIREN_EXPLODE &&
+            (inj_f1->state == STATE_BURNING || inj_f1->state == STATE_FIRE)) {
+            return;
+        }
+
+        itr_t eff = *raw_itr;
+        if (raw_itr->kind == 5 && attacker->weapon_type < 0) {
+            int32_t h_id = attacker->holder_id;
+            if (h_id >= 0 && h_id < MAX_OBJECTS && global->objects[h_id] &&
+                global->objects[h_id]->file && global->objects[h_id]->weapon_id == attacker_id) {
+                object_t *holder = global->objects[h_id];
+                uint32_t hf = (holder->frame_id4 < MAX_FRAMES) ? holder->frame_id4 : holder->frame_id1;
+                if (hf < MAX_FRAMES) {
+                    uint32_t atk_idx = holder->file->frames[hf].wpoint.attacking;
+                    if (atk_idx > 0 && atk_idx <= 4 && h_id != injured_id) {
+                        const itr_t *src = &attacker->file->attacking_itrs[atk_idx];
+                        eff.kind = 0;
+                        eff.dvx = src->dvx;
+                        eff.dvy = src->dvy;
+                        eff.fall = src->fall;
+                        eff.arest = src->arest;
+                        eff.vrest = src->vrest;
+                        eff.respond = src->respond;
+                        eff.effect = src->effect;
+                        eff.catching_act1 = src->catching_act1;
+                        eff.catching_act2 = src->catching_act2;
+                        eff.caught_act1 = src->caught_act1;
+                        eff.caught_act2 = src->caught_act2;
+                        eff.bdefend = src->bdefend;
+                        eff.injury = src->injury;
+                        eff.zwidth = src->zwidth;
+                        eff._unknown1 = src->_unknown1;
+                    }
+                }
+            }
+        }
+
+        if (attacker->thrown_injury > 0 && eff.kind == ITR_KIND_THROWN) {
+            eff.kind = ITR_KIND_NORMAL;
+            if ((attacker->x_velocity > 0.0 && attacker->facing == FACING_LEFT) ||
+                (attacker->x_velocity < 0.0 && attacker->facing == FACING_RIGHT)) {
+                eff.dvx = -eff.dvx;
+            }
+        }
+
+        if (injured->weapon_type == 2 && eff.kind == ITR_KIND_NORMAL) {
+            int32_t wid = injured->weapon_id;
+            if (wid >= 0 && wid < MAX_OBJECTS && global->objects[wid]) {
+                object_t *w = global->objects[wid];
+                if (w->holder_id == injured_id && w->weapon_type == -2) {
+                    attacker->vrest_of_objects[wid] = 45;
+                    injured->weapon_type = 0;
+                    injured->vrest_of_objects[wid] = 30;
+                    w->weapon_type = 0;
+                    w->frame_id1 = (uint32_t)FUN_00417170(0xec, 6);
+                    w->y_velocity = -1.0;
+                }
+            }
+        }
+
+        if (injured->file->type == TYPE_HEAVY_WEAPON) {
+            eff.dvx /= 2;
+            eff.dvy /= 2;
+        }
+
+        int32_t is_bleed = 0;
+        if (eff.kind == ITR_KIND_FORCEFIELD &&
+            (injured->file->type == TYPE_CHARACTER ||
+             inj_f1->state == 1002 || inj_f1->state == 2000)) {
+            eff.kind = ITR_KIND_NORMAL;
+            if (injured->file->type == TYPE_CHARACTER) {
+                attacker->hp = 0;
+            }
+        }
+
+        if (eff.kind == ITR_KIND_NORMAL) {
+            if (is_defended_hit(attacker, injured, inj_f1, inj_f4, &eff) &&
+                injured->file->type == TYPE_CHARACTER) {
+                apply_defended_hit(global, attacker, (uint32_t)attacker_id, injured, &eff);
+            } else {
+                if (!apply_plain_hit(global, attacker, (uint32_t)attacker_id, injured, injured_id, &eff, &is_bleed)) {
+                    return;
+                }
+            }
+            record_hit_spark(global, attacker, (uint32_t)attacker_id, injured, injured_id, &eff, is_bleed);
+        } else {
+            apply_non_zero_itr(global, attacker, (uint32_t)attacker_id, injured, injured_id, &eff);
+        }
+    }
+}
+
+void FUN_0042e100(int param_1)
+{
+    lf2_attack_process((global_t *)in_ECX, param_1);
+}

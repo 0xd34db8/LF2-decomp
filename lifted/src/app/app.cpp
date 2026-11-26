@@ -4,6 +4,8 @@
 #include "gameplay/ai.h"
 #include "gameplay/grapple.h"
 #include "gameplay/weapon.h"
+#include "core/random.h"
+#include "audio/bgm.h"
 #include <iostream>
 #include <cstring>
 #include <algorithm>
@@ -11,7 +13,7 @@
 
 namespace lf2 {
 
-void control_config_t::init_defaults() {
+void app_control_config_t::init_defaults() {
     // Authentic default controls from LF2 control.txt (0x00419a60 & 0x00423480)
     // Player 1 (Slot 0): Numpad 8, 2, 4, 6, 5, 0, +
     players[0].device = 0;
@@ -68,7 +70,7 @@ void control_config_t::init_defaults() {
     std::strcpy(profile_info, "<No info>");
 }
 
-bool control_config_t::load_from_file(const std::string& path) {
+bool app_control_config_t::load_from_file(const std::string& path) {
     FILE* fp = std::fopen(path.c_str(), "r");
     if (!fp) {
         return false;
@@ -128,7 +130,7 @@ bool control_config_t::load_from_file(const std::string& path) {
     return true;
 }
 
-bool control_config_t::save_to_file(const std::string& path) const {
+bool app_control_config_t::save_to_file(const std::string& path) const {
     FILE* fp = std::fopen(path.c_str(), "w");
     if (!fp) {
         return false;
@@ -327,13 +329,14 @@ bool app_t::init(int width, int height, bool fullscreen, bool test_mode) {
         }
     }
 
-    // Initialize Audio System and preload authentic UI sounds matching 0x0043cf40 (WinMain)
+    // Initialize Audio System and preload authentic UI & battle fixed sounds matching 0x0043cf40 (WinMain)
     if (get_audio_system().init()) {
         get_audio_system().load_sound(SOUND_JOIN, "data/m_join.wav");
         get_audio_system().load_sound(SOUND_OK, "data/m_ok.wav");
         get_audio_system().load_sound(SOUND_CANCEL, "data/m_cancel.wav");
         get_audio_system().load_sound(SOUND_PASS, "data/m_pass.wav");
         get_audio_system().load_sound(SOUND_END, "data/m_end.wav");
+        get_audio_system().preload_fixed_battle_sounds();
     }
 
     // Load authentic Player Controls from control.txt (0x00423480)
@@ -1101,8 +1104,39 @@ void app_t::start_battle() {
     }
     std::memset(&m_world, 0, sizeof(m_world));
     std::memset(m_fighters, 0, sizeof(m_fighters));
+    for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
+        object_init(&m_fighters[i]);
+        m_world.objects[i] = &m_fighters[i];
+    }
     m_num_fighters = 0;
     m_battle_paused = false;
+
+    // Reset 0x0041BC90 Master Battle Loop state machine
+    m_input_phase = 0;
+    m_pause_req = 0;
+    m_pause_next = 0;
+    m_pause_state = 0;
+    m_fkey_state = 0;
+    m_fast_forward = false;
+    m_unlimited_mp = false;
+    m_sky_weapon_cmd = 0;
+    m_recover_cmd = 0;
+    m_f6_uses = 0;
+    m_f7_uses = 0;
+    m_f8_uses = 0;
+    m_f9_uses = 0;
+    m_shake = 0;
+    m_counter_12 = 0;
+    m_counter_3 = 0;
+    m_round_counter = 0;
+    m_winning_team = -1;
+    m_battle_elapsed = 0;
+    m_hud_visible = true;
+    m_replay_panning = false;
+    m_replay_cam_x = -1000;
+    m_replay_cam_vx = 0;
+    m_net_seq = 0;
+    m_last_net_sync = SyncResult::OK;
 
     // Load Stage
     const std::string bg_candidates[] = {
@@ -1166,6 +1200,10 @@ void app_t::start_battle() {
 
     m_camera.x = 0;
     m_camera.y = 0;
+    get_audio_system().set_camera_x(m_camera.x);
+    for (uint32_t i = 0; i < MAX_FILES; ++i) {
+        m_world.files[i] = m_loaded_files[i];
+    }
 
     // Mode-specific initialization (0x0041C920 & 0x00438B40)
     if (m_selected_mode == MODE_STAGE) {
@@ -1188,6 +1226,15 @@ void app_t::start_battle() {
 
 void app_t::return_to_menu() {
     play_ui_sound(SOUND_CANCEL);
+    get_audio_system().stop_all();
+    if (m_replay_recorder.is_recording()) {
+        m_replay_recorder.cancel_recording();
+    }
+    if (m_replay_player.is_open()) {
+        m_replay_player.close();
+    }
+    m_has_playback_replay = false;
+    m_in_battle = false;
     for (uint32_t i = 0; i < MAX_FILES; ++i) {
         if (m_loaded_files[i]) {
             dat_loader_t::free_file_resources(m_loaded_files[i]);
@@ -1197,50 +1244,241 @@ void app_t::return_to_menu() {
     }
     std::memset(&m_world, 0, sizeof(m_world));
     std::memset(m_fighters, 0, sizeof(m_fighters));
+    for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
+        object_init(&m_fighters[i]);
+        m_world.objects[i] = &m_fighters[i];
+    }
     m_num_fighters = 0;
     m_battle_paused = false;
+
+    // Reset 0x0041BC90 Master Battle Loop state machine
+    m_input_phase = 0;
+    m_pause_req = 0;
+    m_pause_next = 0;
+    m_pause_state = 0;
+    m_fkey_state = 0;
+    m_fast_forward = false;
+    m_unlimited_mp = false;
+    m_sky_weapon_cmd = 0;
+    m_recover_cmd = 0;
+    m_f6_uses = 0;
+    m_f7_uses = 0;
+    m_f8_uses = 0;
+    m_f9_uses = 0;
+    m_shake = 0;
+    m_counter_12 = 0;
+    m_counter_3 = 0;
+    m_round_counter = 0;
+    m_winning_team = -1;
+    m_battle_elapsed = 0;
+    m_hud_visible = true;
+    m_replay_panning = false;
+    m_replay_cam_x = -1000;
+    m_replay_cam_vx = 0;
+    m_net_seq = 0;
+    m_last_net_sync = SyncResult::OK;
 
     change_scene(scene_t::MODE_SELECT);
 }
 
-void app_t::update_battle() {
-    if (is_key_just_pressed(VK_LF2_F4) || is_key_just_pressed(VK_LF2_ESCAPE)) {
-        return_to_menu();
-        return;
-    }
-
-    if (is_key_just_pressed(VK_LF2_F1)) {
-        m_battle_paused = !m_battle_paused;
-        play_ui_sound(SOUND_OK);
-    }
-
-    if (m_battle_paused) {
-        if (!is_key_just_pressed(VK_LF2_F2)) {
-            return;
+file_t* app_t::find_loaded_file(uint32_t file_id) const {
+    for (uint32_t i = 0; i < MAX_FILES; ++i) {
+        if (m_world.files[i] && m_world.files[i]->id == file_id) {
+            return m_world.files[i];
         }
     }
+    for (uint32_t i = 0; i < MAX_FILES; ++i) {
+        if (m_loaded_files[i] && m_loaded_files[i]->id == file_id) {
+            return m_loaded_files[i];
+        }
+    }
+    return nullptr;
+}
 
-    // Mode-specific wave / army spawning dispatch (0x0041C920)
-    switch (m_selected_mode) {
-    case MODE_STAGE:
-        m_stage_mgr.update_stage(&m_world, m_camera.x);
+int32_t app_t::find_free_dynamic_slot() const {
+    for (uint32_t i = 50; i < MAX_OBJECTS; ++i) {
+        if (m_world.is_object_exists[i] == 0) {
+            if (!m_world.objects[i]) {
+                const_cast<app_t*>(this)->m_world.objects[i] = const_cast<object_t*>(&m_fighters[i]);
+            }
+            return static_cast<int32_t>(i);
+        }
+    }
+    return -1;
+}
+
+void app_t::clear_vrest_for_slot(int32_t slot) {
+    if (slot < 0 || slot >= static_cast<int32_t>(MAX_OBJECTS)) return;
+    for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
+        if (m_world.is_object_exists[i] != 0 && m_world.objects[i]) {
+            m_world.objects[i]->vrest_of_objects[slot] = 0;
+        }
+    }
+}
+
+void app_t::dispatch_fkey_action(uint8_t fkey_vk, replay_frame_10_t& rec_out) {
+    const bool stage_fkeys_ok = (m_selected_mode == MODE_VS || m_cheat_herofighter == 'd');
+    switch (fkey_vk) {
+    case 0xFE: // Secret lf2.net toggle (0x00416C70)
+        rec_out.unlock_flags |= REPLAY_UNLOCK_LF2NET;
+        m_cheat_lf2net = (m_cheat_lf2net == 'd') ? 'u' : 'd';
+        play_ui_sound(SOUND_OK);
         break;
-    case MODE_BATTLE:
-        m_battle_mgr.step_simulation();
+    case 0xFF: // Secret herofighter.com toggle (0x00416CA0)
+        rec_out.unlock_flags |= REPLAY_UNLOCK_HEROFIGHTER;
+        m_cheat_herofighter = (m_cheat_herofighter == 'd') ? 'u' : 'd';
+        play_ui_sound(SOUND_OK);
         break;
-    case MODE_VS:
-    case MODE_1ON1:
-    case MODE_2ON2:
-    case MODE_DEMO:
-    case MODE_PLAYBACK:
+    case VK_LF2_F1: // Pause toggle (0x00416DD0)
+        m_pause_req = 1 - m_pause_state;
+        m_pause_next = m_pause_req;
+        m_battle_paused = (m_pause_req == 1);
+        play_ui_sound(SOUND_OK);
+        break;
+    case VK_LF2_F2: // Single-frame step (0x00416DF0)
+        m_pause_next = 1;
+        m_pause_req = 0;
+        m_battle_paused = false;
+        break;
+    case VK_LF2_F3: // Lock F6-F9 keys (0x00416E10)
+        rec_out.func_flags |= REPLAY_FKEY_F3;
+        m_fkey_state = 2;
+        break;
+    case VK_LF2_F4: // Match exit / round trigger (0x00416CD0)
+        m_pause_state = 0;
+        m_pause_req = 0;
+        m_pause_next = 0;
+        m_battle_paused = false;
+        m_fast_forward = false;
+        if (m_has_playback_replay) {
+            if (m_replay_player.is_open()) {
+                m_replay_player.close();
+            }
+            m_has_playback_replay = false;
+            m_selected_mode = MODE_PLAYBACK;
+            m_round_counter = 0;
+            if (m_window) return_to_menu();
+        } else if (m_selected_mode != MODE_1ON1 && m_selected_mode != MODE_2ON2) {
+            m_round_counter = 350;
+        } else {
+            if (m_replay_recorder.is_recording() && m_round_counter < 101) {
+                m_replay_recorder.cancel_recording();
+            }
+            m_round_counter = 0;
+            if (m_window) return_to_menu();
+        }
+        break;
+    case VK_LF2_F5: // Simulation speed toggle (0x00416E30)
+        m_fast_forward = !m_fast_forward;
+        m_key_states[VK_LF2_F5] = 'u';
+        break;
+    case VK_LF2_F6: // Unlimited MP toggle (0x00416E60)
+        if (m_fkey_state < 2 && stage_fkeys_ok) {
+            rec_out.func_flags |= REPLAY_FKEY_F6;
+            m_unlimited_mp = !m_unlimited_mp;
+            m_f6_uses++;
+            m_fkey_state = 1;
+        }
+        break;
+    case VK_LF2_F7: // Recover HP/MP (0x00416EB0)
+        if (m_fkey_state < 2 && stage_fkeys_ok) {
+            rec_out.func_flags |= REPLAY_FKEY_F7;
+            if (m_round_counter == 0) {
+                m_recover_cmd = 1 - m_recover_cmd;
+                m_f7_uses++;
+                m_fkey_state = 1;
+            }
+        }
+        break;
+    case VK_LF2_F8: // Drop weapons from sky (0x00416F10)
+        if (m_fkey_state < 2 && stage_fkeys_ok) {
+            rec_out.func_flags |= REPLAY_FKEY_F8;
+            if (m_round_counter == 0) {
+                m_f8_uses++;
+                m_sky_weapon_cmd = 1;
+                m_fkey_state = 1;
+            }
+        }
+        break;
+    case VK_LF2_F9: // Destroy items / stage enemies (0x00416F60)
+        if (m_fkey_state < 2 && stage_fkeys_ok) {
+            rec_out.func_flags |= REPLAY_FKEY_F9;
+            if (m_round_counter == 0) {
+                m_f9_uses++;
+                m_sky_weapon_cmd = 2;
+                m_fkey_state = 1;
+            }
+        }
+        break;
     default:
         break;
     }
+}
 
-    int32_t unlock_chars = (m_cheat_lf2net == 'd') ? 1 : 0;
-    int32_t z_min = m_stage_loaded ? m_background.zboundary_min : 0;
-    int32_t z_max = m_stage_loaded ? m_background.zboundary_max : 400;
-    int32_t stage_w = m_stage_loaded ? m_background.width : 2000;
+void app_t::dispatch_replay_fkey_flags(const replay_frame_10_t& rec, replay_frame_10_t& rec_out) {
+    if (rec.unlock_flags & REPLAY_UNLOCK_LF2NET) dispatch_fkey_action(0xFE, rec_out);
+    if (rec.unlock_flags & REPLAY_UNLOCK_HEROFIGHTER) dispatch_fkey_action(0xFF, rec_out);
+    if (rec.func_flags & REPLAY_FKEY_F3) dispatch_fkey_action(VK_LF2_F3, rec_out);
+    if (rec.func_flags & REPLAY_FKEY_F6) dispatch_fkey_action(VK_LF2_F6, rec_out);
+    if (rec.func_flags & REPLAY_FKEY_F7) dispatch_fkey_action(VK_LF2_F7, rec_out);
+    if (rec.func_flags & REPLAY_FKEY_F8) dispatch_fkey_action(VK_LF2_F8, rec_out);
+    if (rec.func_flags & REPLAY_FKEY_F9) dispatch_fkey_action(VK_LF2_F9, rec_out);
+}
+
+void app_t::step_battle_frame() {
+    // 1. Two-frame input phase alternation (0 <-> 1) & phase-0 pause latch
+    m_input_phase = (m_input_phase + 1) & 1;
+    if (m_input_phase == 0) {
+        m_pause_state = m_pause_req;
+        m_pause_req = m_pause_next;
+    }
+    const bool paused = (m_pause_state == 1);
+    m_battle_paused = paused;
+
+    // 2. Replay viewer HUD toggle (F6) & manual camera pan (Left/Right/Down)
+    if (m_has_playback_replay) {
+        if (is_key_down(VK_LF2_F6)) {
+            m_hud_visible = !m_hud_visible;
+            m_key_states[VK_LF2_F6] = 'u';
+        }
+        if (is_key_down(VK_LF2_LEFT) || is_key_down(VK_LF2_RIGHT)) {
+            if (!m_replay_panning) {
+                m_replay_cam_x = m_camera.x;
+                m_replay_panning = true;
+            }
+            if (is_key_down(VK_LF2_LEFT)) m_replay_cam_vx -= 5;
+            if (is_key_down(VK_LF2_RIGHT)) m_replay_cam_vx += 5;
+        }
+        if (is_key_down(VK_LF2_DOWN)) {
+            m_replay_panning = false;
+            m_replay_cam_vx = 0;
+        } else if (m_replay_panning) {
+            m_replay_cam_x += m_replay_cam_vx;
+            m_replay_cam_vx = (m_replay_cam_vx * 6) / 7;
+        } else {
+            m_replay_cam_vx = 0;
+        }
+    }
+
+    replay_frame_10_t local_rec{};
+    replay_frame_10_t playback_rec{};
+    bool checksum_ok = true;
+    if (m_has_playback_replay && m_replay_player.is_open() && !paused && m_input_phase == 0) {
+        if (m_replay_player.read_frame_10(playback_rec, compute_active_hp_sum(m_world), checksum_ok)) {
+            if (!checksum_ok) {
+                m_replay_player.close();
+                m_has_playback_replay = false;
+                m_selected_mode = MODE_PLAYBACK;
+                if (m_window) return_to_menu();
+                return;
+            }
+        }
+    }
+
+    const int32_t unlock_chars = (m_cheat_lf2net == 'd') ? 1 : 0;
+    const int32_t z_min = m_stage_loaded ? m_background.zboundary_min : 0;
+    const int32_t z_max = m_stage_loaded ? m_background.zboundary_max : 400;
+    const int32_t stage_w = m_stage_loaded ? m_background.width : 2000;
 
     ai_world_params_t ai_params;
     ai_params.mode = static_cast<int32_t>(m_selected_mode);
@@ -1253,89 +1491,531 @@ void app_t::update_battle() {
     ai_params.random_game = (m_selected_mode == MODE_DEMO);
     ai_params.unlock_chars = unlock_chars;
 
-    // Process inputs for all active fighters (Players 0..3 read their control.txt mappings)
-    for (uint32_t i = 0; i < m_num_fighters; ++i) {
-        object_t* fighter = &m_fighters[i];
-        if (!fighter->file) continue;
+    const bool net_active = (m_net_mgr != nullptr && m_net_mgr->is_connected());
+    net_packet_t local_pkt{};
+    net_packet_t remote_pkt{};
+    network_manager_t::init_packet(local_pkt);
 
-        uint32_t slot = fighter->owner;
-        if (slot < 4 && m_slots[slot].is_human && m_selected_mode != MODE_DEMO) {
-            input_state_t input;
-            input.left   = is_player_key_down(slot, ctrl_action_t::LEFT);
-            input.right  = is_player_key_down(slot, ctrl_action_t::RIGHT);
-            input.up     = is_player_key_down(slot, ctrl_action_t::UP);
-            input.down   = is_player_key_down(slot, ctrl_action_t::DOWN);
-            input.attack = is_player_key_down(slot, ctrl_action_t::ATTACK);
-            input.jump   = is_player_key_down(slot, ctrl_action_t::JUMP);
-            input.defend = is_player_key_down(slot, ctrl_action_t::DEFEND);
-
-            object_handle_input(fighter, input, true, unlock_chars);
-        } else {
-            ai_tick(&m_world, i, ai_params);
-        }
-    }
-
-    // Per-slot AI & hit_Fa dispatch for world objects >= 10 (0x00419A60)
-    for (uint32_t i = 10; i < MAX_OBJECTS; ++i) {
-        if (!m_world.is_object_exists[i]) continue;
-        object_t* obj = m_world.objects[i];
-        if (!obj || !obj->file) continue;
-
-        if (obj->file->type == TYPE_CHARACTER) {
-            if (i >= m_num_fighters || obj != &m_fighters[i]) {
+    bool input_tick_done[MAX_OBJECTS]{};
+    if (!paused && !m_has_playback_replay && !net_active) {
+        for (uint32_t i = 0; i < 8; ++i) {
+            if (!m_world.is_object_exists[i] || !m_world.objects[i] || !m_world.objects[i]->file) continue;
+            uint32_t slot = m_world.objects[i]->owner;
+            if (slot < 4 && m_slots[slot].joined && m_slots[slot].is_human && m_selected_mode != MODE_DEMO) {
+                input_state_t in{};
+                in.left   = is_player_key_down(static_cast<int>(slot), ctrl_action_t::LEFT);
+                in.right  = is_player_key_down(static_cast<int>(slot), ctrl_action_t::RIGHT);
+                in.up     = is_player_key_down(static_cast<int>(slot), ctrl_action_t::UP);
+                in.down   = is_player_key_down(static_cast<int>(slot), ctrl_action_t::DOWN);
+                in.attack = is_player_key_down(static_cast<int>(slot), ctrl_action_t::ATTACK);
+                in.jump   = is_player_key_down(static_cast<int>(slot), ctrl_action_t::JUMP);
+                in.defend = is_player_key_down(static_cast<int>(slot), ctrl_action_t::DEFEND);
+                local_rec.inputs[i] = network_manager_t::pack_input(in);
+                object_handle_input(m_world.objects[i], in, m_round_counter == 0, unlock_chars);
+                input_tick_done[i] = true;
+            } else if (slot < 8 && m_slots[slot].joined) {
                 ai_tick(&m_world, i, ai_params);
+                input_tick_done[i] = true;
             }
-        } else if (obj->frame_id1 < MAX_FRAMES && obj->file->frames[obj->frame_id1].hit_Fa > 0) {
-            object_process_hit_fa(&m_world, static_cast<int32_t>(i));
+        }
+    } else if (!paused && net_active) {
+        for (uint32_t i = 0; i < 8; ++i) {
+            if (!m_world.is_object_exists[i] || !m_world.objects[i]) continue;
+            uint32_t slot = m_world.objects[i]->owner;
+            if (slot < 4 && m_slots[slot].joined && m_slots[slot].is_human) {
+                input_state_t in{};
+                in.left   = is_player_key_down(static_cast<int>(slot), ctrl_action_t::LEFT);
+                in.right  = is_player_key_down(static_cast<int>(slot), ctrl_action_t::RIGHT);
+                in.up     = is_player_key_down(static_cast<int>(slot), ctrl_action_t::UP);
+                in.down   = is_player_key_down(static_cast<int>(slot), ctrl_action_t::DOWN);
+                in.attack = is_player_key_down(static_cast<int>(slot), ctrl_action_t::ATTACK);
+                in.jump   = is_player_key_down(static_cast<int>(slot), ctrl_action_t::JUMP);
+                in.defend = is_player_key_down(static_cast<int>(slot), ctrl_action_t::DEFEND);
+                local_pkt.player_inputs[i] = network_manager_t::pack_input(in);
+                local_rec.inputs[i] = local_pkt.player_inputs[i];
+            }
         }
     }
 
-    double d_z_min = static_cast<double>(z_min);
-    double d_z_max = static_cast<double>(z_max);
-    double d_stage_w = static_cast<double>(stage_w);
-    int32_t counter_12 = static_cast<int32_t>(m_frame_counter % 12);
-    uint32_t game_mode = static_cast<uint32_t>(m_selected_mode);
+    // 3. Phase-0 F1-F9 dispatch & lockstep synchronization (0x0041BC90 / 0x0041C5F0)
+    if (m_input_phase == 0) {
+        if (!net_active) {
+            if (m_has_playback_replay) {
+                if (is_key_down(VK_LF2_F4)) { m_key_states[VK_LF2_F4] = 'u'; dispatch_fkey_action(VK_LF2_F4, local_rec); }
+                if (is_key_down(VK_LF2_F5)) { m_key_states[VK_LF2_F5] = 'u'; dispatch_fkey_action(VK_LF2_F5, local_rec); }
+                if (is_key_down(VK_LF2_F1)) { m_key_states[VK_LF2_F1] = 'u'; dispatch_fkey_action(VK_LF2_F1, local_rec); }
+                if (is_key_down(VK_LF2_F2)) { m_key_states[VK_LF2_F2] = 'u'; dispatch_fkey_action(VK_LF2_F2, local_rec); }
+                dispatch_replay_fkey_flags(playback_rec, local_rec);
+            } else {
+                const uint8_t fkeys[] = {
+                    VK_LF2_F4, VK_LF2_F1, VK_LF2_F2, VK_LF2_F3,
+                    VK_LF2_F5, VK_LF2_F6, VK_LF2_F7, VK_LF2_F8, VK_LF2_F9
+                };
+                for (uint8_t fk : fkeys) {
+                    if (is_key_down(fk)) {
+                        m_key_states[fk] = 'u';
+                        dispatch_fkey_action(fk, local_rec);
+                    }
+                }
+            }
+        } else {
+            if (is_key_down(VK_LF2_F1)) { local_pkt.func_keys_1 |= NET_FKEY1_F1; m_key_states[VK_LF2_F1] = 'u'; }
+            if (is_key_down(VK_LF2_F2)) { local_pkt.func_keys_1 |= NET_FKEY1_F2; m_key_states[VK_LF2_F2] = 'u'; }
+            if (is_key_down(VK_LF2_F3)) { local_pkt.func_keys_2 |= NET_FKEY2_F3; m_key_states[VK_LF2_F3] = 'u'; }
+            if (is_key_down(VK_LF2_F4)) { local_pkt.func_keys_1 |= NET_FKEY1_F4; m_key_states[VK_LF2_F4] = 'u'; }
+            if (is_key_down(VK_LF2_F5)) { local_pkt.func_keys_1 |= NET_FKEY1_F5; m_key_states[VK_LF2_F5] = 'u'; }
+            if (is_key_down(VK_LF2_F6)) { local_pkt.func_keys_1 |= NET_FKEY1_F6; m_key_states[VK_LF2_F6] = 'u'; }
+            if (is_key_down(VK_LF2_F7)) { local_pkt.func_keys_1 |= NET_FKEY1_F7; m_key_states[VK_LF2_F7] = 'u'; }
+            if (is_key_down(VK_LF2_F8)) { local_pkt.func_keys_2 |= NET_FKEY2_F8; m_key_states[VK_LF2_F8] = 'u'; }
+            if (is_key_down(VK_LF2_F9)) { local_pkt.func_keys_1 |= NET_FKEY1_F9; m_key_states[VK_LF2_F9] = 'u'; }
 
-    // 1. Physics integration, gravity & ground impact (0x0040E490)
-    for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
-        if (!m_world.is_object_exists[i]) continue;
-        object_t* obj = m_world.objects[i];
-        if (!obj || !obj->file) continue;
-        object_physics_tick(obj, counter_12);
+            m_net_seq = static_cast<uint8_t>((m_net_seq + 1) % 50);
+            local_pkt.seq_counter = m_net_seq;
+            local_pkt.version_tag = m_net_version;
+            local_pkt.hp_checksum = network_manager_t::compute_hp_checksum(m_world.objects, 20);
+            network_manager_t::encode_data_crc(local_pkt, m_data_crc);
+
+            if (!m_net_mgr->exchange_lockstep(local_pkt, remote_pkt)) {
+                m_last_net_sync = SyncResult::CONNECTION_LOST;
+                return;
+            }
+            m_last_net_sync = network_manager_t::verify_sync(local_pkt, remote_pkt);
+            if (m_last_net_sync != SyncResult::OK) {
+                return;
+            }
+
+            if ((remote_pkt.func_keys_1 & NET_FKEY1_F1) || (local_pkt.func_keys_1 & NET_FKEY1_F1)) dispatch_fkey_action(VK_LF2_F1, local_rec);
+            if ((remote_pkt.func_keys_1 & NET_FKEY1_F2) || (local_pkt.func_keys_1 & NET_FKEY1_F2)) dispatch_fkey_action(VK_LF2_F2, local_rec);
+            if ((remote_pkt.func_keys_1 & NET_FKEY1_F4) || (local_pkt.func_keys_1 & NET_FKEY1_F4)) dispatch_fkey_action(VK_LF2_F4, local_rec);
+            if ((remote_pkt.func_keys_1 & NET_FKEY1_F5) || (local_pkt.func_keys_1 & NET_FKEY1_F5)) dispatch_fkey_action(VK_LF2_F5, local_rec);
+            if ((remote_pkt.func_keys_2 & NET_FKEY2_F3) || (local_pkt.func_keys_2 & NET_FKEY2_F3)) dispatch_fkey_action(VK_LF2_F3, local_rec);
+            if ((remote_pkt.func_keys_2 & NET_FKEY2_F8) || (local_pkt.func_keys_2 & NET_FKEY2_F8)) dispatch_fkey_action(VK_LF2_F8, local_rec);
+            if ((remote_pkt.func_keys_1 & NET_FKEY1_F6) || (local_pkt.func_keys_1 & NET_FKEY1_F6)) dispatch_fkey_action(VK_LF2_F6, local_rec);
+            if ((remote_pkt.func_keys_1 & NET_FKEY1_F7) || (local_pkt.func_keys_1 & NET_FKEY1_F7)) dispatch_fkey_action(VK_LF2_F7, local_rec);
+            if ((remote_pkt.func_keys_1 & NET_FKEY1_F9) || (local_pkt.func_keys_1 & NET_FKEY1_F9)) dispatch_fkey_action(VK_LF2_F9, local_rec);
+            if ((remote_pkt.func_keys_2 & NET_FKEY2_LF2NET) || (local_pkt.func_keys_2 & NET_FKEY2_LF2NET)) dispatch_fkey_action(0xFE, local_rec);
+            if ((remote_pkt.func_keys_2 & NET_FKEY2_HEROFIGHTER) || (local_pkt.func_keys_2 & NET_FKEY2_HEROFIGHTER)) dispatch_fkey_action(0xFF, local_rec);
+        }
     }
 
-    // 2. Pre-collision wpoint sync (0x00417F80)
+    // 4. Remote/playback input unpack & replay recording
+    if (!paused) {
+        if (net_active) {
+            uint8_t merged_inputs[8]{};
+            for (int k = 0; k < 8; ++k) {
+                merged_inputs[k] = static_cast<uint8_t>(local_pkt.player_inputs[k] | remote_pkt.player_inputs[k]);
+                local_rec.inputs[k] = merged_inputs[k];
+            }
+            slot_unpack_network_inputs(&m_world, merged_inputs, m_input_phase);
+        } else if (m_has_playback_replay) {
+            slot_unpack_network_inputs(&m_world, playback_rec.inputs, m_input_phase);
+        }
+
+        if (m_replay_recorder.is_recording()) {
+            const replay_frame_10_t& rec_to_write = m_has_playback_replay ? playback_rec : local_rec;
+            m_replay_recorder.record_frame_10(rec_to_write, compute_active_hp_sum(m_world));
+        }
+    }
+
+    if (paused) {
+        m_fast_forward = false;
+        return;
+    }
+    if (m_pause_state == 2) {
+        m_pause_state = 1;
+        m_battle_paused = true;
+    }
+
+    // 5. Modulo frame counters & alive-team round-end state machine (0x0041BC90)
+    m_shake = 1 - m_shake;
+    m_counter_12 = (m_counter_12 + 1) % 12;
+    m_counter_3 = (m_counter_3 + 1) % 3;
+
+    if (m_selected_mode == MODE_STAGE) {
+        bool any_player_alive = false;
+        for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
+            if (m_world.is_object_exists[i] && m_world.objects[i] && m_world.objects[i]->file &&
+                m_world.objects[i]->hp > 0 && m_world.objects[i]->file->type == TYPE_CHARACTER &&
+                m_world.objects[i]->team > 0 && m_world.objects[i]->team < 40 &&
+                m_world.objects[i]->team != 5) {
+                any_player_alive = true;
+                break;
+            }
+        }
+        if (!any_player_alive || m_stage_mgr.is_stage_cleared()) {
+            m_round_counter++;
+            if (!m_stage_mgr.is_stage_cleared() && m_round_counter == 80) {
+                m_fast_forward = false;
+                get_bgm_manager().pause();
+                play_ui_sound(SOUND_END);
+            }
+        }
+    } else {
+        int32_t team_counts[40]{};
+        for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
+            if (m_world.is_object_exists[i] && m_world.objects[i] && m_world.objects[i]->file &&
+                m_world.objects[i]->hp > 0 && m_world.objects[i]->file->type == TYPE_CHARACTER) {
+                uint32_t t = m_world.objects[i]->team;
+                if (t > 0 && t < 40 && t != 5) {
+                    team_counts[t]++;
+                }
+            }
+        }
+        int32_t alive_teams = 0;
+        for (int32_t t = 0; t < 40; ++t) {
+            if (team_counts[t] > 0) {
+                m_winning_team = t;
+                alive_teams++;
+            }
+        }
+        if (alive_teams < 2 && m_selected_mode != MODE_BATTLE) {
+            if (alive_teams == 0) m_winning_team = -1;
+            m_round_counter++;
+            if (m_round_counter == 80) {
+                if (m_selected_mode != MODE_VS && m_selected_mode != MODE_1ON1 &&
+                    m_selected_mode != MODE_2ON2 && m_selected_mode != MODE_DEMO) {
+                    get_bgm_manager().pause();
+                }
+                if (m_selected_mode != MODE_DEMO) {
+                    m_fast_forward = false;
+                }
+                play_ui_sound(SOUND_END);
+            }
+        } else if (m_selected_mode != MODE_1ON1 && m_selected_mode != MODE_2ON2) {
+            m_winning_team = -1;
+        }
+    }
+
+    if (m_round_counter == 145) {
+        m_round_counter = 144;
+    } else if (m_round_counter > 349) {
+        // End-of-round transformation reverts (LouisEX, Firzen fusion split, Rudolf uid)
+        for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
+            if (!m_world.is_object_exists[i] || !m_world.objects[i] || !m_world.objects[i]->file) continue;
+            object_t* obj = m_world.objects[i];
+            if (obj->uid < 0) {
+                if (obj->file->id == LOUISE_EX_DAT && m_cheat_lf2net != 'd') {
+                    file_t* lf = find_loaded_file(LOUIS_DAT);
+                    if (lf) obj->file = lf;
+                } else if (obj->fusion_state >= 0) {
+                    int32_t partner_slot = obj->fusion_partner;
+                    obj->fusion_state = -1;
+                    obj->firen_counter = 900;
+                    file_t* sf = find_loaded_file(static_cast<uint32_t>(obj->fusion_self_id));
+                    file_t* pf = find_loaded_file(static_cast<uint32_t>(obj->fusion_partner_id));
+                    if (sf) obj->file = sf;
+                    if (partner_slot >= 0 && partner_slot < static_cast<int32_t>(MAX_OBJECTS) &&
+                        m_world.objects[partner_slot]) {
+                        object_t* partner = m_world.objects[partner_slot];
+                        object_init(partner);
+                        if (pf) {
+                            partner->file = pf;
+                            partner->weapon_hp = pf->weapon_hp;
+                        }
+                        m_world.is_object_exists[partner_slot] = 1;
+                        partner->hp = obj->hp / 2;
+                        partner->dark_hp = obj->dark_hp / 2;
+                        obj->hp /= 2;
+                        obj->dark_hp /= 2;
+                        partner->x = obj->x;
+                        partner->z = obj->z;
+                        partner->y = 0;
+                        partner->x_position = static_cast<double>(partner->x);
+                        partner->z_position = static_cast<double>(partner->z);
+                        partner->y_position = 0.0;
+                        obj->x_velocity = 0.0;
+                        partner->x_velocity = 0.0;
+                        partner->facing = static_cast<uint8_t>(1U - obj->facing);
+                        obj->frame_id1 = 112;
+                        partner->frame_id1 = 112;
+                        obj->mp = 0;
+                        partner->mp = 0;
+                        partner->team = obj->team;
+                    }
+                }
+            } else {
+                file_t* orig = find_loaded_file(static_cast<uint32_t>(obj->uid));
+                if (orig) {
+                    obj->file = orig;
+                    obj->uid = -1;
+                }
+            }
+        }
+        m_round_counter = 0;
+        if (m_replay_recorder.is_recording()) {
+            m_replay_recorder.finish_recording();
+        }
+        if (m_has_playback_replay) {
+            m_replay_player.close();
+            m_has_playback_replay = false;
+            m_selected_mode = MODE_PLAYBACK;
+        }
+        if (m_window) {
+            return_to_menu();
+        }
+        return;
+    }
+
+    if (m_round_counter >= 144) {
+        for (int i = 0; i < 8; ++i) {
+            if (m_world.objects[i] && (m_world.objects[i]->click_attack == 1 || m_world.objects[i]->click_jump == 1)) {
+                m_round_counter = 350;
+                break;
+            }
+        }
+    }
+
+    // 6. Per-object Loop 1: AI/hit_Fa (objects 10..399) + control input tick + Rudolf teleport & transform
+    for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
+        if (!m_world.is_object_exists[i] || !m_world.objects[i] || !m_world.objects[i]->file) continue;
+        object_t* obj = m_world.objects[i];
+
+        if (i >= 10) {
+            if (obj->file->type == TYPE_CHARACTER) {
+                ai_tick(&m_world, i, ai_params);
+                input_tick_done[i] = true;
+            } else if (obj->frame_id1 < MAX_FRAMES && obj->file->frames[obj->frame_id1].hit_Fa > 0) {
+                object_process_hit_fa(&m_world, static_cast<int32_t>(i));
+            }
+        }
+
+        if (!input_tick_done[i]) {
+            object_input_tick(obj, m_round_counter == 0, unlock_chars);
+        }
+
+        if (obj->frame_id1 < MAX_FRAMES) {
+            uint32_t state = obj->file->frames[obj->frame_id1].state;
+            if (state == 400 && m_shake == 0) {
+                m_world.teleport(i, TELEPORT_TO_ENEMY);
+            } else if (state == 401 && m_shake == 0) {
+                m_world.teleport(i, TELEPORT_TO_TEAM);
+            }
+            if (state == 500 && (obj->transformed_to_id == -1 || obj->uid > -1)) {
+                obj->frame_id1 = 0;
+            }
+            if (state == 501 && obj->transformed_to_id > -1) {
+                file_t* tf = find_loaded_file(static_cast<uint32_t>(obj->transformed_to_id));
+                if (tf) {
+                    obj->uid = static_cast<int32_t>(obj->file->id);
+                    obj->file = tf;
+                    obj->frame_id1 = 0;
+                    for (uint32_t c = 0; c < MAX_OBJECTS; ++c) {
+                        if (m_world.is_object_exists[c] && m_world.objects[c] &&
+                            m_world.objects[c]->clone == static_cast<int32_t>(i) &&
+                            m_world.objects[c]->hp > 0) {
+                            m_world.objects[c]->file = tf;
+                            m_world.objects[c]->frame_id1 = (m_world.objects[c]->y < 0) ? 212 : 0;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // 7. Per-object Loop 2: Physics + removal + join_hp/reserve respawn + transform revert
+    for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
+        if (!m_world.is_object_exists[i] || !m_world.objects[i] || !m_world.objects[i]->file) continue;
+        object_t* obj = m_world.objects[i];
+
+        object_physics_tick(obj, m_counter_12);
+
+        if (obj->frame_id1 < MAX_FRAMES && obj->file->frames[obj->frame_id1].state == 9998) {
+            m_world.is_object_exists[i] = 0;
+            continue;
+        }
+
+        if (obj->frame_id1 < MAX_FRAMES &&
+            obj->file->frames[obj->frame_id1].state == STATE_LYING &&
+            obj->hp <= 0 &&
+            (obj->clone >= 0 || obj->team == 5 || i >= 20) &&
+            obj->blink_time > 0 && obj->blink_time < 5) {
+            if (obj->join_hp > 0) {
+                obj->team = 1;
+                obj->reserve = obj->join_reserve;
+                obj->max_hp = obj->join_hp;
+                obj->dark_hp = obj->join_hp;
+                obj->hp = obj->join_hp;
+                obj->join_hp = 0;
+                obj->mp = 0;
+                if (obj->file->id >= 30 && obj->file->id <= 36) {
+                    obj->pic_no_gain = 140;
+                }
+                obj->frame_id1 = 219;
+                obj->shaking = 10;
+                int32_t ms = find_free_dynamic_slot();
+                file_t* ef = find_loaded_file(ETC_DAT);
+                if (ms != -1 && ef) {
+                    object_t* m = m_world.objects[ms];
+                    object_init(m);
+                    m->file = ef;
+                    m->weapon_hp = ef->weapon_hp;
+                    m->x = obj->x;
+                    m->y = obj->y;
+                    m->z = obj->z + 1;
+                    m->team = obj->team;
+                    m->x_position = static_cast<double>(m->x);
+                    m->y_position = static_cast<double>(m->y);
+                    m->z_position = static_cast<double>(m->z);
+                    m->frame_id1 = 6;
+                    m->x_velocity = 0.0;
+                    m->y_velocity = 0.0;
+                    m->z_velocity = 0.0;
+                    m->facing = FACING_RIGHT;
+                    m_world.is_object_exists[ms] = 1;
+                }
+            } else if (obj->reserve < 2) {
+                m_world.is_object_exists[i] = 0;
+                continue;
+            } else {
+                obj->reserve--;
+                int32_t sum_x = 0, sum_z = 0, count = 0;
+                for (uint32_t t = 0; t < MAX_OBJECTS; ++t) {
+                    if (m_world.is_object_exists[t] && m_world.objects[t] &&
+                        m_world.objects[t]->team == obj->team && m_world.objects[t]->hp > 0) {
+                        sum_x += m_world.objects[t]->x;
+                        sum_z += m_world.objects[t]->z;
+                        count++;
+                    }
+                }
+                if (count > 0) {
+                    int32_t rx = (sum_x / count) + lf2_random(0, 51) - 26;
+                    int32_t rz = (sum_z / count) + lf2_random(0, 31) - 16;
+                    obj->x = rx;
+                    obj->z = rz;
+                    obj->x_position = static_cast<double>(rx);
+                    obj->z_position = static_cast<double>(rz);
+                }
+                obj->y = -300;
+                obj->y_position = -300.0;
+                obj->mp = 500;
+                obj->dark_hp = obj->max_hp;
+                obj->hp = obj->max_hp;
+                obj->blink_time = 20;
+                obj->frame_id1 = 212;
+                obj->y_velocity = 0.0;
+            }
+        }
+
+        if (obj->uid > -1 && obj->click_DJA == 3 && obj->y == 0 && obj->hp > 0) {
+            obj->click_DJA = 0;
+            file_t* orig = find_loaded_file(static_cast<uint32_t>(obj->uid));
+            if (orig) {
+                obj->file = orig;
+                obj->frame_id1 = 245;
+                obj->uid = -1;
+                for (uint32_t c = 0; c < MAX_OBJECTS; ++c) {
+                    if (m_world.is_object_exists[c] && m_world.objects[c] &&
+                        m_world.objects[c]->clone == static_cast<int32_t>(i) &&
+                        m_world.objects[c]->hp > 0) {
+                        m_world.objects[c]->file = orig;
+                        m_world.objects[c]->frame_id1 = (m_world.objects[c]->y < 0) ? 212 : 0;
+                    }
+                }
+            }
+        }
+    }
+
+    // 8. Mid-frame combat & sky weapon drop (0x00417F80 -> 0x00419380 -> 0x0042E100 -> 0x00418C30 -> 0x004187B0)
+    const uint32_t game_mode = static_cast<uint32_t>(m_selected_mode);
     world_process_weapons(&m_world);
 
-    // 3. Collision detection, Firzen fusion & attack resolution (0x00419380 -> 0x0042E100)
-    m_world.process_all_attacks(game_mode, counter_12);
+    for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
+        if (m_world.is_object_exists[i] && m_world.objects[i]) {
+            m_world.objects[i]->successful_attacks = 0;
+            m_world.objects[i]->attackable_distance = 1000;
+            m_world.objects[i]->vulnerable_distance = 1000;
+            m_world.objects[i]->flag_eb = 0;
+        }
+    }
+    world_step_collisions(&m_world, game_mode);
+    world_process_firzen_fusion(&m_world, unlock_chars);
 
-    // 4. Cpoint catch chain & grapple sync (0x00418C30 -> 0x004187B0)
+    int32_t weapon_count = 0;
+    for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
+        if (!m_world.is_object_exists[i] || !m_world.objects[i] || !m_world.objects[i]->file) continue;
+        uint32_t t = m_world.objects[i]->file->type;
+        if (t == TYPE_LIGHT_WEAPON || t == TYPE_HEAVY_WEAPON || t == TYPE_THROW_WEAPON || t == TYPE_DRINK) {
+            weapon_count++;
+        }
+        if (t == TYPE_CHARACTER) {
+            m_world.attack_process(i, m_counter_12);
+        }
+    }
+
+    if (weapon_count < 4 && lf2_random(0, 200) == 0) {
+        file_t* cands[MAX_FILES]{};
+        int32_t cand_count = 0;
+        for (uint32_t f = 0; f < MAX_FILES; ++f) {
+            file_t* fp = m_world.files[f] ? m_world.files[f] : m_loaded_files[f];
+            if (fp && fp->id >= 100 && fp->id < 200) {
+                if ((fp->id != MILK_DAT && fp->id != BEER_DAT) ||
+                    (lf2_random(0, 2) != 0 && m_selected_mode != MODE_STAGE &&
+                     m_selected_mode != MODE_1ON1 && m_selected_mode != MODE_2ON2 &&
+                     m_selected_mode != MODE_BATTLE)) {
+                    cands[cand_count++] = fp;
+                }
+            }
+        }
+        int32_t fs = find_free_dynamic_slot();
+        if (cand_count > 0 && fs != -1) {
+            file_t* wf = cands[lf2_random(0, cand_count)];
+            object_t* w = m_world.objects[fs];
+            int32_t sx = lf2_random(0, 30) + 30 + lf2_random(0, 30) * ((stage_w - 60) / 30);
+            int32_t zw = (z_max > z_min + 60) ? (z_max - z_min - 60) : 60;
+            int32_t sz = lf2_random(0, 30) + z_min + 30 + lf2_random(0, 30) * (zw / 30);
+            object_init(w);
+            w->file = wf;
+            w->weapon_hp = wf->weapon_hp;
+            w->x = sx; w->y = -500; w->z = sz;
+            w->x_position = static_cast<double>(sx);
+            w->y_position = -500.0;
+            w->z_position = static_cast<double>(sz);
+            w->x_velocity = 0.0; w->y_velocity = 0.0; w->z_velocity = 0.0;
+            w->owner = 99;
+            if (wf->id == MILK_DAT) w->hp = 200;
+            m_world.is_object_exists[fs] = 1;
+            clear_vrest_for_slot(fs);
+        }
+    }
+
+    for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
+        if (m_world.is_object_exists[i] && m_world.objects[i] && m_world.objects[i]->file &&
+            m_world.objects[i]->file->type > TYPE_CHARACTER) {
+            m_world.attack_process(i, m_counter_12);
+        }
+    }
+
     world_process_cpoint_chain(&m_world);
     world_process_cpoint_sync(&m_world);
-
-    // 5. Holder-weapon validation & post-combat wpoint sync (0x0041BC90 -> 0x00417F80)
     world_validate_weapon_holders(&m_world);
     world_process_weapons(&m_world);
 
-    // 6. Stage boundary clamping & off-screen removal (0x0041B5D0)
+    // Mode-specific wave / army spawning dispatch & boundary clamp
+    switch (m_selected_mode) {
+    case MODE_STAGE:
+        m_stage_mgr.update_stage(&m_world, m_camera.x);
+        break;
+    case MODE_BATTLE:
+        m_battle_mgr.step_simulation();
+        break;
+    default:
+        break;
+    }
+
+    const double d_z_min = static_cast<double>(z_min);
+    const double d_z_max = static_cast<double>(z_max);
+    const double d_stage_w = static_cast<double>(stage_w);
     for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
         if (!m_world.is_object_exists[i]) continue;
         object_t* obj = m_world.objects[i];
         if (!obj || !obj->file) continue;
 
         if (obj->file->type == TYPE_CHARACTER) {
-            if (obj->z_position < d_z_min) {
-                obj->z_position = d_z_min;
-            } else if (obj->z_position > d_z_max) {
-                obj->z_position = d_z_max;
-            }
+            if (obj->z_position < d_z_min) obj->z_position = d_z_min;
+            else if (obj->z_position > d_z_max) obj->z_position = d_z_max;
         } else {
-            if (obj->z_position < d_z_min - 1.0) {
-                obj->z_position = d_z_min - 1.0;
-            } else if (obj->z_position > d_z_max + 1.0) {
-                obj->z_position = d_z_max + 1.0;
-            }
+            if (obj->z_position < d_z_min - 1.0) obj->z_position = d_z_min - 1.0;
+            else if (obj->z_position > d_z_max + 1.0) obj->z_position = d_z_max + 1.0;
         }
         obj->z = static_cast<int32_t>(obj->z_position);
 
@@ -1346,18 +2026,12 @@ void app_t::update_battle() {
         } else if (obj->file->type == TYPE_CHARACTER) {
             double x_min = (i < 20) ? ((obj->team == 5) ? -300.0 : 0.0) : -100.0;
             double x_max = (i < 20) ? d_stage_w : (d_stage_w + 100.0);
-            if (obj->x_position < x_min) {
-                obj->x_position = x_min;
-            } else if (obj->x_position > x_max) {
-                obj->x_position = x_max;
-            }
+            if (obj->x_position < x_min) obj->x_position = x_min;
+            else if (obj->x_position > x_max) obj->x_position = x_max;
         } else {
             if ((obj->file->id == MILK_DAT || obj->file->id == BEER_DAT) && obj->player_index > 0) {
-                if (obj->x_position < 10.0) {
-                    obj->x_position = 10.0;
-                } else if (obj->x_position > d_stage_w - 10.0) {
-                    obj->x_position = d_stage_w - 10.0;
-                }
+                if (obj->x_position < 10.0) obj->x_position = 10.0;
+                else if (obj->x_position > d_stage_w - 10.0) obj->x_position = d_stage_w - 10.0;
             } else if ((obj->x_position < 0.0 || obj->x_position > d_stage_w) && obj->y == 0) {
                 m_world.is_object_exists[i] = 0;
             }
@@ -1365,26 +2039,516 @@ void app_t::update_battle() {
         obj->x = static_cast<int32_t>(obj->x_position);
     }
 
-    // 7. Physics velocity & impulse averaging (0x004196F0)
     world_average_velocities(&m_world);
 
-    // 8. Frame history shift & animation timer advance (0x0040D960)
+    // 9. Per-object Loop 3: transforms, regen, frame advance, opoint/weapon break/team orders, ice/fire FX
     for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
-        if (!m_world.is_object_exists[i]) continue;
+        if (!m_world.is_object_exists[i] || !m_world.objects[i] || !m_world.objects[i]->file) continue;
         object_t* obj = m_world.objects[i];
-        if (!obj || !obj->file) continue;
 
-        obj->frame_id4 = obj->frame_id3;
-        obj->frame_id3 = obj->frame_id2;
-        object_frame_advance(obj, static_cast<int32_t>(m_selected_mode), static_cast<int32_t>(i), 1, true);
-        if (obj->frame_id1 == 1000 && obj->file->type != TYPE_CHARACTER) {
+        if (obj->frame_id1 < MAX_FRAMES) {
+            uint32_t pre_state = obj->file->frames[obj->frame_id1].state;
+            if (obj->file->type == TYPE_CHARACTER && pre_state == 9995) {
+                file_t* lex = find_loaded_file(LOUISE_EX_DAT);
+                if (lex) obj->file = lex;
+                obj->frame_id1 = 0;
+            } else if (pre_state > 7999 && pre_state < 9000) {
+                file_t* tf = find_loaded_file(pre_state - 8000);
+                if (tf) obj->file = tf;
+                obj->frame_id1 = 0;
+                obj->pic_no_gain = 140;
+            } else if (obj->file->type == TYPE_CHARACTER && pre_state == 9996 && obj->wait_counter == 1) {
+                for (int p = 0; p < 5; ++p) {
+                    int32_t s = find_free_dynamic_slot();
+                    if (s == -1) break;
+                    file_t* pf = find_loaded_file((p == 4) ? LOUIS_ARMOUR_DAT : LOUIS_WRISTER_DAT);
+                    if (!pf) continue;
+                    object_t* sh = m_world.objects[s];
+                    object_init(sh);
+                    sh->file = pf;
+                    sh->weapon_hp = pf->weapon_hp;
+                    sh->x = obj->x + lf2_random(0x9b, 7) - 3;
+                    sh->y = obj->y + lf2_random(0x9c, 7) - 9;
+                    sh->z = obj->z + 1;
+                    sh->x_position = static_cast<double>(sh->x);
+                    sh->y_position = static_cast<double>(sh->y);
+                    sh->z_position = static_cast<double>(sh->z);
+                    sh->y_velocity = -static_cast<double>(lf2_random(0x9d, 15) / 2) - 5.0;
+                    sh->arest = 6;
+                    if (p == 0 || p == 2) sh->z_velocity = static_cast<double>(lf2_random(0, 4)) + 3.0;
+                    else if (p == 1 || p == 3) sh->z_velocity = -3.0 - static_cast<double>(lf2_random(0, 4));
+                    else sh->z_velocity = 1.0;
+
+                    if (p < 2) sh->x_velocity = -10.0 - static_cast<double>(lf2_random(0, 4));
+                    else if (p < 4) sh->x_velocity = static_cast<double>(lf2_random(0, 4)) + 10.0;
+                    else sh->x_velocity = static_cast<double>(lf2_random(0, 7)) - 3.0;
+
+                    sh->frame_id1 = static_cast<uint32_t>(lf2_random(0, 4));
+                    sh->facing = static_cast<uint8_t>(lf2_random(0, 2));
+                    m_world.is_object_exists[s] = 1;
+                }
+            }
+        }
+
+        if (obj->file->type == TYPE_CHARACTER) {
+            if (obj->hp > 0 && obj->hp < obj->dark_hp && m_counter_12 == 0) {
+                obj->hp++;
+            }
+            if (static_cast<int32_t>(obj->thrown_injury) < 0 && m_counter_12 == 0) {
+                int32_t loss = (obj->armor_multiplier > 0) ? (900 / static_cast<int32_t>(obj->armor_multiplier)) : 9;
+                obj->hp -= loss;
+                obj->dark_hp -= loss / 3;
+                if (obj->hp < 0) obj->hp = 0;
+                if (obj->dark_hp < 0) obj->dark_hp = 0;
+                obj->hp_lost += 9;
+            }
+            if ((obj->clone == -1 || obj->mp < 150) && obj->mp < 500 &&
+                m_counter_3 == 0 && obj->blink_time >= 0) {
+                int32_t eff_hp = (obj->hp > 500) ? 500 : obj->hp;
+                if (obj->file->id == FIRZEN_DAT || obj->file->id == JULIAN_DAT) {
+                    eff_hp /= 2;
+                }
+                obj->mp += (500 - eff_hp) / 100 + 1;
+            }
+            if (m_unlimited_mp && obj->mp < 500) {
+                obj->mp = 500;
+            }
+        }
+
+        object_frame_advance(obj, static_cast<int32_t>(m_selected_mode), static_cast<int32_t>(i),
+                             m_unlimited_mp ? 0 : 1, m_round_counter == 0);
+
+        int32_t curr_f = static_cast<int32_t>(obj->frame_id1);
+        if (curr_f / 100 == 11 || curr_f / 100 == 12) {
+            for (uint32_t c = 0; c < MAX_OBJECTS; ++c) {
+                if (m_world.is_object_exists[c] && m_world.objects[c] &&
+                    m_world.objects[c]->clone == static_cast<int32_t>(i)) {
+                    m_world.objects[c]->blink_time = 1100 - curr_f;
+                }
+            }
+            obj->blink_time = 1100 - curr_f;
+            obj->frame_id1 = 0;
+            continue;
+        }
+
+        if (curr_f < 0 || curr_f > 399) {
+            obj->frame_id1 = 0;
             m_world.is_object_exists[i] = 0;
+            continue;
+        }
+
+        if (obj->file->type == TYPE_CHARACTER && obj->hp < 1 &&
+            (curr_f < 12 || curr_f == 110 || curr_f == 111)) {
+            obj->frame_id1 = 186;
+            obj->y_velocity = -3.0;
+            obj->y_accl = -3.0;
+            obj->y_position = -1.0;
+            obj->y = -1;
+            curr_f = 186;
+        }
+
+        if (obj->file->type == TYPE_CHARACTER && obj->y == 0 &&
+            obj->y_position == 0.0 && obj->y_velocity == 0.0 && obj->y_accl == 0.0 &&
+            ((curr_f > 179 && curr_f < 190 && curr_f != 184) || (curr_f > 211 && curr_f < 215))) {
+            obj->frame_id1 = 186;
+            obj->y_velocity = -3.0;
+            obj->y_accl = -3.0;
+            obj->y_position = -1.0;
+            obj->y = -1;
+            curr_f = 186;
+        }
+
+        const frame_t& cf = obj->file->frames[obj->frame_id1];
+        if (cf.opoint.kind > 0 && cf.opoint.oid > 0 && obj->wait_counter == 0 &&
+            !(obj->shaking != 0 && obj->file->type == TYPE_CHARACTER)) {
+            int count = 1;
+            int face_mode = static_cast<int>(cf.opoint.facing);
+            if (face_mode > 10) {
+                count = face_mode / 10;
+                face_mode = face_mode % 10;
+            }
+            int32_t spawned_slots[16]{};
+            int spawned_count = 0;
+
+            for (int k = 0; k < count && spawned_count < 16; ++k) {
+                int32_t ns = find_free_dynamic_slot();
+                file_t* of = find_loaded_file(cf.opoint.oid);
+                if (ns == -1 || !of) break;
+
+                spawned_slots[spawned_count++] = ns;
+                object_t* no = m_world.objects[ns];
+                object_init(no);
+                no->file = of;
+                no->weapon_hp = of->weapon_hp;
+                no->owner = obj->owner;
+                clear_vrest_for_slot(ns);
+                m_world.is_object_exists[ns] = 1;
+
+                no->x = (obj->facing == FACING_RIGHT)
+                    ? ((obj->x - cf.centerx) + cf.opoint.x)
+                    : ((cf.centerx - cf.opoint.x) + obj->x);
+                no->y = (obj->y - cf.centery) + cf.opoint.y;
+                no->team = obj->team;
+                no->z_position = obj->z_position + 1.0;
+                no->y_position = static_cast<double>(no->y);
+                no->x_position = static_cast<double>(no->x);
+                no->z = static_cast<int32_t>(no->z_position);
+                no->frame_id1 = cf.opoint.action;
+                no->y_velocity = static_cast<double>(cf.opoint.dvy);
+                no->z_velocity = 0.0;
+
+                if (no->frame_id1 < MAX_FRAMES) {
+                    uint32_t nstate = of->frames[no->frame_id1].state;
+                    if ((nstate == 3000 || nstate == 1002 || nstate == 3006) &&
+                        of->id != FIRZEN_BALL_DAT && of->id != BAT_BALL_DAT) {
+                        if (obj->click_up != 0 && obj->click_down == 0) no->z_velocity = -2.5;
+                        else if (obj->click_down != 0) no->z_velocity = 2.5;
+                        if (of->id == FIREN_FLAME_DAT) no->z_velocity *= 0.25;
+                    }
+                }
+
+                if (of->type == TYPE_CHARACTER) {
+                    no->clone = (obj->clone < 0) ? static_cast<int32_t>(i) : obj->clone;
+                    no->blink_time = obj->blink_time;
+                }
+
+                if (face_mode == 0) no->facing = obj->facing;
+                else if (face_mode == 1) no->facing = static_cast<uint8_t>(1U - obj->facing);
+                else no->facing = FACING_RIGHT;
+
+                no->x_velocity = (no->facing == FACING_RIGHT)
+                    ? static_cast<double>(cf.opoint.dvx)
+                    : -static_cast<double>(cf.opoint.dvx);
+
+                if (count > 1) {
+                    double spread = (static_cast<double>(k) * 10.0) / (static_cast<double>(count) - 1.0) - 5.0;
+                    no->z_velocity += spread;
+                    if (no->x_velocity > 0.0 && spread > 0.0) no->x_velocity -= spread;
+                    else if (no->x_velocity < 0.0 && spread < 0.0) no->x_velocity -= spread;
+                    else no->x_velocity += spread;
+                }
+
+                if (obj->file->type == TYPE_ATTACK && obj->frame_id1 < MAX_FRAMES &&
+                    obj->file->frames[obj->frame_id1].state == 3003) {
+                    no->vrest_of_objects[i] = 10;
+                }
+
+                if (of->id == RUDOLF_DAT || of->id == JULIAN_DAT) {
+                    no->hp = 10;
+                    no->max_hp = 10;
+                    no->dark_hp = 10;
+                    no->mp = 5;
+                }
+
+                if (cf.opoint.kind == 2) {
+                    obj->weapon_type = 1;
+                    no->weapon_type = -1;
+                    obj->weapon_id = ns;
+                    no->holder_id = static_cast<int32_t>(i);
+                    no->team = obj->team;
+                }
+            }
+
+            if (spawned_count > 1) {
+                for (int a = 0; a < spawned_count; ++a) {
+                    int32_t sid = spawned_slots[a];
+                    if ((spawned_count & 1) == 0) {
+                        if (a < spawned_count / 2 - 1) m_world.objects[sid]->arest = (spawned_count / 2 - a) * 2 - 2;
+                        else if (a > spawned_count / 2) m_world.objects[sid]->arest = (a - spawned_count / 2) * 2;
+                    } else {
+                        if (a < spawned_count / 2) m_world.objects[sid]->arest = (spawned_count / 2 - a) * 2;
+                        else if (a > spawned_count / 2) m_world.objects[sid]->arest = (a - spawned_count / 2) * 2;
+                    }
+                    for (int b = 0; b < a; ++b) {
+                        int32_t prev_sid = spawned_slots[b];
+                        m_world.objects[sid]->vrest_of_objects[prev_sid] = 40;
+                        m_world.objects[prev_sid]->vrest_of_objects[sid] = 40;
+                    }
+                }
+            }
+        } else if ((obj->file->type == TYPE_LIGHT_WEAPON || obj->file->type == TYPE_HEAVY_WEAPON ||
+                    obj->file->type == TYPE_THROW_WEAPON || obj->file->type == TYPE_DRINK) &&
+                   obj->weapon_hp < 0) {
+            obj->weapon_hp = 0;
+            uint32_t wid = obj->file->id;
+            int pieces = 0;
+            if (wid == HOE_DAT || wid == LOUIS_ARMOUR_DAT) pieces = 7;
+            else if (wid == STICK_DAT || wid == ICE_SWORD_DAT || wid == LOUIS_WRISTER_DAT) pieces = 5;
+            else if (wid == HENRY_ARROW1_DAT || wid == KNIFE_DAT || wid == BOOMERANG_DAT) pieces = 3;
+            else if (wid == STONE_DAT) pieces = 13;
+            else if (wid == WOODEN_BOX_DAT) pieces = 15;
+            else if (wid == BASEBALL_DAT) pieces = 4;
+            else if (wid == MILK_DAT || wid == BEER_DAT) pieces = 9;
+
+            if (obj->file->weapon_broken_sound_id >= 0) {
+                get_audio_system().queue_item_sound(obj->x, m_camera.x, obj->file->weapon_broken_sound_id);
+            }
+            file_t* bw = find_loaded_file(BROKEN_WEAPON_DAT);
+            if (bw) {
+                for (int p = 0; p < pieces; ++p) {
+                    int32_t s = find_free_dynamic_slot();
+                    if (s == -1) break;
+                    object_t* sh = m_world.objects[s];
+                    object_init(sh);
+                    sh->file = bw;
+                    sh->weapon_hp = bw->weapon_hp;
+                    sh->x = obj->x + lf2_random(0, 7) - 3;
+                    sh->y = obj->y + lf2_random(0, 7) - 3;
+                    sh->z = obj->z;
+                    sh->x_position = static_cast<double>(sh->x);
+                    sh->y_position = static_cast<double>(sh->y);
+                    sh->z_position = static_cast<double>(sh->z);
+                    sh->x_velocity = static_cast<double>(lf2_random(0, 11)) - 5.0;
+                    if (wid == STONE_DAT || wid == WOODEN_BOX_DAT || wid == ICE_SWORD_DAT) {
+                        sh->y_velocity = -static_cast<double>(lf2_random(0, 11) / 2) - 8.0;
+                    } else {
+                        sh->y_velocity = -static_cast<double>(lf2_random(0, 11) / 2) - 6.0;
+                    }
+                    if (wid == STONE_DAT) sh->frame_id1 = (p < 5) ? static_cast<uint32_t>(lf2_random(0, 4)) : static_cast<uint32_t>(lf2_random(0, 4) + 4);
+                    else if (wid == STICK_DAT) sh->frame_id1 = (p < 2) ? static_cast<uint32_t>(lf2_random(0, 4) + 10) : static_cast<uint32_t>(lf2_random(0, 4) + 14);
+                    else if (wid == ICE_SWORD_DAT) sh->frame_id1 = (p < 2) ? static_cast<uint32_t>(lf2_random(0, 4) + 150) : static_cast<uint32_t>(lf2_random(0, 4) + 154);
+                    else if (wid == HOE_DAT) sh->frame_id1 = (p < 5) ? static_cast<uint32_t>(lf2_random(0, 2) * 4 + 20 + lf2_random(0, 2)) : static_cast<uint32_t>(lf2_random(0, 2) + 30);
+                    else if (wid == WOODEN_BOX_DAT) {
+                        if (p < 2) sh->frame_id1 = static_cast<uint32_t>(lf2_random(0, 4) + 40);
+                        else if (p < 5) sh->frame_id1 = static_cast<uint32_t>(lf2_random(0, 4) + 44);
+                        else if (p < 8) sh->frame_id1 = static_cast<uint32_t>(lf2_random(0, 4) + 50);
+                        else sh->frame_id1 = static_cast<uint32_t>(lf2_random(0, 4) + 54);
+                    } else if (wid == KNIFE_DAT) {
+                        sh->frame_id1 = (p < 2) ? static_cast<uint32_t>(lf2_random(0, 2) + 54) : static_cast<uint32_t>(lf2_random(0, 2) + 30);
+                    } else if (wid == BOOMERANG_DAT) sh->frame_id1 = static_cast<uint32_t>(lf2_random(0, 2) + 170);
+                    else if (wid == BASEBALL_DAT) sh->frame_id1 = static_cast<uint32_t>(lf2_random(0, 4) + 60);
+                    else if (wid == MILK_DAT) {
+                        if (p < 1) sh->frame_id1 = static_cast<uint32_t>(lf2_random(0, 4) + 70);
+                        else if (p < 3) sh->frame_id1 = static_cast<uint32_t>(lf2_random(0, 4) + 80);
+                        else { sh->frame_id1 = static_cast<uint32_t>(lf2_random(0, 4) + 74); sh->y_velocity = -static_cast<double>(lf2_random(0, 11) / 2) - 4.0; }
+                    } else if (wid == BEER_DAT) {
+                        if (p < 1) sh->frame_id1 = static_cast<uint32_t>(lf2_random(0, 4) + 160);
+                        else if (p < 3) sh->frame_id1 = static_cast<uint32_t>(lf2_random(0, 4) + 164);
+                        else { sh->frame_id1 = static_cast<uint32_t>(lf2_random(0, 4) + 74); sh->y_velocity = -static_cast<double>(lf2_random(0, 11) / 2) - 4.0; }
+                    } else if (wid == LOUIS_WRISTER_DAT || wid == LOUIS_ARMOUR_DAT) {
+                        sh->frame_id1 = static_cast<uint32_t>(lf2_random(0, 4) + 174);
+                    }
+                    m_world.is_object_exists[s] = 1;
+                }
+            }
+            m_world.is_object_exists[i] = 0;
+        } else if (i < 10 && obj->hp > 0 && obj->file->type == TYPE_CHARACTER) {
+            int32_t cmd = 0;
+            if (obj->input_history[1] == 9) {
+                if (obj->input_history[2] == 0 && obj->input_history[3] == 9 && obj->input_history[4] == 0) cmd = 100;
+                else if (obj->input_history[2] == 9 && obj->input_history[3] == 9 && obj->input_history[4] == 9) cmd = 102;
+                else if (obj->input_history[2] == 5 && obj->input_history[3] == 9 && obj->input_history[4] == 5) cmd = 104;
+            }
+            if (cmd != 0) {
+                std::memset(obj->input_history, 0, sizeof(obj->input_history));
+                int32_t ms = find_free_dynamic_slot();
+                file_t* ef = find_loaded_file(ETC_DAT);
+                if (ms != -1 && ef) {
+                    object_t* m = m_world.objects[ms];
+                    object_init(m);
+                    m->file = ef;
+                    m->weapon_hp = ef->weapon_hp;
+                    m->x = obj->x; m->y = 0; m->z = obj->z;
+                    m->frame_id1 = static_cast<uint32_t>(cmd - 100);
+                    m->x_position = static_cast<double>(m->x);
+                    m->y_position = 0.0;
+                    m->z_position = static_cast<double>(m->z);
+                    m->x_velocity = 0.0; m->y_velocity = 0.0;
+                    m_world.is_object_exists[ms] = 1;
+                    for (uint32_t t = 0; t < MAX_OBJECTS; ++t) {
+                        if (m_world.is_object_exists[t] && m_world.objects[t] &&
+                            m_world.objects[t]->hp > 0 && m_world.objects[t]->file &&
+                            m_world.objects[t]->file->type == TYPE_CHARACTER &&
+                            m_world.objects[t]->team == obj->team) {
+                            if (cmd == 100) {
+                                m_world.objects[t]->ai_target_x = m->x + lf2_random(0, 81) - 40;
+                                m_world.objects[t]->ai_target_z = m->z + lf2_random(0, 81) - 40;
+                            } else if (cmd == 102) {
+                                m_world.objects[t]->follow_order = 1;
+                            } else if (cmd == 104) {
+                                m_world.objects[t]->follow_order = 0;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Ice shatter (data/066.wav) & fire smoke FX comparing frame_id3 (previous) vs frame_id1 (current)
+        uint32_t pf = obj->frame_id3;
+        if (pf < MAX_FRAMES) {
+            uint32_t pstate = obj->file->frames[pf].state;
+            uint32_t cstate = obj->file->frames[obj->frame_id1].state;
+            if ((pstate == STATE_ICE || pf == 200) && cstate != STATE_ICE && obj->frame_id1 != 200) {
+                get_audio_system().queue_fixed_sound(obj->x, m_camera.x, 15);
+                file_t* bw = find_loaded_file(BROKEN_WEAPON_DAT);
+                if (bw) {
+                    for (int k = 0; k < 15; ++k) {
+                        int32_t s = find_free_dynamic_slot();
+                        if (s == -1) break;
+                        object_t* sh = m_world.objects[s];
+                        object_init(sh);
+                        sh->file = bw;
+                        sh->weapon_hp = bw->weapon_hp;
+                        sh->x = obj->x; sh->y = obj->y; sh->z = obj->z;
+                        sh->x_position = static_cast<double>(lf2_random(200, 39) - 19) + obj->x_position;
+                        sh->y_position = obj->y_position - static_cast<double>(lf2_random(199, 29));
+                        sh->z_position = obj->z_position;
+                        sh->y_velocity = -static_cast<double>(lf2_random(201, 20) / 2) - 8.0;
+                        sh->x_velocity = obj->pic_x_gain * 0.5 + (static_cast<double>(lf2_random(202, 11)) - 5.0);
+                        if (k < 2) sh->frame_id1 = 120;
+                        else if (k < 5) sh->frame_id1 = 130;
+                        else if (k < 9) sh->frame_id1 = 125;
+                        else sh->frame_id1 = 135;
+                        m_world.is_object_exists[s] = 1;
+                    }
+                }
+            }
+            if (pstate == STATE_BURNING || pstate == STATE_FIRE || pstate == 19) {
+                int puffs = 0;
+                if (cstate == STATE_BURNING || cstate == STATE_FIRE || cstate == 19) {
+                    if (lf2_random(0, 4) == 0) puffs = 1;
+                } else {
+                    puffs = 7;
+                }
+                if (puffs > 0) {
+                    file_t* bw = find_loaded_file(BROKEN_WEAPON_DAT);
+                    if (bw) {
+                        for (int k = 0; k < puffs; ++k) {
+                            int32_t s = find_free_dynamic_slot();
+                            if (s == -1) break;
+                            object_t* sm = m_world.objects[s];
+                            object_init(sm);
+                            sm->file = bw;
+                            sm->weapon_hp = bw->weapon_hp;
+                            sm->x = obj->x; sm->y = obj->y; sm->z = obj->z;
+                            sm->x_position = static_cast<double>(lf2_random(0xcd, 59) - 29) + obj->x_position;
+                            sm->y_position = obj->y_position - static_cast<double>(lf2_random(0xcc, 29));
+                            sm->z_position = obj->z_position;
+                            sm->y_velocity = -1.0;
+                            sm->x_velocity = (static_cast<double>(lf2_random(0xce, 11)) - 5.0) + obj->x_velocity;
+                            sm->frame_id1 = static_cast<uint32_t>(lf2_random(0xcf, 2) + 140);
+                            m_world.is_object_exists[s] = 1;
+                        }
+                    }
+                }
+            }
+        }
+        obj->frame_id3 = obj->frame_id1;
+    }
+
+    // 10. F8 sky weapon fill
+    if (m_sky_weapon_cmd == 1) {
+        for (uint32_t f = 0; f < MAX_FILES; ++f) {
+            file_t* wf = m_world.files[f] ? m_world.files[f] : m_loaded_files[f];
+            if (!wf) continue;
+            if (wf->id >= 100 && wf->id < 200 && (wf->id != MILK_DAT || lf2_random(0, 2) != 0)) {
+                int32_t s = find_free_dynamic_slot();
+                if (s == -1) break;
+                object_t* w = m_world.objects[s];
+                int32_t sx = lf2_random(0xd2, 30) + 30 + lf2_random(0xd1, 30) * ((stage_w - 60) / 30);
+                int32_t zw = (z_max > z_min + 60) ? (z_max - z_min - 60) : 60;
+                int32_t sz = lf2_random(0xd4, 30) + z_min + 30 + lf2_random(0xd3, 30) * (zw / 30);
+                object_init(w);
+                w->file = wf;
+                w->weapon_hp = wf->weapon_hp;
+                w->x = sx; w->y = -500; w->z = sz;
+                w->x_position = static_cast<double>(sx);
+                w->y_position = -500.0;
+                w->z_position = static_cast<double>(sz);
+                w->x_velocity = 0.0; w->y_velocity = 0.0; w->z_velocity = 0.0;
+                if (wf->id == MILK_DAT) w->hp = 200;
+                m_world.is_object_exists[s] = 1;
+                clear_vrest_for_slot(s);
+            }
         }
     }
 
-    if (m_num_fighters > 0) {
+    // 11. Per-object Loop 4: F9 destroy, F7 recover, state 1700 self-heal, Jan heal & distance reset
+    for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
+        if (!m_world.is_object_exists[i] || !m_world.objects[i] || !m_world.objects[i]->file) continue;
+        object_t* obj = m_world.objects[i];
+
+        if (m_sky_weapon_cmd == 2) {
+            uint32_t t = obj->file->type;
+            if (t == TYPE_LIGHT_WEAPON || t == TYPE_HEAVY_WEAPON || t == TYPE_THROW_WEAPON || t == TYPE_DRINK) {
+                obj->weapon_hp = -1;
+            } else if (m_selected_mode == MODE_STAGE && obj->team == 5 &&
+                       t == TYPE_CHARACTER && obj->file->id != CRIMINAL_DAT) {
+                obj->hp = 0;
+                obj->mp = 0;
+            }
+        }
+
+        if (m_recover_cmd == 1 && (m_selected_mode != MODE_STAGE || (i < 8 && obj->team == 1))) {
+            if (obj->max_hp < 500) obj->max_hp = 500;
+            obj->dark_hp = obj->max_hp;
+            obj->hp = obj->dark_hp;
+            obj->mp = 500;
+            get_bgm_manager().stop();
+        }
+
+        if (obj->curing_hp / 1000 == 1 && obj->hp > 0) {
+            obj->curing_hp--;
+            if (obj->curing_hp % 8 == 0) {
+                if (obj->hp < obj->dark_hp) {
+                    obj->hp = (obj->hp < obj->dark_hp - 8) ? (obj->hp + 8) : obj->dark_hp;
+                } else {
+                    obj->curing_hp = 0;
+                }
+            }
+            if (obj->curing_hp % 1000 == 0) obj->curing_hp = 0;
+        }
+
+        if (obj->heal_timer > 0 && obj->hp > 0) {
+            obj->heal_timer--;
+            if (obj->heal_timer % 8 == 0 && obj->hp < obj->dark_hp) {
+                obj->hp += 8;
+                if (obj->hp > obj->dark_hp) {
+                    obj->hp = obj->dark_hp;
+                    obj->heal_timer = 0;
+                }
+            }
+        }
+
+        if (obj->frame_id1 < MAX_FRAMES && obj->file->frames[obj->frame_id1].state == 1700) {
+            obj->curing_hp = 1100;
+        }
+
+        obj->attackable_distance = 1000;
+        obj->vulnerable_distance = 1000;
+        obj->successful_attacks = 0;
+        obj->flag_eb = 0;
+    }
+
+    m_recover_cmd = 0;
+    m_sky_weapon_cmd = 0;
+
+    if (m_round_counter < 100) {
+        m_battle_elapsed++;
+    }
+    if (m_round_counter == 101 && m_replay_recorder.is_recording() && !m_has_playback_replay) {
+        m_replay_recorder.finish_recording();
+    }
+
+    // 12. Update camera & flush spatialized battle sounds
+    if (m_replay_panning) {
+        m_camera.update_target(m_replay_cam_x);
+    } else if (m_world.is_object_exists[0] && m_world.objects[0]) {
+        m_camera.update_target(m_world.objects[0]->x);
+    } else if (m_num_fighters > 0) {
         m_camera.update_target(m_fighters[0].x);
     }
+    get_audio_system().set_camera_x(m_camera.x);
+    get_audio_system().flush_queued_sounds();
+}
+
+void app_t::update_battle() {
+    if (is_key_just_pressed(VK_LF2_ESCAPE)) {
+        return_to_menu();
+        return;
+    }
+    step_battle_frame();
 }
 
 void app_t::render_battle() {
@@ -1548,7 +2712,7 @@ void app_t::run() {
         process_events();
         if (!m_running) break;
 
-        const uint32_t step = TICK_STEP_BATTLE_MS; // Authentic 30.3 FPS across all scenes (33 ms)
+        const uint32_t step = (m_in_battle && m_fast_forward) ? TICK_STEP_MENU_MS : TICK_STEP_BATTLE_MS;
 
         uint32_t now = SDL_GetTicks();
         if (now - last_time > step) {

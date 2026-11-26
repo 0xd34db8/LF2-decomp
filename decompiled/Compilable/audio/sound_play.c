@@ -114,4 +114,65 @@ void FUN_00417090(int param_1, int param_2)
     DAT_00453e10[param_2] = 1;
 }
 
+/*
+ * Virtual Address: 0x00419E60
+ * Function: FUN_00419e60 - End-of-frame spatialized sound flush
+ * Dispatches queued item sounds [0..399] and fixed battle sounds [0..79]
+ * with exact DirectSound pan & volume dB attenuation math.
+ */
+void FUN_00419e60(void)
+{
+    if (DAT_0044eecc == 0) {
+        return;
+    }
+
+    void *prev_ecx = in_ECX;
+    for (int i = 0; i < 400; ++i) {
+        if (DAT_00457588[i] > 0) {
+            int strength = DAT_00457bc8[i] + DAT_00452170[i];
+            DAT_00457588[i] = 0;
+            if (strength > 100) {
+                strength = 100;
+            } else if (strength < 1) {
+                continue;
+            }
+
+            int pan = ((DAT_00452170[i] - DAT_00457bc8[i]) * 1500) / 100;
+            int vol = ((DAT_0044d000 - 100) * 3800) / 100 + ((strength - 100) * 2000) / 100;
+            lf2_last_item_pan[i] = pan;
+            lf2_last_item_vol[i] = vol;
+            lf2_last_item_played[i] = (DAT_0044d000 > 0) ? 1 : 0;
+
+            if (DAT_0044d000 > 0) {
+                in_ECX = &DAT_00452948_arr[i];
+                FUN_00401a30();
+            }
+        }
+    }
+
+    for (int i = 0; i < 80; ++i) {
+        if (DAT_00453e10[i] > 0) {
+            int strength = DAT_004527e8[i] + DAT_004554c8[i];
+            DAT_00453e10[i] = 0;
+            if (strength > 100) {
+                strength = 100;
+            } else if (strength < 1) {
+                continue;
+            }
+
+            int pan = ((DAT_004554c8[i] - DAT_004527e8[i]) * 1500) / 100;
+            int vol = ((DAT_0044d000 - 100) * 3800) / 100 + ((strength - 100) * 2000) / 100;
+            lf2_last_fixed_pan[i] = pan;
+            lf2_last_fixed_vol[i] = vol;
+            lf2_last_fixed_played[i] = (DAT_0044d000 > 0) ? 1 : 0;
+
+            if (DAT_0044d000 > 0) {
+                in_ECX = &DAT_00451db0[i];
+                FUN_00401a30();
+            }
+        }
+    }
+    in_ECX = prev_ecx;
+}
+
 

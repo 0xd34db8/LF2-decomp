@@ -7,6 +7,46 @@
 
 namespace lf2 {
 
+namespace {
+
+// 18 fixed battle sound WAVs loaded into DAT_00451db0[0..17] at startup (0x0041C000)
+const char* const FIXED_BATTLE_SOUND_PATHS[audio_system_t::NUM_FIXED_SOUNDS] = {
+    "data/001.wav", "data/002.wav", "data/006.wav", "data/010.wav",
+    "data/011.wav", "data/004.wav", "data/016.wav", "data/017.wav",
+    "data/020.wav", "data/021.wav", "data/025.wav", "data/032.wav",
+    "data/033.wav", "data/039.wav", "data/065.wav", "data/066.wav",
+    "data/068.wav", "data/085.wav"
+};
+
+void compute_ear_volumes(int32_t world_x, int32_t camera_x, int32_t& out_left, int32_t& out_right) {
+    int32_t left_dist = (world_x - camera_x) - 200;
+    if (left_dist < 0) left_dist = -left_dist;
+    if (left_dist < 200) out_left = 100;
+    else if (left_dist < 400) out_left = ((400 - left_dist) * 100) / 200;
+    else out_left = 0;
+
+    int32_t right_dist = (world_x - camera_x) - 600;
+    if (right_dist < 0) right_dist = -right_dist;
+    if (right_dist < 200) out_right = 100;
+    else if (right_dist < 400) out_right = ((400 - right_dist) * 100) / 200;
+    else out_right = 0;
+}
+
+} // namespace
+
+const char* audio_system_t::get_fixed_sound_path(size_t index)
+{
+    if (index >= NUM_FIXED_SOUNDS) return nullptr;
+    return FIXED_BATTLE_SOUND_PATHS[index];
+}
+
+void audio_system_t::preload_fixed_battle_sounds()
+{
+    for (size_t i = 0; i < NUM_FIXED_SOUNDS; ++i) {
+        load_sound(FIXED_SOUND_BASE + static_cast<uint32_t>(i), FIXED_BATTLE_SOUND_PATHS[i]);
+    }
+}
+
 audio_system_t::audio_system_t()
 {
     // Default obtained spec in case audio device is headless
@@ -196,7 +236,7 @@ bool audio_system_t::load_sound_from_memory(uint32_t sound_id, const uint8_t* da
     return true;
 }
 
-int32_t audio_system_t::play_sound(uint32_t sound_id, bool loop, int volume)
+int32_t audio_system_t::play_sound(uint32_t sound_id, bool loop, int volume, int left_gain, int right_gain)
 {
     auto it = m_samples.find(sound_id);
     if (it == m_samples.end() || it->second.buffer == nullptr) {
@@ -226,6 +266,8 @@ int32_t audio_system_t::play_sound(uint32_t sound_id, bool loop, int volume)
     m_channels[chosen_channel].loop = loop;
     m_channels[chosen_channel].sound_id = sound_id;
     m_channels[chosen_channel].volume = std::clamp(volume, 0, static_cast<int>(SDL_MIX_MAXVOLUME));
+    m_channels[chosen_channel].left_gain = std::clamp(left_gain, 0, 100);
+    m_channels[chosen_channel].right_gain = std::clamp(right_gain, 0, 100);
 
     if (m_device_id != 0) {
         SDL_UnlockAudioDevice(m_device_id);
@@ -285,6 +327,115 @@ uint32_t audio_system_t::get_active_channel_count() const
     return count;
 }
 
+void audio_system_t::queue_item_sound(int32_t world_x, int32_t camera_x, int32_t sound_id)
+{
+    if (sound_id < 0 || sound_id >= static_cast<int32_t>(MAX_ITEM_SOUNDS)) return;
+    int32_t left = 0, right = 0;
+    compute_ear_volumes(world_x, camera_x, left, right);
+    if (m_item_queued[sound_id] == 0) {
+        m_item_left[sound_id] = 0;
+        m_item_right[sound_id] = 0;
+    }
+    m_item_left[sound_id] += left;
+    m_item_right[sound_id] += right;
+    m_item_queued[sound_id] = 1;
+}
+
+void audio_system_t::queue_fixed_sound(int32_t world_x, int32_t camera_x, int32_t fixed_idx)
+{
+    if (fixed_idx < 0 || fixed_idx >= static_cast<int32_t>(MAX_FIXED_SOUNDS)) return;
+    int32_t left = 0, right = 0;
+    compute_ear_volumes(world_x, camera_x, left, right);
+    if (m_fixed_queued[fixed_idx] == 0) {
+        m_fixed_left[fixed_idx] = 0;
+        m_fixed_right[fixed_idx] = 0;
+    }
+    m_fixed_left[fixed_idx] += left;
+    m_fixed_right[fixed_idx] += right;
+    m_fixed_queued[fixed_idx] = 1;
+}
+
+void audio_system_t::flush_queued_sounds()
+{
+    int master_pct = (m_master_volume * 100) / SDL_MIX_MAXVOLUME;
+
+    for (uint32_t i = 0; i < MAX_ITEM_SOUNDS; ++i) {
+        if (m_item_queued[i] > 0) {
+            int32_t left = m_item_left[i];
+            int32_t right = m_item_right[i];
+            int32_t strength = left + right;
+            m_item_queued[i] = 0;
+            if (strength > 100) strength = 100;
+            else if (strength < 1) continue;
+
+            m_last_item_pan[i] = ((right - left) * 1500) / 100;
+            m_last_item_vol[i] = ((master_pct - 100) * 3800) / 100 + ((strength - 100) * 2000) / 100;
+            if (master_pct > 0) {
+                if (i > 0 && m_samples.find(i) == m_samples.end()) {
+                    char buf[64];
+                    std::snprintf(buf, sizeof(buf), "data/%03u.wav", i);
+                    load_sound(i, buf);
+                }
+                int ch_vol = (strength * SDL_MIX_MAXVOLUME) / 100;
+                play_sound(i, false, ch_vol, std::min(100, left), std::min(100, right));
+            }
+        }
+    }
+
+    for (uint32_t i = 0; i < MAX_FIXED_SOUNDS; ++i) {
+        if (m_fixed_queued[i] > 0) {
+            int32_t left = m_fixed_left[i];
+            int32_t right = m_fixed_right[i];
+            int32_t strength = left + right;
+            m_fixed_queued[i] = 0;
+            if (strength > 100) strength = 100;
+            else if (strength < 1) continue;
+
+            m_last_fixed_pan[i] = ((right - left) * 1500) / 100;
+            m_last_fixed_vol[i] = ((master_pct - 100) * 3800) / 100 + ((strength - 100) * 2000) / 100;
+            if (master_pct > 0) {
+                if (i < NUM_FIXED_SOUNDS && m_samples.find(FIXED_SOUND_BASE + i) == m_samples.end()) {
+                    const char* fp = get_fixed_sound_path(i);
+                    if (fp) load_sound(FIXED_SOUND_BASE + i, fp);
+                }
+                m_fixed_play_count[i]++;
+                int ch_vol = (strength * SDL_MIX_MAXVOLUME) / 100;
+                play_sound(FIXED_SOUND_BASE + i, false, ch_vol, std::min(100, left), std::min(100, right));
+            }
+        }
+    }
+}
+
+int32_t audio_system_t::get_last_item_pan(int32_t sound_id) const
+{
+    if (sound_id < 0 || sound_id >= static_cast<int32_t>(MAX_ITEM_SOUNDS)) return 0;
+    return m_last_item_pan[sound_id];
+}
+
+int32_t audio_system_t::get_last_item_vol(int32_t sound_id) const
+{
+    if (sound_id < 0 || sound_id >= static_cast<int32_t>(MAX_ITEM_SOUNDS)) return 0;
+    return m_last_item_vol[sound_id];
+}
+
+int32_t audio_system_t::get_last_fixed_pan(int32_t fixed_idx) const
+{
+    if (fixed_idx < 0 || fixed_idx >= static_cast<int32_t>(MAX_FIXED_SOUNDS)) return 0;
+    return m_last_fixed_pan[fixed_idx];
+}
+
+int32_t audio_system_t::get_last_fixed_vol(int32_t fixed_idx) const
+{
+    if (fixed_idx < 0 || fixed_idx >= static_cast<int32_t>(MAX_FIXED_SOUNDS)) return 0;
+    return m_last_fixed_vol[fixed_idx];
+}
+
+uint32_t audio_system_t::get_fixed_play_count(int32_t fixed_idx) const
+{
+    if (fixed_idx < 0 || fixed_idx >= static_cast<int32_t>(MAX_FIXED_SOUNDS)) return 0;
+    return m_fixed_play_count[fixed_idx];
+}
+
 void audio_system_t::on_frame_sound(uint32_t sound_tag)
 {
     if (sound_tag == 0) return;
@@ -313,7 +464,22 @@ void audio_system_t::audio_callback(uint8_t* stream, int len)
         uint32_t mix_len = std::min(static_cast<uint32_t>(len), m_channels[i].remaining);
         int effective_vol = (m_channels[i].volume * m_master_volume) / SDL_MIX_MAXVOLUME;
 
-        SDL_MixAudioFormat(stream, m_channels[i].pos, m_obtained_spec.format, mix_len, effective_vol);
+        if (m_obtained_spec.format == AUDIO_S16SYS && m_obtained_spec.channels == 2 &&
+            (m_channels[i].left_gain != 100 || m_channels[i].right_gain != 100)) {
+            const int16_t* src = reinterpret_cast<const int16_t*>(m_channels[i].pos);
+            int16_t* dst = reinterpret_cast<int16_t*>(stream);
+            uint32_t frames = mix_len / (sizeof(int16_t) * 2);
+            int lg = m_channels[i].left_gain;
+            int rg = m_channels[i].right_gain;
+            for (uint32_t f = 0; f < frames; ++f) {
+                int32_t l_sample = (static_cast<int32_t>(src[f * 2]) * effective_vol * lg) / (SDL_MIX_MAXVOLUME * 100);
+                int32_t r_sample = (static_cast<int32_t>(src[f * 2 + 1]) * effective_vol * rg) / (SDL_MIX_MAXVOLUME * 100);
+                dst[f * 2] = static_cast<int16_t>(std::clamp(static_cast<int32_t>(dst[f * 2]) + l_sample, -32768, 32767));
+                dst[f * 2 + 1] = static_cast<int16_t>(std::clamp(static_cast<int32_t>(dst[f * 2 + 1]) + r_sample, -32768, 32767));
+            }
+        } else {
+            SDL_MixAudioFormat(stream, m_channels[i].pos, m_obtained_spec.format, mix_len, effective_vol);
+        }
 
         m_channels[i].pos += mix_len;
         m_channels[i].remaining -= mix_len;

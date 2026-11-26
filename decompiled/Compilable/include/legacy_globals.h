@@ -36,17 +36,27 @@ extern int   DAT_00450bf0;
 extern int   DAT_00450bf4;
 extern int   DAT_00450bf8;
 extern int   DAT_00450c34;
-extern int   DAT_00451b60;
-extern int   DAT_00451b68;
+extern int   DAT_00451b60_arr[8];
+#define DAT_00451b60 (DAT_00451b60_arr[0])
+extern int   DAT_00451b68_arr[8];
+#define DAT_00451b68 (DAT_00451b68_arr[0])
 extern char  DAT_00451d48[64];
 extern int   DAT_00451dac;
-extern int   DAT_00452948;
+extern intptr_t DAT_00452948_arr[400];
+#define DAT_00452948 (DAT_00452948_arr[0])
+extern intptr_t DAT_00451db0[80];
 extern int   DAT_00453e0c;
 extern HWND  DAT_004546f4;
 extern char  DAT_00455378[300];
 extern char  DAT_004553e8;
 extern char  DAT_004553e9;
 extern char  DAT_004553ea;
+#define DAT_004553eb (DAT_00455378[0x73])
+#define DAT_004553ec (DAT_00455378[0x74])
+#define DAT_004553ed (DAT_00455378[0x75])
+#define DAT_004553ee (DAT_00455378[0x76])
+#define DAT_004553ef (DAT_00455378[0x77])
+#define DAT_004553f0 (DAT_00455378[0x78])
 extern int   DAT_004554a4;
 extern int   DAT_004554c0;
 extern int   DAT_00455608;
@@ -152,6 +162,9 @@ extern char  DAT_00453ff0[128];
 extern int   DAT_00450b6c;
 extern int   DAT_00450b70;
 extern int   DAT_00450b74;
+extern int   DAT_00450b78;
+extern int   DAT_00450b7c;
+extern int   DAT_00450c00;
 extern int   DAT_00450b84;
 extern int   DAT_00450b88;
 extern int   DAT_00450bbc;
@@ -268,9 +281,10 @@ extern int   DAT_004546f0;
 extern int   DAT_0045757c;
 extern int   DAT_00457580;
 extern int   DAT_00458428;
+extern int   DAT_0045842c;
 extern int   DAT_00458434;
 extern void *DAT_004588a8;
-extern int   DAT_004588ac;
+extern intptr_t DAT_004588ac;
 extern const char DAT_0044d7a0[1346];
 
 // Battle Mode, 2on2 Tournament & Army Skirmish Globals (Phase 15)
@@ -382,10 +396,10 @@ extern int   DAT_004511e0;
 extern int   DAT_004511c8;
 extern char* DAT_004511c4;
 extern int   DAT_0044fb70[80];
-extern char  DAT_0044fcc0[44];
+extern char  DAT_0044fcc0[88];
 extern char  DAT_0044fd18[100];
 extern char  DAT_0044f890[100];
-extern char  DAT_0044f900[100];
+extern char  DAT_0044f900[400];
 extern char  DAT_00455388;
 
 // Phase 19: BGM Streaming & Audio Globals
@@ -422,6 +436,35 @@ extern int   DAT_0044f618;
 extern int   DAT_0044f61c;
 extern int   lf2_bg_zmin;
 extern int   lf2_bg_zmax;
+
+// Master Battle Frame Loop, Replay & Sound Tracking Globals
+extern int   DAT_0044d020;
+extern int   DAT_0044d05c;
+extern uint8_t DAT_0044f198[24];
+extern uintptr_t DAT_0044f46c;
+extern int   DAT_0044fb60;
+extern int   DAT_0044fcb0;
+extern int   DAT_00450b8c;
+extern int   DAT_00450b90;
+extern int   DAT_00450bb8;
+extern int   DAT_00450bc0;
+extern int   DAT_00450bd4;
+extern int   DAT_00450bd8;
+extern int   DAT_0045115c;
+extern int   DAT_00451160;
+extern char  DAT_00455470;
+extern char  DAT_00455471;
+extern int   DAT_0045877c;
+extern char  DAT_00458850[88];
+extern char  DAT_004587e8[100];
+extern char  DAT_00458588[400];
+extern char  DAT_00458780[100];
+extern int   lf2_last_item_pan[400];
+extern int   lf2_last_item_vol[400];
+extern int   lf2_last_item_played[400];
+extern int   lf2_last_fixed_pan[80];
+extern int   lf2_last_fixed_vol[80];
+extern int   lf2_last_fixed_played[80];
 
 #ifdef __cplusplus
 }

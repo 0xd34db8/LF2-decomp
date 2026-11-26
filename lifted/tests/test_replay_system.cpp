@@ -236,6 +236,71 @@ void test_dual_format_playback() {
     std::cout << "    Dual format detection and bit-for-bit frame consistency verified 100%!" << std::endl;
 }
 
+void test_authentic_10byte_replay_and_backup() {
+    std::cout << "[+] Testing Authentic 6.4MB Replay Block (0x630E18), 10B Records & 150-Frame HP Checksums..." << std::endl;
+    assert(AUTHENTIC_LFR_BLOCK_SIZE == 0x630E18);
+
+    // 1. Verify replay_backup_state_t save & restore (0x0043DF00 / 0x0043DFA0)
+    replay_backup_state_t bk{};
+    bk.difficulty = 2;
+    bk.player_names[0] = "HeroOne";
+    bk.profile_name = "Alice";
+    bk.profile_info = "Info";
+    bk.profile_email = "alice@lf2.test";
+    bk.unlock_chars = 1;
+    bk.unlock_fkeys = 1;
+
+    std::vector<uint8_t> block(AUTHENTIC_LFR_BLOCK_SIZE, 0);
+    bk.write_to_block(block);
+
+    replay_backup_state_t restored{};
+    restored.restore_from_block(block);
+    assert(restored.difficulty == 2);
+    assert(restored.player_names[0] == "HeroOne");
+    assert(restored.profile_name == "Alice");
+    assert(restored.profile_info == "Info");
+    assert(restored.profile_email == "alice@lf2.test");
+    assert(restored.unlock_chars == 1 && restored.unlock_fkeys == 1);
+
+    // 2. Record 152 authentic 10-byte frames & verify 150-frame HP checksum validation
+    const std::string auth_lfr = "tests_authentic_v2.lfr";
+    replay_recorder_t rec;
+    assert(rec.start_authentic_recording(1, 0, 1, 0, auth_lfr));
+    for (size_t f = 0; f < 152; ++f) {
+        replay_frame_10_t rf{};
+        rf.inputs[0] = static_cast<uint8_t>((f & 0x7F) | 0x01);
+        rf.func_flags = (f == 10) ? REPLAY_FKEY_F6 : 0;
+        rf.unlock_flags = (f == 5) ? REPLAY_UNLOCK_LF2NET : 0;
+        int32_t hp_sum = (f < 150) ? 1000 : 850;
+        assert(rec.record_frame_10(rf, hp_sum));
+    }
+    assert(rec.finish_recording());
+
+    replay_player_t player;
+    assert(player.open_replay(auth_lfr));
+    assert(player.get_format() == replay_format_t::AUTHENTIC_V2_RAW);
+
+    for (size_t f = 0; f < 150; ++f) {
+        replay_frame_10_t rf{};
+        bool ok = false;
+        assert(player.read_frame_10(rf, 1000, ok));
+        assert(ok == true);
+        if (f == 5) assert((rf.unlock_flags & REPLAY_UNLOCK_LF2NET) != 0);
+        if (f == 10) assert((rf.func_flags & REPLAY_FKEY_F6) != 0);
+    }
+
+    // Frame 150 checks second 150-frame checksum entry (850): mismatch must flag ok == false
+    replay_frame_10_t rf150{};
+    bool ok_mismatch = true;
+    assert(player.read_frame_10(rf150, 999, ok_mismatch));
+    assert(ok_mismatch == false);
+
+    player.close();
+    std::remove(auth_lfr.c_str());
+
+    std::cout << "    Authentic 0x630E18 replay recording, 150-frame HP checksum, and backup/restore verified!" << std::endl;
+}
+
 int main(int argc, char* argv[]) {
     (void)argc;
     (void)argv;
@@ -246,6 +311,7 @@ int main(int argc, char* argv[]) {
     test_secondary_cipher_parity();
     test_replay_record_and_playback();
     test_dual_format_playback();
+    test_authentic_10byte_replay_and_backup();
 
     std::cout << "[SUCCESS] All Replay & Save System tests passed with 100% precision!" << std::endl;
     return 0;

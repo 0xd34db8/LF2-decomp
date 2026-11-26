@@ -76,3 +76,20 @@ void FUN_004061d0(void)
 {
     lf2_object_init((object_t *)in_ECX);
 }
+
+/*
+ * Virtual Address: 0x00419E40
+ * Function: lf2_global_ctor / Global manager reset
+ * Calling Convention: __thiscall (ECX = global_t*)
+ */
+void lf2_global_ctor(global_t *global)
+{
+    if (!global) return;
+    global->game_state = 0;
+    memset(global->is_object_exists, 0, MAX_OBJECTS);
+}
+
+void FUN_00419e40(void)
+{
+    lf2_global_ctor((global_t *)in_ECX);
+}

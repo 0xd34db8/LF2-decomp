@@ -109,6 +109,7 @@ Remove-Item *.o
 | `0x0040be70` | [`data/calc_frame_coords.c`](data/calc_frame_coords.c) | Data | Sprite sheet UV cell coordinate calculator |
 | `0x0040bf30` | [`graphics/draw_object.c`](graphics/draw_object.c) | Graphics | Frame wait/next helper (`lf2_draw_object` sprite cell lookup) |
 | `0x0040d0a0` | [`data/save_dat.c`](data/save_dat.c) | Data | Character `.dat` file serializer |
+| `0x0040d940` | [`data/frame_ctor.c`](data/frame_ctor.c) | Data | Frame presence validation check on `.dat` slot |
 | `0x0040d960` | [`gameplay/entity_tick.c`](gameplay/entity_tick.c) | Gameplay | Per-object frame timer, sound trigger & `frame.next` advancement |
 | `0x0040de30` | [`graphics/draw_object.c`](graphics/draw_object.c) | Graphics | Sprite entity rendering, facing flip & palette blit |
 | `0x0040e170` | [`gameplay/entity_tick.c`](gameplay/entity_tick.c) | Gameplay | Combo timer window (`== 5`) interruption check helper |
@@ -130,6 +131,17 @@ Remove-Item *.o
 | `0x004146b0` | [`data/decrypt_dat.c`](data/decrypt_dat.c) | Data | Character `.dat` encryption cipher serializer |
 | `0x004148a0` | [`data/decrypt_dat.c`](data/decrypt_dat.c) | Data | 123-byte header skip & Vigenère cipher decrypter |
 | `0x00414a30` | [`data/decrypt_dat.c`](data/decrypt_dat.c) | Data | Decrypted `.dat` file exporter |
+| `0x00416c70` | [`net/net_lockstep.c`](net/net_lockstep.c) | App | Secret character unlock toggle (`lf2.net`) & replay flag |
+| `0x00416ca0` | [`net/net_lockstep.c`](net/net_lockstep.c) | App | Secret F-key unlock toggle (`herofighter.com`) & replay flag |
+| `0x00416cd0` | [`net/net_lockstep.c`](net/net_lockstep.c) | App | F4 match exit, recording cancel & replay restoration handler |
+| `0x00416dd0` | [`net/net_lockstep.c`](net/net_lockstep.c) | App | F1 battle pause toggle handler |
+| `0x00416df0` | [`net/net_lockstep.c`](net/net_lockstep.c) | App | F2 single-frame step handler |
+| `0x00416e10` | [`net/net_lockstep.c`](net/net_lockstep.c) | App | F3 function-key lock handler |
+| `0x00416e30` | [`net/net_lockstep.c`](net/net_lockstep.c) | App | F5 simulation speed toggle handler |
+| `0x00416e60` | [`net/net_lockstep.c`](net/net_lockstep.c) | App | F6 unlimited MP toggle handler |
+| `0x00416eb0` | [`net/net_lockstep.c`](net/net_lockstep.c) | App | F7 HP/MP full recovery handler |
+| `0x00416f10` | [`net/net_lockstep.c`](net/net_lockstep.c) | App | F8 sky weapon drop trigger handler |
+| `0x00416f60` | [`net/net_lockstep.c`](net/net_lockstep.c) | App | F9 destroy items / stage enemies handler |
 | `0x00416fb0` | [`audio/sound_play.c`](audio/sound_play.c) | Audio | Positional audio panning calculator pass 1 |
 | `0x00417090` | [`audio/sound_play.c`](audio/sound_play.c) | Audio | Positional audio panning calculator pass 2 |
 | `0x00417170` | [`core/random.c`](core/random.c) | Core | 3,000-byte precomputed circular PRNG lookup |
@@ -144,6 +156,8 @@ Remove-Item *.o
 | `0x004197a0` | [`gameplay/slot_input.c`](gameplay/slot_input.c) | Gameplay | Remote/network input bits unpacking & flag latching |
 | `0x004198f0` | [`gameplay/slot_input.c`](gameplay/slot_input.c) | Gameplay | Local player input bits latching & replay recording |
 | `0x00419a60` | [`gameplay/slot_input.c`](gameplay/slot_input.c) | Gameplay | Master per-slot controller / AI input dispatch & loop |
+| `0x00419e40` | [`gameplay/object_init.c`](gameplay/object_init.c) | Gameplay | Global game manager state constructor / existence reset |
+| `0x00419e60` | [`audio/sound_play.c`](audio/sound_play.c) | Audio | Spatialized sound queue flush & DirectSound pan/volume dispatch |
 | `0x0041a250` | [`graphics/parallax_calc.c`](graphics/parallax_calc.c) | Graphics | Background update, parallax layer math & camera bounds (includes `0x0041a2dd` compat alias) |
 | `0x0041a5a0` | [`graphics/draw_object.c`](graphics/draw_object.c) | Graphics | Master scene rendering dispatcher & Z-sorting pass |
 | `0x0041bc90` | [`net/net_lockstep.c`](net/net_lockstep.c) | Network | Master battle loop, lockstep pacing & input sampling (includes `0x0041c5f0` compat alias) |
@@ -174,7 +188,12 @@ Remove-Item *.o
 | `0x0043bdd0` | [`app/create_window.c`](app/create_window.c) | App | Win32 `CreateWindowEx` setup |
 | `0x0043bec0` | [`graphics/init_display.c`](graphics/init_display.c) | Graphics | DirectDraw 6 display mode initialization |
 | `0x0043cf40` | [`app/winmain.c`](app/winmain.c) | App | WinMain entry point & 30.3 FPS game loop |
+| `0x0043d2a0` | [`data/replay_cipher.c`](data/replay_cipher.c) | Data | Replay recording & playback buffer deallocator |
+| `0x0043db40` | [`data/replay_cipher.c`](data/replay_cipher.c) | Data | Per-frame 10-byte replay input recorder |
+| `0x0043dc50` | [`data/replay_cipher.c`](data/replay_cipher.c) | Data | Per-frame 10-byte replay input reader |
 | `0x0043dd60` | [`data/replay_cipher.c`](data/replay_cipher.c) | Data | LF2 v2.0 replay save, zlib compression & secondary cipher |
+| `0x0043df00` | [`data/replay_cipher.c`](data/replay_cipher.c) | Data | Replay difficulty, player name & profile string restorer |
+| `0x0043dfa0` | [`data/replay_cipher.c`](data/replay_cipher.c) | Data | Replay memory buffer state unpacking & entity restoration |
 | `0x0043e620` | [`data/replay_cipher.c`](data/replay_cipher.c) | Data | LF2 v2.0 replay load, secondary decipher & zlib inflation |
 | `0x0043e9a0` | [`app/game_mode_mgr.c`](app/game_mode_mgr.c) | App | Game mode setup & developer cheat switches |
 | `0x0043ef70` | [`graphics/clip_rect.c`](graphics/clip_rect.c) | Graphics | 2D software clipping against screen boundaries |

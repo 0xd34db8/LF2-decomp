@@ -455,10 +455,10 @@ void trigger_frame_sound(const object_t* obj, uint32_t fid)
 {
     if (!obj || !obj->file || fid >= MAX_FRAMES) return;
     const frame_t& f = obj->file->frames[fid];
-    if (f.sound != 0) {
-        get_audio_system().on_frame_sound(f.sound);
-    } else if (f.sound_id > 0) {
-        get_audio_system().on_frame_sound(static_cast<uint32_t>(f.sound_id));
+    if (f.sound_id >= 0) {
+        get_audio_system().queue_item_sound(obj->x, f.sound_id);
+    } else if (f.sound > 0) {
+        get_audio_system().queue_item_sound(obj->x, static_cast<int32_t>(f.sound));
     }
 }
 
@@ -1096,7 +1096,7 @@ void object_physics_tick(object_t* obj, int32_t counter_12)
                 } else if (0.0001 < obj->y_position && 0.0001 < obj->y_velocity &&
                            (file->frames[obj->frame_id1].state == STATE_FALLING ||
                             file->frames[obj->frame_id1].state == STATE_BURNING)) {
-                    get_audio_system().on_frame_sound(6);
+                    get_audio_system().queue_fixed_sound(obj->x, 6);
                     int32_t dmg = static_cast<int32_t>(obj->thrown_injury);
                     if (dmg != 0) {
                         if (dmg < 0) {
@@ -1144,10 +1144,10 @@ void object_physics_tick(object_t* obj, int32_t counter_12)
                         obj->y_velocity = -8.0;
                         obj->facing = static_cast<uint8_t>(1U - obj->facing);
                         obj->x_velocity *= 0.5;
-                        if (file->weapon_drop_sound != 0) {
-                            get_audio_system().on_frame_sound(file->weapon_drop_sound);
-                        } else if (file->weapon_drop_sound_id > 0) {
-                            get_audio_system().on_frame_sound(static_cast<uint32_t>(file->weapon_drop_sound_id));
+                        if (file->weapon_drop_sound_id >= 0) {
+                            get_audio_system().queue_item_sound(obj->x, file->weapon_drop_sound_id);
+                        } else if (file->weapon_drop_sound > 0) {
+                            get_audio_system().queue_item_sound(obj->x, static_cast<int32_t>(file->weapon_drop_sound));
                         }
                     } else {
                         obj->frame_id1 = 60;
@@ -1176,10 +1176,10 @@ void object_physics_tick(object_t* obj, int32_t counter_12)
                             obj->y_velocity = -10.0;
                         }
                         obj->x_velocity *= 0.7;
-                        if (file->weapon_drop_sound != 0) {
-                            get_audio_system().on_frame_sound(file->weapon_drop_sound);
-                        } else if (file->weapon_drop_sound_id > 0) {
-                            get_audio_system().on_frame_sound(static_cast<uint32_t>(file->weapon_drop_sound_id));
+                        if (file->weapon_drop_sound_id >= 0) {
+                            get_audio_system().queue_item_sound(obj->x, file->weapon_drop_sound_id);
+                        } else if (file->weapon_drop_sound > 0) {
+                            get_audio_system().queue_item_sound(obj->x, static_cast<int32_t>(file->weapon_drop_sound));
                         }
                     }
                 }
@@ -1188,10 +1188,10 @@ void object_physics_tick(object_t* obj, int32_t counter_12)
                     obj->weapon_hp -= 1;
                     obj->y_position = 0.0;
                     if (9.0 < obj->y_velocity) {
-                        if (file->weapon_drop_sound != 0) {
-                            get_audio_system().on_frame_sound(file->weapon_drop_sound);
-                        } else if (file->weapon_drop_sound_id > 0) {
-                            get_audio_system().on_frame_sound(static_cast<uint32_t>(file->weapon_drop_sound_id));
+                        if (file->weapon_drop_sound_id >= 0) {
+                            get_audio_system().queue_item_sound(obj->x, file->weapon_drop_sound_id);
+                        } else if (file->weapon_drop_sound > 0) {
+                            get_audio_system().queue_item_sound(obj->x, static_cast<int32_t>(file->weapon_drop_sound));
                         }
                         obj->y_velocity = -5.0;
                         obj->facing = static_cast<uint8_t>(1U - obj->facing);
@@ -1543,7 +1543,7 @@ void object_input_tick(object_t* obj, bool match_running, int32_t unlock_chars)
             obj->frame_id1 = 102;
         }
         if (obj->click_jump == 1 && static_cast<int8_t>(obj->jump_press) > 0) {
-            get_audio_system().on_frame_sound(7);
+            get_audio_system().queue_fixed_sound(obj->x, 7);
             obj->dash_counter = 0;
             obj->frame_id1 = 213;
             obj->x_velocity = static_cast<double>(static_cast<int32_t>(obj->facing) * -2 + 1) * file->dash_distance;
@@ -1593,7 +1593,7 @@ void object_input_tick(object_t* obj, bool match_running, int32_t unlock_chars)
         if (obj->click_jump != 0) {
             if ((obj->click_right != 0 || 0.001 < obj->x_velocity) &&
                 static_cast<int8_t>(obj->jump_press) > 0) {
-                get_audio_system().on_frame_sound(7);
+                get_audio_system().queue_fixed_sound(obj->x, 7);
                 obj->frame_id1 = static_cast<uint32_t>(obj->facing) + 213U;
                 obj->dash_counter = 0;
                 obj->x_velocity = file->dash_distance;
@@ -1602,7 +1602,7 @@ void object_input_tick(object_t* obj, bool match_running, int32_t unlock_chars)
             if (obj->click_jump != 0 &&
                 (obj->click_left != 0 || obj->x_velocity < -0.001) &&
                 static_cast<int8_t>(obj->jump_press) > 0) {
-                get_audio_system().on_frame_sound(7);
+                get_audio_system().queue_fixed_sound(obj->x, 7);
                 obj->frame_id1 = 214U - static_cast<uint32_t>(obj->facing);
                 obj->dash_counter = 0;
                 obj->x_velocity = -file->dash_distance;

@@ -4,7 +4,11 @@
 CC ?= gcc
 AR ?= ar
 CFLAGS ?= -std=c11 -O2 -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Wno-int-conversion -Wno-incompatible-pointer-types -Iinclude
+ifeq ($(OS),Windows_NT)
+LDFLAGS ?= -lz -lws2_32
+else
 LDFLAGS ?= -lz
+endif
 
 BUILD_DIR ?= build
 OBJ_DIR = $(BUILD_DIR)/obj

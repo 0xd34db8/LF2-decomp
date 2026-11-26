@@ -4,6 +4,8 @@
 #include <memory>
 #include "core/global.h"
 #include "gameplay/entity.h"
+#include "app/app.h"
+#include "audio/audio.h"
 
 using namespace lf2;
 
@@ -506,8 +508,152 @@ void test_special_itrs_and_criminal_rescue()
     std::cout << "    ITR kinds 8, 9, 14, 15, 16 & Criminal hostage rescue verified!" << std::endl;
 }
 
-int main()
+void test_master_battle_frame_loop()
 {
+    std::cout << "[+] Testing Master Battle Frame Loop (0x0041BC90: F-keys, opoint, ice FX, orders & split)..." << std::endl;
+    get_audio_system().init();
+    get_audio_system().set_master_volume(SDL_MIX_MAXVOLUME);
+    uint32_t prev_ice_plays = get_audio_system().get_fixed_play_count(15);
+
+    auto app = std::make_unique<app_t>();
+    app->set_selected_mode(MODE_VS);
+    global_t& world = app->get_world();
+
+    auto f_davis  = std::make_unique<file_t>(); f_davis->id = DAVIS_DAT; f_davis->type = TYPE_CHARACTER;
+    auto f_firen  = std::make_unique<file_t>(); f_firen->id = FIREN_DAT; f_firen->type = TYPE_CHARACTER;
+    auto f_freeze = std::make_unique<file_t>(); f_freeze->id = FREEZE_DAT; f_freeze->type = TYPE_CHARACTER;
+    auto f_firzen = std::make_unique<file_t>(); f_firzen->id = FIRZEN_DAT; f_firzen->type = TYPE_CHARACTER;
+    auto f_ball   = std::make_unique<file_t>(); f_ball->id = JOHN_BALL_DAT; f_ball->type = TYPE_ATTACK;
+    auto f_stick  = std::make_unique<file_t>(); f_stick->id = STICK_DAT; f_stick->type = TYPE_LIGHT_WEAPON;
+    auto f_bw     = std::make_unique<file_t>(); f_bw->id = BROKEN_WEAPON_DAT; f_bw->type = TYPE_ATTACK;
+    auto f_etc    = std::make_unique<file_t>(); f_etc->id = ETC_DAT; f_etc->type = TYPE_ATTACK;
+
+    f_stick->weapon_hp = 100;
+    f_stick->weapon_broken_sound_id = 3;
+    for (int k = 0; k < 50; ++k) {
+        f_davis->frames[k].wait = 5;
+        f_ball->frames[k].wait = 5;
+        f_bw->frames[k].wait = 5;
+        f_etc->frames[k].wait = 5;
+    }
+    f_davis->frames[14].wait = 1;
+    f_davis->frames[14].next = 15;
+    f_davis->frames[15].wait = 5;
+    f_davis->frames[15].opoint.kind = 1;
+    f_davis->frames[15].opoint.oid = JOHN_BALL_DAT;
+    f_davis->frames[15].opoint.facing = 30; // spawn 3
+    f_davis->frames[15].opoint.dvx = 6;
+    f_davis->frames[20].state = STATE_ICE;
+    f_davis->frames[20].wait = 1;
+    f_davis->frames[20].next = 999;
+
+    world.files[0] = f_davis.get();
+    world.files[1] = f_firen.get();
+    world.files[2] = f_freeze.get();
+    world.files[3] = f_firzen.get();
+    world.files[4] = f_ball.get();
+    world.files[5] = f_stick.get();
+    world.files[6] = f_bw.get();
+    world.files[7] = f_etc.get();
+
+    object_t* fighters = app->get_fighters();
+    for (uint32_t i = 0; i < MAX_OBJECTS; ++i) {
+        object_init(&fighters[i]);
+        world.objects[i] = &fighters[i];
+    }
+
+    // Slot 0: Team 1 casting 3-ball opoint + Jan heal_timer
+    world.is_object_exists[0] = 1;
+    fighters[0].file = f_davis.get();
+    fighters[0].team = 1;
+    fighters[0].x = 200; fighters[0].z = 200;
+    fighters[0].x_position = 200.0; fighters[0].z_position = 200.0;
+    fighters[0].x_velocity = 0.0; fighters[0].y_velocity = 0.0; fighters[0].z_velocity = 0.0;
+    fighters[0].hp = 400; fighters[0].dark_hp = 500; fighters[0].heal_timer = 17;
+    fighters[0].frame_id1 = 14; fighters[0].frame_id2 = 14; fighters[0].wait_counter = 1;
+
+    // Slot 1: Team 2 shattering out of STATE_ICE
+    world.is_object_exists[1] = 1;
+    fighters[1].file = f_davis.get();
+    fighters[1].team = 2;
+    fighters[1].x = 500; fighters[1].z = 200;
+    fighters[1].x_position = 500.0; fighters[1].z_position = 200.0;
+    fighters[1].x_velocity = 0.0; fighters[1].y_velocity = 0.0; fighters[1].z_velocity = 0.0;
+    fighters[1].frame_id1 = 20; fighters[1].frame_id2 = 20; fighters[1].frame_id3 = 20;
+    fighters[1].wait_counter = 1;
+
+    // Slot 50: broken stick
+    world.is_object_exists[50] = 1;
+    fighters[50].file = f_stick.get();
+    fighters[50].weapon_hp = -1;
+    fighters[50].x = 300; fighters[50].z = 220;
+
+    // Tick 1 (input_phase -> 1): spawns 3 balls, breaks stick (5 shards), ice shatter (15 shards + 066.wav), Jan +8 HP
+    app->step_battle_frame();
+    assert(app->get_input_phase() == 1);
+    assert(app->get_battle_elapsed() == 1);
+    assert(world.is_object_exists[50] == 0);
+    int ball_count = 0, shard_count = 0;
+    for (uint32_t s = 50; s < MAX_OBJECTS; ++s) {
+        if (world.is_object_exists[s] && world.objects[s]->file) {
+            if (world.objects[s]->file->id == JOHN_BALL_DAT) ball_count++;
+            if (world.objects[s]->file->id == BROKEN_WEAPON_DAT) shard_count++;
+        }
+    }
+    assert(ball_count == 3);
+    assert(shard_count == 20);
+    assert(get_audio_system().get_fixed_play_count(15) == prev_ice_plays + 1);
+    assert(fighters[0].hp >= 408);
+
+    // Tick 2 (input_phase -> 0): test F6 unlimited MP & D-D-D-D team order
+    app->set_key_state(VK_LF2_F6, 'd');
+    fighters[0].input_history[1] = 9;
+    fighters[0].input_history[2] = 9;
+    fighters[0].input_history[3] = 9;
+    fighters[0].input_history[4] = 9;
+    fighters[2].file = f_davis.get(); fighters[2].team = 1; fighters[2].hp = 500;
+    fighters[2].x_velocity = 0.0; fighters[2].y_velocity = 0.0; fighters[2].z_velocity = 0.0;
+    world.is_object_exists[2] = 1;
+
+    app->step_battle_frame();
+    assert(app->get_input_phase() == 0);
+    assert(app->is_unlimited_mp() == true);
+    assert(app->get_fkey_lock_state() == 1);
+    assert(app->get_f6_uses() == 1);
+    assert(fighters[2].follow_order == 1);
+
+    // Tick 3-4 (input_phase -> 0): press F3 to lock F-keys, F6 must no longer toggle
+    app->step_battle_frame();
+    app->set_key_state(VK_LF2_F3, 'd');
+    app->set_key_state(VK_LF2_F6, 'd');
+    app->step_battle_frame();
+    assert(app->get_fkey_lock_state() == 2);
+    assert(app->is_unlimited_mp() == true);
+    assert(app->get_f6_uses() == 1);
+
+    // Round counter >= 350: Firzen splits back into Firen + Freeze
+    std::memset(world.is_object_exists, 0, sizeof(world.is_object_exists));
+    object_init(&fighters[0]);
+    world.is_object_exists[0] = 1;
+    fighters[0].file = f_firzen.get();
+    fighters[0].fusion_state = 1;
+    fighters[0].fusion_partner = 1;
+    fighters[0].fusion_self_id = FIREN_DAT;
+    fighters[0].fusion_partner_id = FREEZE_DAT;
+    fighters[0].hp = 100; fighters[0].dark_hp = 100;
+    app->set_round_counter(350);
+    app->step_battle_frame();
+    assert(app->get_round_counter() == 0);
+    assert(fighters[0].file->id == FIREN_DAT);
+    assert(world.is_object_exists[1] == 1 && fighters[1].file->id == FREEZE_DAT);
+
+    std::cout << "    Master Battle Frame Loop F-keys, opoint, shards, team orders & split verified!" << std::endl;
+}
+
+int main(int argc, char* argv[])
+{
+    (void)argc;
+    (void)argv;
     std::cout << "=== Little Fighter 2 Combat Engine & Action Dispatcher Tests ===" << std::endl;
     test_attack_damage_and_flinch();
     test_knockdown_fall_state();
@@ -515,6 +661,7 @@ int main()
     test_defend_and_armor();
     test_weapon_strength_pickup_and_catch_itrs();
     test_special_itrs_and_criminal_rescue();
+    test_master_battle_frame_loop();
     std::cout << "[SUCCESS] All Combat Engine & Action Dispatcher tests passed with 100% precision!" << std::endl;
     return 0;
 }

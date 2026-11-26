@@ -10,6 +10,7 @@ typedef int socklen_t;
 #else
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/select.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
@@ -285,15 +286,71 @@ void network_manager_t::unpack_input(uint8_t packed, input_state_t& out_input) {
 }
 
 uint8_t network_manager_t::compute_hp_checksum(const object_t* const* objects, int count) {
-    if (!objects || count <= 0) return 0;
+    if (!objects || count <= 0) return 1;
 
-    uint32_t hp_sum = 0;
-    for (int i = 0; i < count && i < static_cast<int>(MAX_OBJECTS); ++i) {
+    int32_t hp_sum = 0;
+    int limit = (count < 20) ? count : 20;
+    for (int i = 0; i < limit; ++i) {
         if (objects[i]) {
-            hp_sum += static_cast<uint32_t>(objects[i]->hp);
+            hp_sum += objects[i]->hp;
         }
     }
-    return static_cast<uint8_t>(hp_sum & 0xFF);
+    return static_cast<uint8_t>(hp_sum - (hp_sum / 100) * 100 + 1);
+}
+
+void network_manager_t::init_packet(net_packet_t& pkt) {
+    std::memset(&pkt, 0x01, 20);
+    pkt.payload[4] = 0;
+    pkt.payload[5] = 0;
+}
+
+void network_manager_t::encode_data_crc(net_packet_t& pkt, int32_t data_crc) {
+    pkt.data_crc_lo = static_cast<uint8_t>(data_crc & 0xFF);
+    pkt.data_crc_hi = static_cast<uint8_t>((data_crc + ((data_crc < 0) ? 0xFF : 0)) >> 8);
+}
+
+bool network_manager_t::exchange_lockstep(const net_packet_t& local_pkt, net_packet_t& out_remote_pkt) {
+    if (m_socket == -1 || !m_connected) return false;
+
+    // 0x0041C626: Switch socket to synchronous blocking mode for deterministic lockstep exchange
+#if defined(_WIN32)
+    u_long blocking_mode = 0;
+    ioctlsocket(static_cast<SOCKET>(m_socket), FIONBIO, &blocking_mode);
+#else
+    int flags = fcntl(static_cast<int>(m_socket), F_GETFL, 0);
+    if (flags != -1) {
+        fcntl(static_cast<int>(m_socket), F_SETFL, flags & ~O_NONBLOCK);
+    }
+#endif
+
+    auto recv_full_22 = [&](net_packet_t& pkt) -> bool {
+        int total_read = 0;
+        char* buf = reinterpret_cast<char*>(&pkt);
+        while (total_read < static_cast<int>(LF2_PACKET_SIZE)) {
+            fd_set read_fds;
+            FD_ZERO(&read_fds);
+            FD_SET(static_cast<SOCKET>(m_socket), &read_fds);
+            timeval tv{ 5, 0 };
+            int sel = select(static_cast<int>(m_socket) + 1, &read_fds, nullptr, nullptr, &tv);
+            if (sel <= 0) return false;
+            int more = recv(static_cast<SOCKET>(m_socket), buf + total_read,
+                            LF2_PACKET_SIZE - total_read, 0);
+            if (more <= 0) return false;
+            total_read += more;
+        }
+        return true;
+    };
+
+    if (m_mode == NetMode::CLIENT) {
+        if (!recv_full_22(out_remote_pkt)) {
+            return false;
+        }
+        return send_packet(local_pkt);
+    }
+    if (!send_packet(local_pkt)) {
+        return false;
+    }
+    return recv_full_22(out_remote_pkt);
 }
 
 SyncResult network_manager_t::verify_sync(const net_packet_t& local_pkt, const net_packet_t& remote_pkt) {
@@ -312,6 +369,12 @@ SyncResult network_manager_t::verify_sync(const net_packet_t& local_pkt, const n
         return SyncResult::DESYNCHRONIZATION;
     }
 
+    // 0x0041CCCE: Data file checksum check (Offsets +14..+15)
+    if (local_pkt.data_crc_lo != remote_pkt.data_crc_lo ||
+        local_pkt.data_crc_hi != remote_pkt.data_crc_hi) {
+        return SyncResult::DATA_MISMATCH;
+    }
+
     return SyncResult::OK;
 }
 
@@ -325,6 +388,8 @@ const char* network_manager_t::get_sync_error_string(SyncResult result) {
             return "Version not matched!";
         case SyncResult::DESYNCHRONIZATION:
             return "Synchronisation Error!";
+        case SyncResult::DATA_MISMATCH:
+            return "Data Error! You and your opponent have different set of data files.";
         default:
             return "Unknown Error";
     }

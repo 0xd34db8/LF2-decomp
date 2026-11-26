@@ -163,7 +163,13 @@ struct object_t {
     int32_t         max_hp;                   // 0x304
     int32_t         mp;                       // 0x308
     int32_t         reserve;                  // 0x30C
-    uint32_t        _unknown31[2];            // 0x310 - 0x318
+    union {
+        uint32_t    _unknown31[2];            // 0x310 - 0x318
+        struct {
+            int32_t join_reserve;             // 0x310 (reserve granted upon joining Team 1)
+            int32_t join_hp;                  // 0x314 (>0: criminal/ally joins Team 1 upon defeat)
+        };
+    };
     int32_t         pic_no_gain;              // 0x318
     union {
         int32_t     weapon_hp;                // 0x31C

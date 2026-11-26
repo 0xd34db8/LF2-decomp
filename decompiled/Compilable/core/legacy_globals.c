@@ -29,11 +29,12 @@ int   DAT_00450bf0 = 0;
 int   DAT_00450bf4 = 0;
 int   DAT_00450bf8 = 0;
 int   DAT_00450c34 = 0;
-int   DAT_00451b60 = 0;
-int   DAT_00451b68 = 0;
+int   DAT_00451b60_arr[8] = {0};
+int   DAT_00451b68_arr[8] = {0};
 char  DAT_00451d48[64] = {0};
 int   DAT_00451dac = 0;
-int   DAT_00452948 = 0;
+intptr_t DAT_00452948_arr[400] = {0};
+intptr_t DAT_00451db0[80] = {0};
 int   DAT_00453e0c = 0;
 HWND  DAT_004546f4 = NULL;
 char  DAT_00455378[300] = {0};
@@ -125,6 +126,9 @@ char  DAT_00453ff0[128] = {0};
 int   DAT_00450b6c = 0;
 int   DAT_00450b70 = 0;
 int   DAT_00450b74 = 0;
+int   DAT_00450b78 = 0;
+int   DAT_00450b7c = 0;
+int   DAT_00450c00 = 0;
 int   DAT_00450b84 = 0;
 int   DAT_00450b88 = 0;
 int   DAT_00450bbc = 0;
@@ -215,8 +219,9 @@ int   DAT_004546f0 = 0;
 int   DAT_0045757c = 0;
 int   DAT_00457580 = 0;
 int   DAT_00458428 = 0;
+int   DAT_0045842c = 0;
 int   DAT_00458434 = 0;
-int   DAT_004588ac = 0;
+intptr_t DAT_004588ac = 0;
 
 // Battle Mode, 2on2 Tournament & Army Skirmish Globals (Phase 15)
 int   DAT_0044d100 = 0;
@@ -338,10 +343,10 @@ int   DAT_004511e0 = 0;
 int   DAT_004511c8 = 0;
 char* DAT_004511c4 = NULL;
 int   DAT_0044fb70[80] = {0};
-char  DAT_0044fcc0[44] = {0};
+char  DAT_0044fcc0[88] = {0};
 char  DAT_0044fd18[100] = {0};
 char  DAT_0044f890[100] = {0};
-char  DAT_0044f900[100] = {0};
+char  DAT_0044f900[400] = {0};
 char  DAT_00455388 = 'u';
 
 // Phase 19: BGM Streaming & Audio Globals
@@ -379,6 +384,39 @@ int   DAT_0044f61c = 0;
 int   lf2_bg_zmin = 0;
 int   lf2_bg_zmax = 400;
 
+// Master Battle Frame Loop, Replay & Sound Tracking Globals
+int   DAT_0044d020 = 0;
+int   DAT_0044d05c = 0;
+uint8_t DAT_0044f198[24] = {0};
+uintptr_t DAT_0044f46c = 0;
+int   DAT_0044fb60 = 0;
+int   DAT_0044fcb0 = 0;
+int   DAT_00450b8c = 0;
+int   DAT_00450b90 = 0;
+int   DAT_00450bb8 = 0;
+int   DAT_00450bc0 = 0;
+int   DAT_00450bd4 = 0;
+int   DAT_00450bd8 = 0;
+int   DAT_0045115c = 0;
+int   DAT_00451160 = 0;
+char  DAT_00455470 = 'u';
+char  DAT_00455471 = 'u';
+int   DAT_0045877c = 0;
+char  DAT_00458850[88] = {0};
+char  DAT_004587e8[100] = {0};
+char  DAT_00458588[400] = {0};
+char  DAT_00458780[100] = {0};
+int   lf2_last_item_pan[400] = {0};
+int   lf2_last_item_vol[400] = {0};
+int   lf2_last_item_played[400] = {0};
+int   lf2_last_fixed_pan[80] = {0};
+int   lf2_last_fixed_vol[80] = {0};
+int   lf2_last_fixed_played[80] = {0};
+
 void FUN_00401290(const char *msg) {
     (void)msg;
+}
+
+int FUN_004450d0(void) {
+    return 0;
 }

@@ -16,6 +16,8 @@
 #include "app/stage.h"
 #include "app/battle.h"
 #include "app/survival.h"
+#include "core/replay.h"
+#include "net/network.h"
 
 namespace lf2 {
 
@@ -114,7 +116,7 @@ struct player_control_t {
     char name[16] = {0};
 };
 
-struct control_config_t {
+struct app_control_config_t {
     player_control_t players[4];
     int demo_mode = 0;
     int replay_mode = 0;
@@ -187,8 +189,8 @@ public:
     void play_ui_sound(uint32_t sound_id);
 
     // Control Configuration Access
-    const control_config_t& get_control_config() const { return m_control_cfg; }
-    void set_control_config(const control_config_t& cfg) { m_control_cfg = cfg; }
+    const app_control_config_t& get_control_config() const { return m_control_cfg; }
+    void set_control_config(const app_control_config_t& cfg) { m_control_cfg = cfg; }
     options_ui_t* get_options_ui();
 
     // Cheat Code State Queries
@@ -204,6 +206,38 @@ public:
     // Access to global game state
     global_t& get_world() { return m_world; }
     const global_t& get_world() const { return m_world; }
+    file_t** get_loaded_files() { return m_loaded_files; }
+    object_t* get_fighters() { return m_fighters; }
+
+    // Headless Battle Frame Loop & 0x0041BC90 State Accessors (for tests & simulation)
+    void step_battle_frame();
+    void set_selected_mode(game_mode_t mode) { m_selected_mode = mode; }
+    game_mode_t get_selected_mode() const { return m_selected_mode; }
+    void set_key_state(uint8_t vk, uint8_t state) { m_key_states[vk] = state; }
+    void set_cheat_flags(bool lf2net, bool herofighter) {
+        m_cheat_lf2net = lf2net ? 'd' : 'u';
+        m_cheat_herofighter = herofighter ? 'd' : 'u';
+    }
+    void set_network_manager(network_manager_t* mgr) { m_net_mgr = mgr; }
+    replay_recorder_t& get_replay_recorder() { return m_replay_recorder; }
+    replay_player_t& get_replay_player() { return m_replay_player; }
+
+    bool is_battle_paused() const { return m_battle_paused; }
+    bool is_fast_forward() const { return m_fast_forward; }
+    bool is_unlimited_mp() const { return m_unlimited_mp; }
+    int32_t get_fkey_lock_state() const { return m_fkey_state; }
+    int32_t get_input_phase() const { return m_input_phase; }
+    int32_t get_round_counter() const { return m_round_counter; }
+    void set_round_counter(int32_t val) { m_round_counter = val; }
+    uint32_t get_battle_elapsed() const { return m_battle_elapsed; }
+    int32_t get_counter_12() const { return m_counter_12; }
+    int32_t get_counter_3() const { return m_counter_3; }
+    bool is_hud_visible() const { return m_hud_visible; }
+    int32_t get_f6_uses() const { return m_f6_uses; }
+    int32_t get_f7_uses() const { return m_f7_uses; }
+    int32_t get_f8_uses() const { return m_f8_uses; }
+    int32_t get_f9_uses() const { return m_f9_uses; }
+    SyncResult get_last_net_sync() const { return m_last_net_sync; }
 
     // Graphics, Camera & Background pipeline access
     renderer_t& get_graphics() { return m_graphics; }
@@ -297,13 +331,52 @@ private:
     bool            m_modal_cpu_open{false};
     int             m_cpu_count{1};
 
-    control_config_t m_control_cfg;
+    app_control_config_t m_control_cfg;
     std::unique_ptr<options_ui_t> m_options_ui;
 
     uint32_t        m_loading_timer{0};
     std::string     m_loading_filename{""};
 
     bool            m_battle_paused{false};
+
+    // Master Battle Loop 0x0041BC90 state machine fields
+    int32_t         m_input_phase{0};           // DAT_00450b90: alternates 0 <-> 1 every tick
+    int32_t         m_pause_req{0};             // DAT_0044fb60: requested pause state latched on phase 0
+    int32_t         m_pause_next{0};            // DAT_0044fcb0: next pause state (F2 sets pause_req=0, pause_next=1)
+    int32_t         m_pause_state{0};           // DAT_00450bfc: 0=running, 1=paused, 2=step
+    int32_t         m_fkey_state{0};            // DAT_00450c28: 0=unused, 1=used, 2=locked (F3)
+    bool            m_fast_forward{false};      // 1 - DAT_0044d02c (F5 speed toggle)
+    bool            m_unlimited_mp{false};      // 1 - DAT_0044d034 (F6 infinite MP toggle)
+    int32_t         m_sky_weapon_cmd{0};        // DAT_00450bb8: 1=F8 drop all weapons, 2=F9 destroy
+    int32_t         m_recover_cmd{0};           // DAT_00450bc0: 1=F7 full recover
+    int32_t         m_f6_uses{0};               // DAT_00450c18
+    int32_t         m_f7_uses{0};               // DAT_00450c1c
+    int32_t         m_f8_uses{0};               // DAT_00450c20
+    int32_t         m_f9_uses{0};               // DAT_00450c24
+    int32_t         m_shake{0};                 // DAT_00450bd8: 1 - shake
+    int32_t         m_counter_12{0};            // DAT_00450bd0: (counter_12 + 1) % 12
+    int32_t         m_counter_3{0};             // DAT_00450bd4: (counter_3 + 1) % 3
+    int32_t         m_round_counter{0};         // DAT_00450bdc: post-round frames (80 jingle, 101 replay, 144 hold, 350 exit)
+    int32_t         m_winning_team{-1};         // DAT_00450bf8
+    uint32_t        m_battle_elapsed{0};        // DAT_00450bbc
+    bool            m_hud_visible{true};        // DAT_0044d030 (replay F6 toggle)
+    bool            m_replay_panning{false};    // DAT_00450b74
+    int32_t         m_replay_cam_x{-1000};      // DAT_00450b7c
+    int32_t         m_replay_cam_vx{0};         // DAT_00450b78
+    bool            m_has_playback_replay{false}; // DAT_00450b84
+    network_manager_t* m_net_mgr{nullptr};
+    replay_recorder_t  m_replay_recorder;
+    replay_player_t    m_replay_player;
+    uint8_t         m_net_seq{0};               // DAT_00450bf0 (% 50)
+    uint8_t         m_net_version{0x1E};        // DAT_0044d03c (v2.0 = 0x1E)
+    int32_t         m_data_crc{0};              // DAT_0044f620
+    SyncResult      m_last_net_sync{SyncResult::OK};
+
+    file_t* find_loaded_file(uint32_t file_id) const;
+    int32_t find_free_dynamic_slot() const;
+    void clear_vrest_for_slot(int32_t slot);
+    void dispatch_fkey_action(uint8_t fkey_vk, replay_frame_10_t& rec_out);
+    void dispatch_replay_fkey_flags(const replay_frame_10_t& rec, replay_frame_10_t& rec_out);
 
     // Game world container
     global_t        m_world;

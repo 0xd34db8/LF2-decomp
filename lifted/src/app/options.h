@@ -73,8 +73,8 @@ public:
     void reset_to_defaults();
 
     // Configuration access
-    control_config_t& get_config() { return m_cfg; }
-    const control_config_t& get_config() const { return m_cfg; }
+    app_control_config_t& get_config() { return m_cfg; }
+    const app_control_config_t& get_config() const { return m_cfg; }
 
     // Display options
     void toggle_fullscreen(app_t* app);
@@ -94,7 +94,7 @@ public:
 
 private:
     options_substate_t m_substate = options_substate_t::CONTROL_SETTINGS;
-    control_config_t m_cfg;
+    app_control_config_t m_cfg;
 
     // Active interactive rebinding state
     int m_rebind_player = -1;      // 0..3, or -1

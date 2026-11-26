@@ -91,7 +91,7 @@ void test_authentic_asset_loading()
     audio_system_t audio;
     audio.init();
 
-    const std::string paths[] = { "data/001.wav", "build/data/001.wav", ".legacy/data/001.wav" };
+    const std::string paths[] = { "data/001.wav", "build/data/001.wav" };
     bool loaded = false;
     for (const auto& p : paths) {
         if (audio.load_sound(1, p)) {
@@ -159,6 +159,37 @@ void test_volume_and_mute()
     std::cout << "    Volume attenuation and stream mute verified!" << std::endl;
 }
 
+void test_spatial_sound_queue_and_flush()
+{
+    std::cout << "[+] Testing Spatial Stereo Sound Queue & End-of-Frame Flush (0x416FB0/0x417090/0x419E60)..." << std::endl;
+    assert(audio_system_t::NUM_FIXED_SOUNDS == 18);
+    assert(std::string(audio_system_t::get_fixed_sound_path(0)) == "data/001.wav");
+    assert(std::string(audio_system_t::get_fixed_sound_path(15)) == "data/066.wav");
+
+    audio_system_t audio;
+    audio.init();
+    audio.set_master_volume(SDL_MIX_MAXVOLUME);
+    audio.set_camera_x(0);
+
+    auto wav = generate_test_wav();
+    audio.load_sound_from_memory(3, wav.data(), wav.size());
+    audio.load_sound_from_memory(audio_system_t::FIXED_SOUND_BASE + 15, wav.data(), wav.size());
+
+    // Queue item sound 3 at right ear (x = 600 -> pan = +1500, vol = 0 dB at 100% master)
+    audio.queue_item_sound(600, 3);
+    // Queue fixed sound 15 at left ear (x = 200 -> pan = -1500, vol = 0 dB at 100% master)
+    audio.queue_fixed_sound(200, 15);
+    audio.flush_queued_sounds();
+
+    assert(audio.get_last_item_pan(3) == 1500);
+    assert(audio.get_last_item_vol(3) == 0);
+    assert(audio.get_last_fixed_pan(15) == -1500);
+    assert(audio.get_last_fixed_vol(15) == 0);
+    assert(audio.get_fixed_play_count(15) == 1);
+
+    std::cout << "    18-path fixed sound bank and spatial pan/attenuation flush verified!" << std::endl;
+}
+
 int main(int argc, char* argv[])
 {
     (void)argc;
@@ -168,6 +199,7 @@ int main(int argc, char* argv[])
     test_authentic_asset_loading();
     test_frame_sound_integration();
     test_volume_and_mute();
+    test_spatial_sound_queue_and_flush();
     std::cout << "[SUCCESS] All Audio Pipeline tests passed with 100% precision!" << std::endl;
     return 0;
 }

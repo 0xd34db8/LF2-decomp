@@ -1275,6 +1275,300 @@ int main() {
         printf("    [PASS] Phase 20 AI Controller, opoint, hit_Fa, Weapons, Specials & Dodge verified!\n");
     }
 
+    // ------------------------------------------------------------------------
+    // TEST 17: Master Battle Frame Loop (0x0041BC90) & Supporting Helpers
+    // ------------------------------------------------------------------------
+    printf("\n[+] Test 17: Master Battle Frame Loop (0x0041BC90) & Helpers...\n");
+    {
+        void *prev_ecx17 = in_ECX;
+        int saved_d020 = DAT_0044d020;
+        int saved_d02c = DAT_0044d02c;
+        int saved_d034 = DAT_0044d034;
+        int saved_b80 = DAT_00450b80;
+        int saved_b84 = DAT_00450b84;
+        int saved_b88 = DAT_00450b88;
+        int saved_b8c = DAT_00450b8c;
+        int saved_b90 = DAT_00450b90;
+        int saved_bb4 = DAT_00450bb4;
+        int saved_bb8 = DAT_00450bb8;
+        int saved_bbc = DAT_00450bbc;
+        int saved_bc0 = DAT_00450bc0;
+        int saved_bc4 = DAT_00450bc4;
+        int saved_bd0 = DAT_00450bd0;
+        int saved_bd4 = DAT_00450bd4;
+        int saved_bd8 = DAT_00450bd8;
+        int saved_bdc = DAT_00450bdc;
+        int saved_be4 = DAT_00450be4;
+        int saved_bfc = DAT_00450bfc;
+        int saved_fb60 = DAT_0044fb60;
+        int saved_fcb0 = DAT_0044fcb0;
+        int saved_c28 = DAT_00450c28;
+        int saved_c2c = DAT_00450c2c;
+        int saved_c30 = DAT_00450c30;
+        int saved_8428 = DAT_00458428;
+        int saved_842c = DAT_0045842c;
+        int saved_eecc = DAT_0044eecc;
+        int saved_d000 = DAT_0044d000;
+        int saved_f1af = DAT_0044f1af;
+        int saved_d05c = DAT_0044d05c;
+
+        // 17A. 0x0040D940 frame present & 0x00419E40 global_ctor
+        global_t *g17 = (global_t *)calloc(1, sizeof(global_t));
+        g17->game_state = 99;
+        memset(g17->is_object_exists, 1, MAX_OBJECTS);
+        in_ECX = g17;
+        FUN_00419e40();
+        assert(g17->game_state == 0 && g17->is_object_exists[0] == 0 && g17->is_object_exists[399] == 0);
+
+        for (int s = 0; s < MAX_OBJECTS; ++s) {
+            g17->objects[s] = (object_t *)calloc(1, sizeof(object_t));
+            lf2_object_init(g17->objects[s]);
+        }
+
+        file_t *f_davis = (file_t *)calloc(1, sizeof(file_t));
+        file_t *f_rudolf = (file_t *)calloc(1, sizeof(file_t));
+        file_t *f_firen = (file_t *)calloc(1, sizeof(file_t));
+        file_t *f_freeze = (file_t *)calloc(1, sizeof(file_t));
+        file_t *f_firzen = (file_t *)calloc(1, sizeof(file_t));
+        file_t *f_ball = (file_t *)calloc(1, sizeof(file_t));
+        file_t *f_stick = (file_t *)calloc(1, sizeof(file_t));
+        file_t *f_bw = (file_t *)calloc(1, sizeof(file_t));
+        file_t *f_etc = (file_t *)calloc(1, sizeof(file_t));
+
+        f_davis->id = ID_DAVIS_DAT; f_davis->type = TYPE_CHARACTER; f_davis->walking_frame_rate = 10;
+        f_rudolf->id = ID_RUDOLF_DAT; f_rudolf->type = TYPE_CHARACTER;
+        f_firen->id = ID_FIREN_DAT; f_firen->type = TYPE_CHARACTER;
+        f_freeze->id = ID_FREEZE_DAT; f_freeze->type = TYPE_CHARACTER;
+        f_firzen->id = ID_FIRZEN_DAT; f_firzen->type = TYPE_CHARACTER;
+        f_ball->id = ID_JOHN_BALL_DAT; f_ball->type = TYPE_ATTACK;
+        f_stick->id = ID_STICK_DAT; f_stick->type = TYPE_LIGHT_WEAPON; f_stick->weapon_hp = 100; f_stick->weapon_broken_sound_id = 3;
+        f_bw->id = ID_BROKEN_WEAPON_DAT; f_bw->type = TYPE_ATTACK;
+        f_etc->id = ID_ETC_DAT; f_etc->type = TYPE_ATTACK;
+
+        for (int k = 0; k < 50; ++k) {
+            f_davis->frames[k].wait = 5;
+            f_rudolf->frames[k].wait = 5;
+            f_ball->frames[k].wait = 5;
+            f_bw->frames[k].wait = 5;
+            f_etc->frames[k].wait = 5;
+        }
+        f_davis->frames[5].present = 1;
+        f_davis->frames[6].present = 0;
+        in_ECX = f_davis;
+        assert(FUN_0040d940(5) == true && FUN_0040d940(6) == false);
+
+        g17->files[0] = f_davis; g17->files[1] = f_rudolf; g17->files[2] = f_firen;
+        g17->files[3] = f_freeze; g17->files[4] = f_firzen; g17->files[5] = f_ball;
+        g17->files[6] = f_stick; g17->files[7] = f_bw; g17->files[8] = f_etc;
+
+        // 17B. Function keys F1-F9 & cheat unlocks (0x416C70 - 0x416F60)
+        uint8_t rec10[10] = {0};
+        DAT_0044d020 = 0; DAT_00450bfc = 0; DAT_0044fb60 = 0; DAT_0044fcb0 = 0;
+        DAT_00450c28 = 0; DAT_0044d02c = 1; DAT_0044d034 = 1; DAT_00450bdc = 0;
+        DAT_00458428 = 0; DAT_0045842c = 0; DAT_00450bb8 = 0; DAT_00450bc0 = 0;
+        DAT_00450b84 = 0; DAT_00450b88 = 0; DAT_00450b80 = 0; DAT_00450be4 = 0;
+
+        int mode17 = 0; // VS Mode
+        FUN_00416c70(rec10);
+        assert(DAT_00458428 == 1 && (rec10[9] & 1) != 0);
+        FUN_00416ca0(rec10);
+        assert(DAT_0045842c == 1 && (rec10[9] & 2) != 0);
+        FUN_00416dd0(&DAT_0044d020);
+        assert(DAT_0044fb60 == 1 && DAT_0044fcb0 == 1);
+        FUN_00416df0(&DAT_0044d020);
+        assert(DAT_0044fcb0 == 1 && DAT_0044fb60 == 0);
+        FUN_00416e30(0, &DAT_0044d020);
+        assert(DAT_0044d02c == 0 && DAT_004553ec == 'u');
+        FUN_00416e60(rec10, &DAT_0044d020, &mode17);
+        assert(DAT_0044d034 == 0 && (rec10[8] & 0x10) != 0 && DAT_00450c28 == 1);
+        FUN_00416eb0(rec10, &DAT_0044d020, &mode17);
+        assert(DAT_00450bc0 == 1 && (rec10[8] & 0x20) != 0);
+        FUN_00416f10(rec10, &DAT_0044d020, &mode17);
+        assert(DAT_00450bb8 == 1 && (rec10[8] & 0x40) != 0);
+        FUN_00416f60(rec10, &DAT_0044d020, &mode17);
+        assert(DAT_00450bb8 == 2 && (rec10[8] & 0x80) != 0);
+        FUN_00416e10(rec10, &DAT_0044d020);
+        assert(DAT_00450c28 == 2 && (rec10[8] & 0x04) != 0);
+        // Locked F-keys must not modify F6
+        int prev_mp_flag = DAT_0044d034;
+        FUN_00416e60(rec10, &DAT_0044d020, &mode17);
+        assert(DAT_0044d034 == prev_mp_flag);
+        // F4 exit in VS mode
+        DAT_00450c28 = 0; DAT_00450bc0 = 0; DAT_00450bb8 = 0; DAT_00450bfc = 0; DAT_0044fb60 = 0; DAT_0044fcb0 = 0;
+        FUN_00416cd0(&DAT_0044d020, &mode17);
+        assert(DAT_00450bdc == 350);
+        DAT_00450bdc = 0;
+
+        // 17C. 0x00419E60 Spatialized Sound Flush math check
+        DAT_0044eecc = 1;
+        DAT_0044d000 = 80;
+        DAT_00450bc4 = 0;
+        memset(DAT_00457588, 0, sizeof(DAT_00457588));
+        memset(DAT_00453e10, 0, sizeof(DAT_00453e10));
+        // Queue item sound 3 at x = 600 -> left_dist = 400 (vol 0), right_dist = 0 (vol 100)
+        FUN_00416fb0(600, 3);
+        // Queue fixed sound 15 at x = 200 -> left_dist = 0 (vol 100), right_dist = 400 (vol 0)
+        FUN_00417090(200, 15);
+        FUN_00419e60();
+        assert(DAT_00457588[3] == 0 && DAT_00453e10[15] == 0);
+        assert(lf2_last_item_pan[3] == 1500);
+        assert(lf2_last_item_vol[3] == -760);
+        assert(lf2_last_fixed_pan[15] == -1500);
+        assert(lf2_last_fixed_vol[15] == -760);
+
+        // 17D. 0x0043DB40 / 0x0043DC50 / 0x0043DF00 / 0x0043D2A0 Replay 10-byte write/read & restore
+        DAT_004588a8 = calloc(1, 0x630e18);
+        DAT_004588ac = (intptr_t)(uintptr_t)calloc(1, 0x630e18);
+        DAT_00450b8c = 42;
+        uint8_t wr[10] = { 0x81, 0x41, 0x21, 0x11, 0x09, 0x05, 0x03, 0x01, 0x30, 0x01 };
+        uint8_t rd[10] = {0};
+        FUN_0043db40(wr);
+        memcpy((uint8_t *)(uintptr_t)DAT_004588ac + 0x2b38 + 42 * 10, wr, 10);
+        FUN_0043dc50(rd);
+        assert(memcmp(wr, rd, 10) == 0);
+
+        DAT_0045877c = 2;
+        strcpy(DAT_00458850, "HeroOne");
+        strcpy(DAT_004587e8, "Alice");
+        strcpy(DAT_00458588, "Info");
+        strcpy(DAT_00458780, "alice@lf2.test");
+        FUN_0043df00();
+        assert(DAT_00450c30 == 2 && strcmp(DAT_0044fcc0, "HeroOne") == 0);
+        assert(strcmp(DAT_0044fd18, "Alice") == 0 && strcmp(DAT_0044f900, "Info") == 0);
+        assert(strcmp(DAT_0044f890, "alice@lf2.test") == 0);
+        FUN_0043d2a0();
+        assert(DAT_004588a8 == NULL && DAT_004588ac == 0);
+
+        // 17E. Master Battle Frame Loop (FUN_0041bc90):
+        // Setup 2 characters on opposite teams, opoint group spawn, broken weapon shards, ice shatter, & healing
+        memset(g17->is_object_exists, 0, MAX_OBJECTS);
+        lf2_object_init(g17->objects[0]);
+        lf2_object_init(g17->objects[1]);
+        g17->is_object_exists[0] = 1;
+        g17->is_object_exists[1] = 1;
+        g17->objects[0]->file = f_davis; g17->objects[0]->team = 1; g17->objects[0]->x = 200; g17->objects[0]->z = 200;
+        g17->objects[0]->x_position = 200.0; g17->objects[0]->z_position = 200.0;
+        g17->objects[0]->x_velocity = 0.0; g17->objects[0]->y_velocity = 0.0; g17->objects[0]->z_velocity = 0.0;
+        g17->objects[1]->file = f_davis; g17->objects[1]->team = 2; g17->objects[1]->x = 500; g17->objects[1]->z = 200;
+        g17->objects[1]->x_position = 500.0; g17->objects[1]->z_position = 200.0;
+        g17->objects[1]->x_velocity = 0.0; g17->objects[1]->y_velocity = 0.0; g17->objects[1]->z_velocity = 0.0;
+
+        // Configure frame 14 -> frame 15 transition so FUN_0040d960 enters frame 15 with wait_counter == 0,
+        // firing opoint to spawn 3 projectiles (facing = 30)
+        f_davis->frames[14].wait = 1;
+        f_davis->frames[14].next = 15;
+        f_davis->frames[15].wait = 5;
+        f_davis->frames[15].next = 0;
+        f_davis->frames[15].opoint.kind = 1;
+        f_davis->frames[15].opoint.oid = ID_JOHN_BALL_DAT;
+        f_davis->frames[15].opoint.facing = 30;
+        f_davis->frames[15].opoint.dvx = 6;
+        g17->objects[0]->frame_id1 = 14;
+        g17->objects[0]->frame_id2 = 14;
+        g17->objects[0]->wait_counter = 1;
+
+        // Put broken stick in slot 50 & ice-leaving object in slot 1 (pf = frame 20 -> state 13 -> frame 0)
+        lf2_object_init(g17->objects[50]);
+        g17->is_object_exists[50] = 1;
+        g17->objects[50]->file = f_stick;
+        g17->objects[50]->weapon_hp = -1;
+        g17->objects[50]->x = 300; g17->objects[50]->z = 220;
+
+        f_davis->frames[20].state = STATE_ICE;
+        f_davis->frames[20].wait = 1;
+        f_davis->frames[20].next = 999;
+        g17->objects[1]->frame_id1 = 20;
+        g17->objects[1]->frame_id2 = 20;
+        g17->objects[1]->frame_id3 = 20;
+        g17->objects[1]->wait_counter = 1; // Advances from 20 -> 999 -> 0 -> triggers ice shatter
+
+        // Put state 1700 self-heal & whirlwind bleed setup: test Jan heal_timer
+        g17->objects[0]->hp = 400;
+        g17->objects[0]->dark_hp = 500;
+        g17->objects[0]->heal_timer = 17; // decrements to 16 (% 8 == 0 -> +8 HP)
+
+        DAT_00450b90 = 1; DAT_0044d020 = 0; DAT_0044f1af = 0; DAT_0044d05c = 0;
+        DAT_00450b80 = 0; DAT_00450b84 = 0; DAT_00450b88 = 0; DAT_00450bbc = 0;
+        DAT_00450bd0 = 0; DAT_00450bd4 = 0; DAT_00450bd8 = 0; DAT_00450bdc = 0;
+        DAT_00451160 = 0; DAT_00450bb4 = 800; DAT_00453e10[15] = 0;
+        lf2_last_fixed_played[15] = 0;
+
+        in_ECX = g17;
+        int rc17 = FUN_0041bc90();
+        assert(rc17 == 0);
+        assert(DAT_00450b90 == 0);
+        assert(DAT_00450bbc == 1);
+        // Weapon stick broke into 5 shards, opoint spawned 3 balls, ice shattered into 15 shards + data\066.wav
+        assert(g17->is_object_exists[50] == 0); // broken weapon removed
+        int shard_count = 0, ball_count = 0;
+        for (int s = 50; s < MAX_OBJECTS; ++s) {
+            if (g17->is_object_exists[s] && g17->objects[s] && g17->objects[s]->file) {
+                if (g17->objects[s]->file->id == ID_BROKEN_WEAPON_DAT) shard_count++;
+                if (g17->objects[s]->file->id == ID_JOHN_BALL_DAT) ball_count++;
+            }
+        }
+        assert(ball_count == 3);
+        assert(shard_count == 20); // 5 stick shards + 15 ice shards
+        assert(lf2_last_fixed_played[15] == 1); // data\066.wav flushed on ice shatter
+        assert(g17->objects[0]->hp >= 408); // Jan heal +8 applied
+
+        // Test team order D-J-D-J (9,0,9,0) on slot 2 -> sets ally ai_target_x/z and spawns ID_ETC_DAT marker
+        memset(g17->is_object_exists, 0, MAX_OBJECTS);
+        lf2_object_init(g17->objects[0]); lf2_object_init(g17->objects[1]); lf2_object_init(g17->objects[2]);
+        g17->is_object_exists[0] = 1; g17->is_object_exists[1] = 1; g17->is_object_exists[2] = 1;
+        g17->objects[0]->file = f_davis; g17->objects[0]->team = 1; g17->objects[0]->x = 250; g17->objects[0]->z = 210;
+        g17->objects[0]->x_velocity = 0.0; g17->objects[0]->y_velocity = 0.0; g17->objects[0]->z_velocity = 0.0;
+        g17->objects[1]->file = f_davis; g17->objects[1]->team = 1;
+        g17->objects[1]->x_velocity = 0.0; g17->objects[1]->y_velocity = 0.0; g17->objects[1]->z_velocity = 0.0;
+        g17->objects[2]->file = f_davis; g17->objects[2]->team = 2; // enemy alive
+        g17->objects[2]->x_velocity = 0.0; g17->objects[2]->y_velocity = 0.0; g17->objects[2]->z_velocity = 0.0;
+        g17->objects[0]->input_history[1] = 9;
+        g17->objects[0]->input_history[2] = 9;
+        g17->objects[0]->input_history[3] = 9;
+        g17->objects[0]->input_history[4] = 9; // D-D-D-D -> follow_order = 1
+        in_ECX = g17;
+        FUN_0041bc90();
+        assert(g17->objects[1]->follow_order == 1);
+
+        // Test round_counter >= 350 Firzen & Rudolf revert
+        memset(g17->is_object_exists, 0, MAX_OBJECTS);
+        lf2_object_init(g17->objects[0]);
+        g17->is_object_exists[0] = 1;
+        g17->objects[0]->file = f_firzen;
+        g17->objects[0]->fusion_state = 1;
+        g17->objects[0]->fusion_partner = 1;
+        g17->objects[0]->fusion_self_id = ID_FIREN_DAT;
+        g17->objects[0]->fusion_partner_id = ID_FREEZE_DAT;
+        g17->objects[0]->hp = 100; g17->objects[0]->dark_hp = 100;
+        DAT_00450bdc = 350;
+        DAT_0044d020 = 0;
+        DAT_00450b90 = 1;
+        in_ECX = g17;
+        int end_rc = FUN_0041bc90();
+        assert(end_rc == 2);
+        assert(g17->objects[0]->file->id == ID_FIREN_DAT);
+        assert(g17->is_object_exists[1] == 1 && g17->objects[1]->file->id == ID_FREEZE_DAT);
+
+        for (int s = 0; s < MAX_OBJECTS; ++s) free(g17->objects[s]);
+        free(g17);
+        free(f_davis); free(f_rudolf); free(f_firen); free(f_freeze);
+        free(f_firzen); free(f_ball); free(f_stick); free(f_bw); free(f_etc);
+
+        DAT_0044d020 = saved_d020; DAT_0044d02c = saved_d02c; DAT_0044d034 = saved_d034;
+        DAT_00450b80 = saved_b80; DAT_00450b84 = saved_b84; DAT_00450b88 = saved_b88;
+        DAT_00450b8c = saved_b8c; DAT_00450b90 = saved_b90; DAT_00450bb4 = saved_bb4;
+        DAT_00450bb8 = saved_bb8; DAT_00450bbc = saved_bbc; DAT_00450bc0 = saved_bc0;
+        DAT_00450bc4 = saved_bc4; DAT_00450bd0 = saved_bd0; DAT_00450bd4 = saved_bd4;
+        DAT_00450bd8 = saved_bd8; DAT_00450bdc = saved_bdc; DAT_00450be4 = saved_be4;
+        DAT_00450bfc = saved_bfc; DAT_0044fb60 = saved_fb60; DAT_0044fcb0 = saved_fcb0;
+        DAT_00450c28 = saved_c28; DAT_00450c2c = saved_c2c; DAT_00450c30 = saved_c30;
+        DAT_00458428 = saved_8428; DAT_0045842c = saved_842c;
+        DAT_0044eecc = saved_eecc; DAT_0044d000 = saved_d000;
+        DAT_0044f1af = saved_f1af; DAT_0044d05c = saved_d05c;
+        in_ECX = prev_ecx17;
+        printf("    [PASS] Master Battle Frame Loop, F-keys, Sound Flush & Replay Helpers verified!\n");
+    }
+
     printf("\n[SUCCESS] All Decompiled Compilable Suite Tests Passed with 100%% Parity!\n");
     return 0;
 }

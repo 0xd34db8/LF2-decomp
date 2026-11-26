@@ -1,4 +1,5 @@
 #include "replay.h"
+#include "core/global.h"
 #include <fstream>
 #include <sstream>
 #include <ctime>
@@ -161,6 +162,60 @@ bool control_config_t::save_to_file(const std::string& filepath) const {
     return true;
 }
 
+void replay_backup_state_t::write_to_block(std::vector<uint8_t>& block) const {
+    if (block.size() < AUTHENTIC_LFR_BLOCK_SIZE) {
+        block.resize(AUTHENTIC_LFR_BLOCK_SIZE, 0);
+    }
+    int32_t* u32 = reinterpret_cast<int32_t*>(block.data());
+    u32[0] = difficulty;
+    u32[AUTHENTIC_LFR_UNLOCK1_OFFSET / 4] = unlock_chars;
+    u32[AUTHENTIC_LFR_UNLOCK2_OFFSET / 4] = unlock_fkeys;
+    for (int i = 0; i < 8; ++i) {
+        char* dst = reinterpret_cast<char*>(block.data() + 0x14C + i * 11);
+        std::memset(dst, 0, 11);
+        std::strncpy(dst, player_names[i].c_str(), 10);
+    }
+    std::memset(block.data() + 0x630BC0, 0, 100);
+    std::strncpy(reinterpret_cast<char*>(block.data() + 0x630BC0), profile_name.c_str(), 99);
+    std::memset(block.data() + 0x630C24, 0, 400);
+    std::strncpy(reinterpret_cast<char*>(block.data() + 0x630C24), profile_info.c_str(), 399);
+    std::memset(block.data() + 0x630DB4, 0, 100);
+    std::strncpy(reinterpret_cast<char*>(block.data() + 0x630DB4), profile_email.c_str(), 99);
+}
+
+void replay_backup_state_t::restore_from_block(const std::vector<uint8_t>& block) {
+    if (block.size() < AUTHENTIC_LFR_BLOCK_SIZE) return;
+    const int32_t* u32 = reinterpret_cast<const int32_t*>(block.data());
+    difficulty = u32[0];
+    unlock_chars = u32[AUTHENTIC_LFR_UNLOCK1_OFFSET / 4];
+    unlock_fkeys = u32[AUTHENTIC_LFR_UNLOCK2_OFFSET / 4];
+    for (int i = 0; i < 8; ++i) {
+        const char* src = reinterpret_cast<const char*>(block.data() + 0x14C + i * 11);
+        char tmp[12] = {0};
+        std::memcpy(tmp, src, 11);
+        player_names[i] = tmp;
+    }
+    char name_buf[101] = {0};
+    std::memcpy(name_buf, block.data() + 0x630BC0, 100);
+    profile_name = name_buf;
+    char info_buf[401] = {0};
+    std::memcpy(info_buf, block.data() + 0x630C24, 400);
+    profile_info = info_buf;
+    char email_buf[101] = {0};
+    std::memcpy(email_buf, block.data() + 0x630DB4, 100);
+    profile_email = email_buf;
+}
+
+int32_t compute_active_hp_sum(const global_t& world) {
+    int32_t hp_sum = 0;
+    for (int i = 0; i < 20; ++i) {
+        if (world.is_object_exists[i] == 1 && world.objects[i] != nullptr) {
+            hp_sum += world.objects[i]->hp;
+        }
+    }
+    return hp_sum;
+}
+
 replay_recorder_t::replay_recorder_t() = default;
 replay_recorder_t::~replay_recorder_t() {
     if (m_recording) {
@@ -200,7 +255,26 @@ bool replay_recorder_t::start_recording(const replay_header_t& header, const std
     m_header.total_frames = 0;
     m_filepath = filepath;
     m_compress = compress;
+    m_authentic_v2 = false;
+    m_authentic_frame_count = 0;
+    m_raw_block.clear();
     m_frames.clear();
+    m_recording = true;
+    return true;
+}
+
+bool replay_recorder_t::start_authentic_recording(int32_t difficulty, int32_t game_mode, int32_t unlock_chars, int32_t unlock_fkeys, const std::string& filepath) {
+    m_filepath = filepath;
+    m_compress = true;
+    m_authentic_v2 = true;
+    m_authentic_frame_count = 0;
+    m_frames.clear();
+    m_raw_block.assign(AUTHENTIC_LFR_BLOCK_SIZE, 0);
+    int32_t* u32 = reinterpret_cast<int32_t*>(m_raw_block.data());
+    u32[0] = difficulty;
+    u32[2] = unlock_chars;
+    u32[3] = unlock_fkeys;
+    u32[0x52] = game_mode;
     m_recording = true;
     return true;
 }
@@ -208,22 +282,74 @@ bool replay_recorder_t::start_recording(const replay_header_t& header, const std
 void replay_recorder_t::record_frame(const uint8_t player_inputs[8], uint8_t control_flags) {
     if (!m_recording) return;
 
+    if (m_authentic_v2) {
+        replay_frame_10_t rec{};
+        std::memcpy(rec.inputs, player_inputs, 8);
+        rec.func_flags = control_flags;
+        record_frame_10(rec, 0);
+        return;
+    }
+
     replay_frame_t frame{};
     std::memcpy(frame.inputs, player_inputs, sizeof(frame.inputs));
     frame.control_flags = control_flags;
     m_frames.push_back(frame);
 }
 
+bool replay_recorder_t::record_frame_10(const replay_frame_10_t& rec, int32_t active_hp_sum) {
+    if (!m_recording) return false;
+    if (!m_authentic_v2) {
+        replay_frame_t frame{};
+        std::memcpy(frame.inputs, rec.inputs, 8);
+        frame.control_flags = rec.func_flags;
+        m_frames.push_back(frame);
+        return true;
+    }
+    if (m_authentic_frame_count >= AUTHENTIC_LFR_MAX_FRAMES) {
+        m_recording = false;
+        return false;
+    }
+
+    // 0x0043DB40: Write 10-byte record to +0x2B38 + frame * 10
+    size_t dst_off = AUTHENTIC_LFR_FRAMES_OFFSET + m_authentic_frame_count * 10;
+    std::memcpy(m_raw_block.data() + dst_off, &rec, 10);
+
+    // 0x0041D65C: Write 150-frame periodic active-HP sum at +0x14B8 + (frame / 150) * 4
+    if ((m_authentic_frame_count % AUTHENTIC_LFR_HP_INTERVAL) == 0) {
+        size_t sum_off = AUTHENTIC_LFR_HP_CHECKSUM_OFFSET + (m_authentic_frame_count / AUTHENTIC_LFR_HP_INTERVAL) * 4;
+        std::memcpy(m_raw_block.data() + sum_off, &active_hp_sum, sizeof(int32_t));
+    }
+
+    m_authentic_frame_count++;
+    return true;
+}
+
 bool replay_recorder_t::finish_recording() {
     if (!m_recording) return false;
-
-    m_header.total_frames = static_cast<uint32_t>(m_frames.size());
 
     std::ofstream out(m_filepath, std::ios::binary);
     if (!out.is_open()) {
         m_recording = false;
         return false;
     }
+
+    if (m_authentic_v2) {
+        std::vector<uint8_t> comp;
+        if (!compress_replay_stream(m_raw_block.data(), m_raw_block.size(), comp)) {
+            out.close();
+            m_recording = false;
+            return false;
+        }
+        replay_cipher_encrypt(comp.data(), comp.size());
+        uint32_t comp_sz = static_cast<uint32_t>(comp.size());
+        out.write(reinterpret_cast<const char*>(&comp_sz), sizeof(comp_sz));
+        out.write(reinterpret_cast<const char*>(comp.data()), comp.size());
+        out.close();
+        m_recording = false;
+        return true;
+    }
+
+    m_header.total_frames = static_cast<uint32_t>(m_frames.size());
 
     if (m_compress) {
         // Build uncompressed stream: header + frames
@@ -267,6 +393,9 @@ bool replay_recorder_t::finish_recording() {
 
 void replay_recorder_t::cancel_recording() {
     m_frames.clear();
+    m_raw_block.clear();
+    m_authentic_frame_count = 0;
+    m_authentic_v2 = false;
     m_recording = false;
 }
 
@@ -362,11 +491,13 @@ bool replay_player_t::open_replay(const std::string& filepath) {
     }
 
     // Authentic LF2 full 0x630E18 memory dump
-    if (uncomp_data.size() == 0x630e18) {
+    if (uncomp_data.size() == AUTHENTIC_LFR_BLOCK_SIZE) {
         std::memset(&m_header, 0, sizeof(m_header));
         m_header.magic = LF2_REPLAY_MAGIC;
-        m_header.game_mode = *reinterpret_cast<const uint32_t*>(uncomp_data.data() + 0x52 * 4);
+        m_header.difficulty = uncomp_data[0];
+        m_header.game_mode = static_cast<uint8_t>(*reinterpret_cast<const uint32_t*>(uncomp_data.data() + 0x52 * 4));
         m_header.prng_seed = *reinterpret_cast<const uint32_t*>(uncomp_data.data() + 0x231 * 4);
+        m_raw_block = std::move(uncomp_data);
         m_format = replay_format_t::AUTHENTIC_V2_RAW;
         m_loaded = true;
         m_current_frame = 0;
@@ -377,6 +508,17 @@ bool replay_player_t::open_replay(const std::string& filepath) {
 }
 
 bool replay_player_t::read_frame(uint8_t out_inputs[8], uint8_t& out_flags) {
+    if (m_format == replay_format_t::AUTHENTIC_V2_RAW) {
+        replay_frame_10_t rec{};
+        bool ok = false;
+        if (!read_frame_10(rec, 0, ok)) {
+            return false;
+        }
+        std::memcpy(out_inputs, rec.inputs, 8);
+        out_flags = rec.func_flags;
+        return true;
+    }
+
     if (!m_loaded || m_current_frame >= m_frames.size()) {
         return false;
     }
@@ -387,9 +529,42 @@ bool replay_player_t::read_frame(uint8_t out_inputs[8], uint8_t& out_flags) {
     return true;
 }
 
+bool replay_player_t::read_frame_10(replay_frame_10_t& out_rec, int32_t current_hp_sum, bool& out_checksum_ok) {
+    out_checksum_ok = true;
+    if (!m_loaded) return false;
+
+    if (m_format == replay_format_t::AUTHENTIC_V2_RAW) {
+        if (m_current_frame >= AUTHENTIC_LFR_MAX_FRAMES || m_raw_block.size() < AUTHENTIC_LFR_BLOCK_SIZE) {
+            return false;
+        }
+        // 0x0043DC50: Read 10-byte record from +0x2B38 + frame * 10
+        size_t off = AUTHENTIC_LFR_FRAMES_OFFSET + m_current_frame * 10;
+        std::memcpy(&out_rec, m_raw_block.data() + off, 10);
+
+        if ((m_current_frame % AUTHENTIC_LFR_HP_INTERVAL) == 0) {
+            size_t sum_off = AUTHENTIC_LFR_HP_CHECKSUM_OFFSET + (m_current_frame / AUTHENTIC_LFR_HP_INTERVAL) * 4;
+            int32_t expected_sum = 0;
+            std::memcpy(&expected_sum, m_raw_block.data() + sum_off, sizeof(int32_t));
+            out_checksum_ok = (current_hp_sum == expected_sum);
+        }
+        m_current_frame++;
+        return true;
+    }
+
+    if (m_current_frame >= m_frames.size()) {
+        return false;
+    }
+    const auto& frame = m_frames[m_current_frame++];
+    std::memcpy(out_rec.inputs, frame.inputs, 8);
+    out_rec.func_flags = frame.control_flags;
+    out_rec.unlock_flags = 0;
+    return true;
+}
+
 void replay_player_t::close() {
     m_loaded = false;
     m_frames.clear();
+    m_raw_block.clear();
     m_current_frame = 0;
 }
 

@@ -27,12 +27,12 @@ bool is_convertible_energy_ball(uint32_t fid)
             fid == DENNIS_CHASE_DAT || fid == JACK_BALL_DAT);
 }
 
-void trigger_weapon_sound(int32_t sound_id, uint32_t sound_tag)
+void trigger_weapon_sound(int32_t world_x, int32_t sound_id, uint32_t sound_tag)
 {
-    if (sound_id > 0) {
-        get_audio_system().on_frame_sound(static_cast<uint32_t>(sound_id));
-    } else if (sound_tag != 0) {
-        get_audio_system().on_frame_sound(sound_tag);
+    if (sound_id >= 0) {
+        get_audio_system().queue_item_sound(world_x, sound_id);
+    } else if (sound_tag > 0) {
+        get_audio_system().queue_item_sound(world_x, static_cast<int32_t>(sound_tag));
     }
 }
 
@@ -149,7 +149,7 @@ void apply_weapon_rebound_and_stick_boost(object_t* attacker, object_t* injured,
 
     if (attacker->file->id == STICK_DAT && attacker->weapon_type < 0) {
         injured->pic_x_gain *= 2.5;
-        get_audio_system().on_frame_sound(13);
+        get_audio_system().queue_fixed_sound(injured->x, 13);
         if (injured->pic_x_gain > 0.0 && injured->pic_x_gain < 10.0) {
             injured->pic_x_gain = 10.0;
         }
@@ -393,18 +393,18 @@ bool apply_plain_hit(global_t* world,
     }
 
     if (attacker->file->type == TYPE_ATTACK) {
-        trigger_weapon_sound(attacker->file->weapon_broken_sound_id, attacker->file->weapon_broken_sound);
+        trigger_weapon_sound(attacker->x, attacker->file->weapon_broken_sound_id, attacker->file->weapon_broken_sound);
     }
     if (injured_type == TYPE_CHARACTER) {
         if (eff.effect == EFFECT_PUNCH) {
-            get_audio_system().on_frame_sound((injured->fall == 80) ? 2U : 0U);
+            get_audio_system().queue_fixed_sound(injured->x, (injured->fall == 80) ? 2 : 0);
         } else if (eff.effect == EFFECT_BLEED) {
             out_is_bleed = 1;
-            get_audio_system().on_frame_sound((injured->fall == 80) ? 12U : 11U);
-            get_audio_system().on_frame_sound((injured->fall == 80) ? 2U : 0U);
+            get_audio_system().queue_fixed_sound(injured->x, (injured->fall == 80) ? 12 : 11);
+            get_audio_system().queue_fixed_sound(injured->x, (injured->fall == 80) ? 2 : 0);
         }
     } else if (injured_type > 0) {
-        trigger_weapon_sound(injured->file->weapon_hit_sound_id, injured->file->weapon_hit_sound);
+        trigger_weapon_sound(injured->x, injured->file->weapon_hit_sound_id, injured->file->weapon_hit_sound);
     }
 
     // Horizontal knockback accumulation
@@ -573,18 +573,18 @@ bool apply_plain_hit(global_t* world,
         injured_type == TYPE_CHARACTER && inj_f3->state != STATE_ICE) {
         injured->frame_id1 = 200;
         injured->wait_counter = 0;
-        get_audio_system().on_frame_sound(14);
+        get_audio_system().queue_fixed_sound(injured->x, 14);
     }
     if ((eff.effect == EFFECT_FIRE || eff.effect == EFFECT_FIRE_JULIAN || eff.effect == EFFECT_FIRE_EXPLODE ||
          (eff.effect == EFFECT_FIRE_NO_SOUND && inj_f3->state != STATE_BURNING)) &&
         injured_type == TYPE_CHARACTER) {
         injured->frame_id1 = 203;
         injured->wait_counter = 0;
-        get_audio_system().on_frame_sound(16);
+        get_audio_system().queue_fixed_sound(injured->x, 16);
         injured->facing = (injured->pic_x_gain < 0.0) ? FACING_RIGHT : FACING_LEFT;
     }
     if (eff.effect == 23) {
-        get_audio_system().on_frame_sound(16);
+        get_audio_system().queue_fixed_sound(injured->x, 16);
     }
 
     return true;
@@ -601,11 +601,11 @@ void apply_defended_hit(global_t* world,
     uint32_t injured_type = injured->file->type;
 
     if (attacker->file->type == TYPE_ATTACK) {
-        trigger_weapon_sound(attacker->file->weapon_broken_sound_id, attacker->file->weapon_broken_sound);
+        trigger_weapon_sound(attacker->x, attacker->file->weapon_broken_sound_id, attacker->file->weapon_broken_sound);
     } else if (injured_fid == KNIGHT_DAT || injured_fid == LOUIS_DAT) {
-        get_audio_system().on_frame_sound(17);
+        get_audio_system().queue_fixed_sound(injured->x, 17);
     } else {
-        get_audio_system().on_frame_sound(1);
+        get_audio_system().queue_fixed_sound(injured->x, 1);
     }
 
     if (injured_type != TYPE_DRINK) {
@@ -824,7 +824,7 @@ void apply_non_zero_itr(global_t* world,
 
     if (kind == ITR_FORCEFIELD) {
         if (injured_type == TYPE_ATTACK) {
-            trigger_weapon_sound(injured->file->weapon_broken_sound_id, injured->file->weapon_broken_sound);
+            trigger_weapon_sound(injured->x, injured->file->weapon_broken_sound_id, injured->file->weapon_broken_sound);
             if (injured->file->frames[injured->frame_id1].state == 3005) {
                 attacker->shaking = -3;
                 injured->flag_eb = 1;
@@ -951,7 +951,7 @@ void apply_non_zero_itr(global_t* world,
                 }
                 injured->frame_id1 = 200;
                 injured->wait_counter = 0;
-                get_audio_system().on_frame_sound(14);
+                get_audio_system().queue_fixed_sound(injured->x, 14);
                 if (static_cast<int32_t>(eff.vrest) > 0) {
                     injured->vrest_of_objects[attacker_id] = static_cast<uint8_t>(eff.vrest);
                 }

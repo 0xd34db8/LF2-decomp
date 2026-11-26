@@ -554,7 +554,11 @@ typedef struct object {
             uint8_t effect;                   // 0x0E8
             uint8_t has_arest;                // 0x0E9
             uint8_t can_hit;                  // 0x0EA
-            uint8_t _pad_0eb;                 // 0x0EB
+            uint8_t flag_eb;                  // 0x0EB
+        };
+        struct {
+            uint8_t _pad_e8[3];               // 0x0E8 - 0x0EA
+            uint8_t _pad_0eb;                 // 0x0EB (alias)
         };
         uint32_t    _unknown26;               // 0x0E8
     };
@@ -575,7 +579,14 @@ typedef struct object {
     int32_t         dark_hp;                  // 0x300
     int32_t         max_hp;                   // 0x304
     int32_t         mp;                       // 0x308
-    uint32_t        _unknown31[3];            // 0x30C - 0x318
+    union {
+        uint32_t    _unknown31[3];            // 0x30C - 0x318
+        struct {
+            int32_t spawn_reserve;            // 0x30C (stage/battle life reserve)
+            int32_t join_reserve;             // 0x310 (reserve granted upon joining Team 1)
+            int32_t join_hp;                  // 0x314 (>0: criminal/ally joins Team 1 upon defeat)
+        };
+    };
     int32_t         pic_no_gain;              // 0x318
     union {
         int32_t     weapon_hp;                // 0x31C
@@ -585,14 +596,28 @@ typedef struct object {
     union {
         struct {
             int32_t uid;                      // 0x324
-            int32_t _unknown34_rest[4];       // 0x328 - 0x338
+            union {
+                int32_t _unknown34_rest[4];   // 0x328 - 0x338
+                struct {
+                    int32_t fusion_state;     // 0x328
+                    int32_t fusion_partner;   // 0x32C
+                    int32_t fusion_self_id;   // 0x330
+                    int32_t fusion_partner_id;// 0x334
+                };
+            };
         };
         uint32_t    _unknown34[5];            // 0x324 - 0x338
     };
     int32_t         firen_counter;            // 0x338
-    int32_t         _unknown39;               // 0x33C
+    union {
+        int32_t     _unknown39;               // 0x33C
+        int32_t     transformed_to_id;        // 0x33C (Rudolf transform target file id)
+    };
     int32_t         armor_multiplier;         // 0x340
-    int32_t         _unknown40;               // 0x344
+    union {
+        int32_t     _unknown40;               // 0x344
+        int32_t     player_index;             // 0x344
+    };
     int32_t         total_attack;             // 0x348
     int32_t         hp_lost;                  // 0x34C
     int32_t         mp_used;                  // 0x350

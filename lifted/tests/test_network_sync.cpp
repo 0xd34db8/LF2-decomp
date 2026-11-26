@@ -51,8 +51,11 @@ void test_input_packing() {
     in.left = false;
 
     uint8_t packed = network_manager_t::pack_input(in);
-    // Base Idle (0x01) | Up (0x02) | Right (0x04) | Attack (0x08) = 0x0F (15)
-    // Matches mfc formula: 1 + 2^(1) + 2^(2) + 2^(3) = 15
+    // Base Idle (0x01) | Attack (0x08) | Right (0x10) | Up (0x80) = 0x99
+    assert(NET_KEY_IDLE == 0x01 && NET_KEY_DEFEND == 0x02 && NET_KEY_JUMP == 0x04 &&
+           NET_KEY_ATTACK == 0x08 && NET_KEY_RIGHT == 0x10 && NET_KEY_LEFT == 0x20 &&
+           NET_KEY_DOWN == 0x40 && NET_KEY_UP == 0x80);
+    assert(packed == (NET_KEY_IDLE | NET_KEY_UP | NET_KEY_RIGHT | NET_KEY_ATTACK));
     assert((packed & NET_KEY_IDLE) != 0);
     assert((packed & NET_KEY_UP) != 0);
     assert((packed & NET_KEY_RIGHT) != 0);
@@ -105,14 +108,18 @@ void test_checksum_and_sync() {
     obj3.hp = 200;
 
     const object_t* objects[4] = { &obj0, &obj1, &obj2, &obj3 };
+    int32_t hp_sum = 500 + 350 + 480 + 200;
     uint8_t checksum = network_manager_t::compute_hp_checksum(objects, 4);
-    assert(checksum == static_cast<uint8_t>((500 + 350 + 480 + 200) & 0xFF));
+    assert(checksum == static_cast<uint8_t>((hp_sum - (hp_sum / 100) * 100) + 1));
 
     // Construct local packet matching authentic binary fields
     net_packet_t local_pkt{};
+    network_manager_t::init_packet(local_pkt);
+    assert(local_pkt.control_flags == 0x01 && local_pkt.func_keys_1 == 0x01 && local_pkt.func_keys_2 == 0x01);
     local_pkt.seq_counter = 12; // Modulo 50 counter
-    local_pkt.version_tag = 0x01; // Version tag
+    local_pkt.version_tag = 0x1E; // Version tag
     local_pkt.hp_checksum = checksum;
+    network_manager_t::encode_data_crc(local_pkt, 0x1234);
 
     // Test OK condition
     net_packet_t remote_pkt = local_pkt;
@@ -135,7 +142,14 @@ void test_checksum_and_sync() {
     assert(network_manager_t::verify_sync(local_pkt, remote_pkt) == SyncResult::DESYNCHRONIZATION);
     assert(std::strcmp(network_manager_t::get_sync_error_string(SyncResult::DESYNCHRONIZATION), "Synchronisation Error!") == 0);
 
-    std::cout << "    Desync verifier matched all 3 authentic LF2 error dialog states!" << std::endl;
+    // Test Data CRC divergence at Offsets +14..+15 -> Data Error!
+    remote_pkt = local_pkt;
+    remote_pkt.data_crc_lo ^= 0x01;
+    assert(network_manager_t::verify_sync(local_pkt, remote_pkt) == SyncResult::DATA_MISMATCH);
+    assert(std::strcmp(network_manager_t::get_sync_error_string(SyncResult::DATA_MISMATCH),
+                       "Data Error! You and your opponent have different set of data files.") == 0);
+
+    std::cout << "    Desync verifier matched all 4 authentic LF2 error dialog states!" << std::endl;
 }
 
 void test_live_loopback_lockstep() {
@@ -206,10 +220,35 @@ void test_live_loopback_lockstep() {
     assert(recv_pkt.version_tag == send_pkt.version_tag);
     assert(recv_pkt.hp_checksum == send_pkt.hp_checksum);
 
+    // 5. Bidirectional Host (send->recv) & Client (recv->send) exchange_lockstep with F-key bits
+    net_packet_t host_out{}, client_out{}, host_in{}, client_in{};
+    network_manager_t::init_packet(host_out);
+    network_manager_t::init_packet(client_out);
+    host_out.seq_counter = 5;
+    host_out.version_tag = 0x1E;
+    host_out.hp_checksum = 31;
+    host_out.func_keys_1 |= NET_FKEY1_F6;
+    client_out.seq_counter = 5;
+    client_out.version_tag = 0x1E;
+    client_out.hp_checksum = 31;
+    client_out.func_keys_2 |= NET_FKEY2_F8;
+
+    bool exch_client_ok = false;
+    std::thread client_thr([&]() {
+        exch_client_ok = client.exchange_lockstep(client_out, client_in);
+    });
+    assert(host.exchange_lockstep(host_out, host_in));
+    client_thr.join();
+    assert(exch_client_ok);
+    assert((host_in.func_keys_2 & NET_FKEY2_F8) != 0);
+    assert((client_in.func_keys_1 & NET_FKEY1_F6) != 0);
+    assert(network_manager_t::verify_sync(host_out, host_in) == SyncResult::OK);
+    assert(network_manager_t::verify_sync(client_out, client_in) == SyncResult::OK);
+
     host.disconnect();
     client.disconnect();
 
-    std::cout << "    Full 14-byte, 77-byte, 3001-byte handshake and 22-byte lockstep loop verified 100%!" << std::endl;
+    std::cout << "    Full 14-byte, 77-byte, 3001-byte handshake and bidirectional 22-byte lockstep verified 100%!" << std::endl;
 }
 
 int main(int argc, char* argv[]) {

@@ -33,7 +33,7 @@ For a buildable C target with all synthetic types, calling convention shims, and
 
 ---
 
-## Function Index (123 Decompiled Routines)
+## Function Index (141 Decompiled Routines)
 
 | Virtual Address | File Path | Subsystem | Original Routine Description |
 | :--- | :--- | :--- | :--- |
@@ -73,6 +73,7 @@ For a buildable C target with all synthetic types, calling convention shims, and
 | `0x0040bbf0` | [`data/func_0040bbf0_frame_ctor.c`](data/func_0040bbf0_frame_ctor.c) | Data | Frame structure constructor & zeroing |
 | `0x0040be70` | [`data/func_0040be70_calc_frame_coords.c`](data/func_0040be70_calc_frame_coords.c) | Data | Sprite sheet UV cell coordinate calculator |
 | `0x0040d0a0` | [`data/func_0040d0a0_save_dat.c`](data/func_0040d0a0_save_dat.c) | Data | Character .dat file serializer |
+| `0x0040d940` | [`data/func_0040d940_frame_present.c`](data/func_0040d940_frame_present.c) | Data | Frame presence validation check on `.dat` slot |
 | `0x0040d960` | [`gameplay/func_0040d960_object_frame_advance.c`](gameplay/func_0040d960_object_frame_advance.c) | Gameplay | Per-object frame timer, sound trigger & `frame.next` advancement |
 | `0x0040de30` | [`graphics/func_0040de30_draw_entity.c`](graphics/func_0040de30_draw_entity.c) | Graphics | Sprite entity rendering, facing flip & palette blit |
 | `0x0040e170` | [`gameplay/func_0040e170_combo_timer_check.c`](gameplay/func_0040e170_combo_timer_check.c) | Gameplay | Combo timer window (`== 5`) interruption check helper |
@@ -96,6 +97,17 @@ For a buildable C target with all synthetic types, calling convention shims, and
 | `0x00414a30` | [`data/func_00414a30_decrypt_dat_to_file.c`](data/func_00414a30_decrypt_dat_to_file.c) | Data | Decrypted .dat file exporter |
 | `0x00414b70` | [`data/func_00414b70_stage_dat_loader.c`](data/func_00414b70_stage_dat_loader.c) | Data | Interactive .dat encrypt/decrypt CLI tool ("Doing what ('E'=encrp, 'D'=decrp)?", `helpme`) |
 | `0x004151d0` | [`graphics/func_004151d0_frame_debugger.c`](graphics/func_004151d0_frame_debugger.c) | Graphics | Frame debugger HUD, sprite rendering dispatch & box overlay |
+| `0x00416c70` | [`app/func_00416c70_unlock_chars_toggle.c`](app/func_00416c70_unlock_chars_toggle.c) | App | Secret character unlock toggle (`lf2.net`) & replay unlock flag |
+| `0x00416ca0` | [`app/func_00416ca0_unlock_fkeys_toggle.c`](app/func_00416ca0_unlock_fkeys_toggle.c) | App | Secret F-key unlock toggle (`herofighter.com`) & replay unlock flag |
+| `0x00416cd0` | [`app/func_00416cd0_fkey_f4_exit.c`](app/func_00416cd0_fkey_f4_exit.c) | App | F4 match exit, recording cancel & replay restoration handler |
+| `0x00416dd0` | [`app/func_00416dd0_fkey_f1_pause.c`](app/func_00416dd0_fkey_f1_pause.c) | App | F1 battle pause toggle handler |
+| `0x00416df0` | [`app/func_00416df0_fkey_f2_step.c`](app/func_00416df0_fkey_f2_step.c) | App | F2 single-frame step handler |
+| `0x00416e10` | [`app/func_00416e10_fkey_f3_lock.c`](app/func_00416e10_fkey_f3_lock.c) | App | F3 function-key lock handler |
+| `0x00416e30` | [`app/func_00416e30_fkey_f5_speed.c`](app/func_00416e30_fkey_f5_speed.c) | App | F5 simulation speed toggle handler |
+| `0x00416e60` | [`app/func_00416e60_fkey_f6_mp.c`](app/func_00416e60_fkey_f6_mp.c) | App | F6 unlimited MP toggle handler |
+| `0x00416eb0` | [`app/func_00416eb0_fkey_f7_recover.c`](app/func_00416eb0_fkey_f7_recover.c) | App | F7 HP/MP full recovery handler |
+| `0x00416f10` | [`app/func_00416f10_fkey_f8_weapons.c`](app/func_00416f10_fkey_f8_weapons.c) | App | F8 sky weapon drop trigger handler |
+| `0x00416f60` | [`app/func_00416f60_fkey_f9_destroy.c`](app/func_00416f60_fkey_f9_destroy.c) | App | F9 destroy items / stage enemies handler |
 | `0x00416fb0` | [`audio/func_00416fb0_sound_pan_calc_1.c`](audio/func_00416fb0_sound_pan_calc_1.c) | Audio | Positional audio panning calculator pass 1 |
 | `0x00417090` | [`audio/func_00417090_sound_pan_calc_2.c`](audio/func_00417090_sound_pan_calc_2.c) | Audio | Positional audio panning calculator pass 2 |
 | `0x00417170` | [`core/func_00417170_random.c`](core/func_00417170_random.c) | Core | 3,000-byte precomputed circular PRNG lookup |
@@ -110,6 +122,8 @@ For a buildable C target with all synthetic types, calling convention shims, and
 | `0x004197a0` | [`gameplay/func_004197a0_input_unpack_net.c`](gameplay/func_004197a0_input_unpack_net.c) | Gameplay | Remote/network input bits unpacking & flag latching |
 | `0x004198f0` | [`gameplay/func_004198f0_input_latch_local.c`](gameplay/func_004198f0_input_latch_local.c) | Gameplay | Local player input bits latching & replay recording |
 | `0x00419a60` | [`gameplay/func_00419a60_input_ai_dispatch.c`](gameplay/func_00419a60_input_ai_dispatch.c) | Gameplay | Master per-slot controller / AI input dispatch & loop |
+| `0x00419e40` | [`gameplay/func_00419e40_global_ctor.c`](gameplay/func_00419e40_global_ctor.c) | Gameplay | Global game manager state constructor / existence reset |
+| `0x00419e60` | [`audio/func_00419e60_sound_flush.c`](audio/func_00419e60_sound_flush.c) | Audio | Spatialized sound queue flush & DirectSound pan/volume dispatch |
 | `0x0041a250` | [`graphics/func_0041a250_background_update.c`](graphics/func_0041a250_background_update.c) | Graphics | Background update, parallax scrolling layer calculation & camera bounds |
 | `0x0041a5a0` | [`graphics/func_0041a5a0_render_scene.c`](graphics/func_0041a5a0_render_scene.c) | Graphics | Master scene rendering dispatcher & Z-sorting pass |
 | `0x0041ae60` | [`graphics/func_0041ae60_render_hud_bars.c`](graphics/func_0041ae60_render_hud_bars.c) | Graphics | In-game HUD HP/MP gauge bar renderer |
@@ -151,7 +165,11 @@ For a buildable C target with all synthetic types, calling convention shims, and
 | `0x0043c780` | [`graphics/func_0043c780_load_ui_surfaces.c`](graphics/func_0043c780_load_ui_surfaces.c) | Graphics | Embedded UI bitmap surface loader |
 | `0x0043cc60` | [`graphics/func_0043cc60_load_ui_2_surface.c`](graphics/func_0043cc60_load_ui_2_surface.c) | Graphics | Embedded UI secondary surface cache loader |
 | `0x0043cf40` | [`app/func_0043cf40_winmain.c`](app/func_0043cf40_winmain.c) | App | WinMain entry point & 30.3 FPS game loop |
+| `0x0043d2a0` | [`data/func_0043d2a0_replay_buffers_free.c`](data/func_0043d2a0_replay_buffers_free.c) | Data | Replay recording & playback buffer deallocator |
+| `0x0043db40` | [`data/func_0043db40_replay_write_frame.c`](data/func_0043db40_replay_write_frame.c) | Data | Per-frame 10-byte replay input recorder |
+| `0x0043dc50` | [`data/func_0043dc50_replay_read_frame.c`](data/func_0043dc50_replay_read_frame.c) | Data | Per-frame 10-byte replay input reader |
 | `0x0043dd60` | [`data/func_0043dd60_replay_save.c`](data/func_0043dd60_replay_save.c) | Data | Replay file save, zlib compression & secondary cipher |
+| `0x0043df00` | [`data/func_0043df00_replay_restore_cfg.c`](data/func_0043df00_replay_restore_cfg.c) | Data | Replay difficulty, player name & profile string restorer |
 | `0x0043dfa0` | [`data/func_0043dfa0_replay_unpack.c`](data/func_0043dfa0_replay_unpack.c) | Data | Replay memory buffer state unpacking & entity restoration |
 | `0x0043e620` | [`data/func_0043e620_replay_load.c`](data/func_0043e620_replay_load.c) | Data | Replay file load, secondary cipher de-obfuscation & inflation |
 | `0x0043e890` | [`graphics/func_0043e890_ddraw_restore.c`](graphics/func_0043e890_ddraw_restore.c) | Graphics | DirectDraw surface restoration handler |

@@ -20,40 +20,63 @@ constexpr size_t LF2_PRNG_SEED_LEN = 3001;        // 1-byte header + 3,000-byte 
 // 22-byte Lockstep Packet Size
 constexpr size_t LF2_PACKET_SIZE = 22; // 0x16
 
-// Input bitmask definitions (0x0041C9D4 - 0x0041CAAC)
-// Formula: 1 + 2^(X+1), where bit 0 is active idle (0x01)
+// Input bitmask definitions (0x004197A0 / 0x004198F0 / 0x00419A60)
+// Base idle active bit 0 is set in network packets (0x01)
 enum NetInputBits : uint8_t {
     NET_KEY_IDLE    = 0x01,
-    NET_KEY_UP      = 0x02,
-    NET_KEY_RIGHT   = 0x04,
+    NET_KEY_DEFEND  = 0x02,
+    NET_KEY_JUMP    = 0x04,
     NET_KEY_ATTACK  = 0x08,
-    NET_KEY_JUMP    = 0x10,
-    NET_KEY_DEFEND  = 0x20,
+    NET_KEY_RIGHT   = 0x10,
+    NET_KEY_LEFT    = 0x20,
     NET_KEY_DOWN    = 0x40,
-    NET_KEY_LEFT    = 0x80,
+    NET_KEY_UP      = 0x80,
+};
+
+// Function key bits packed in net_packet_t::func_keys_1 (+10)
+enum NetFuncKey1Bits : uint8_t {
+    NET_FKEY1_F1 = 0x02,
+    NET_FKEY1_F4 = 0x04,
+    NET_FKEY1_F5 = 0x08,
+    NET_FKEY1_F6 = 0x10,
+    NET_FKEY1_F7 = 0x20,
+    NET_FKEY1_F2 = 0x40,
+    NET_FKEY1_F9 = 0x80,
+};
+
+// Function key & cheat unlock bits packed in net_packet_t::func_keys_2 (+12)
+enum NetFuncKey2Bits : uint8_t {
+    NET_FKEY2_F3         = 0x02,
+    NET_FKEY2_F8         = 0x04,
+    NET_FKEY2_LF2NET     = 0x08,
+    NET_FKEY2_HEROFIGHTER= 0x10,
 };
 
 // 1:1 Binary Layout of the 22-byte Network Packet (0x0044D040 / 0x0044F198)
 // Verified via disassembly at 0x0041CB50 - 0x0041CCD0:
 #pragma pack(push, 1)
 struct net_packet_t {
-    uint8_t  player_inputs[8]; // +0..+7: Packed inputs for player slots 0..7
-    uint8_t  control_flags;    // +8: System control / function keys (F1 pause, F2 step)
+    uint8_t  player_inputs[8]; // +0..+7: Packed inputs for player slots 0..7 (base 0x01)
+    uint8_t  control_flags;    // +8: Base 0x01
     uint8_t  seq_counter;      // +9: Frame sequence counter modulo 50 (checked -> "Connection Lost!")
-    uint8_t  _pad10;           // +10: Sub-sequence padding
+    uint8_t  func_keys_1;      // +10: Function key bitmask 1 (base 0x01)
     uint8_t  version_tag;      // +11: Protocol/version byte (checked -> "Version not matched!")
-    uint8_t  _pad12;           // +12: Sub-frame sync padding
-    uint8_t  hp_checksum;      // +13: Active player cumulative HP checksum (checked -> "Synchronisation Error!")
-    uint8_t  prng_tag;         // +14: PRNG high bits / sub-frame tag
-    uint8_t  sub_sync;         // +15: Sub-frame sync tag
-    uint8_t  payload[6];       // +16..+21: Trailing PRNG indices and sub-frame synchronization
+    uint8_t  func_keys_2;      // +12: Function key bitmask 2 (base 0x01)
+    uint8_t  hp_checksum;      // +13: Active player cumulative HP checksum ((sum % 100) + 1 -> "Synchronisation Error!")
+    uint8_t  data_crc_lo;      // +14: Data checksum low byte (DAT_0044f620 & 0xFF)
+    uint8_t  data_crc_hi;      // +15: Data checksum high byte (arithmetic shift >> 8)
+    uint8_t  payload[6];       // +16..+21: {1, 1, 1, 1, 0, 0}
 };
 #pragma pack(pop)
 
 static_assert(sizeof(net_packet_t) == LF2_PACKET_SIZE, "net_packet_t must be exactly 22 bytes (0x16)");
 static_assert(offsetof(net_packet_t, seq_counter) == 9, "seq_counter must be at offset 9");
+static_assert(offsetof(net_packet_t, func_keys_1) == 10, "func_keys_1 must be at offset 10");
 static_assert(offsetof(net_packet_t, version_tag) == 11, "version_tag must be at offset 11");
+static_assert(offsetof(net_packet_t, func_keys_2) == 12, "func_keys_2 must be at offset 12");
 static_assert(offsetof(net_packet_t, hp_checksum) == 13, "hp_checksum must be at offset 13");
+static_assert(offsetof(net_packet_t, data_crc_lo) == 14, "data_crc_lo must be at offset 14");
+static_assert(offsetof(net_packet_t, data_crc_hi) == 15, "data_crc_hi must be at offset 15");
 
 // 77-byte Slot & Name Handshake Packet
 #pragma pack(push, 1)
@@ -80,9 +103,10 @@ static_assert(sizeof(net_prng_seed_packet_t) == LF2_PRNG_SEED_LEN, "net_prng_see
 // Network Synchronization Result Codes
 enum class SyncResult {
     OK = 0,
-    CONNECTION_LOST   = 1, // 0x004493B4: "Connection Lost!" (Offset +9 sequence mismatch)
-    VERSION_MISMATCH  = 2, // 0x0044939C: "Version not matched!" (Offset +11 version mismatch)
-    DESYNCHRONIZATION = 3  // 0x00449384: "Synchronisation Error!" (Offset +13 HP checksum mismatch)
+    CONNECTION_LOST   = 1, // "Connection Lost!" (Offset +9 sequence mismatch)
+    VERSION_MISMATCH  = 2, // "Version not matched!" (Offset +11 version mismatch)
+    DESYNCHRONIZATION = 3, // "Synchronisation Error!" (Offset +13 HP checksum mismatch)
+    DATA_MISMATCH     = 4  // "Data Error! You and your opponent have different set of data files." (Offsets +14..+15)
 };
 
 // Network Session Mode
@@ -118,11 +142,15 @@ public:
     // 22-byte lockstep transmission & reception (non-blocking)
     bool send_packet(const net_packet_t& packet);
     bool receive_packet(net_packet_t& out_packet);
+    // 1:1 Host (send->recv) vs Client (recv->send) lockstep exchange (0x0041C5F0)
+    bool exchange_lockstep(const net_packet_t& local_pkt, net_packet_t& out_remote_pkt);
 
     // 1:1 Lifted Helper Routines
+    static void init_packet(net_packet_t& pkt);
     static uint8_t pack_input(const input_state_t& input);
     static void unpack_input(uint8_t packed, input_state_t& out_input);
     static uint8_t compute_hp_checksum(const object_t* const* objects, int count);
+    static void encode_data_crc(net_packet_t& pkt, int32_t data_crc);
 
     // 1:1 Lifted Desync Verifier (0x0041CC27 - 0x0041CCD0)
     static SyncResult verify_sync(const net_packet_t& local_pkt, const net_packet_t& remote_pkt);

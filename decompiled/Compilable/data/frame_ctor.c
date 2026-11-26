@@ -20,3 +20,21 @@ void FUN_0040bbf0(void)
 {
     lf2_frame_ctor((frame_t *)in_ECX);
 }
+
+/*
+ * Virtual Address: 0x0040D940
+ * Function: lf2_frame_is_present / Frame slot presence check
+ * Calling Convention: __thiscall (ECX = const file_t*)
+ */
+bool lf2_frame_is_present(const file_t *file, int frame_id)
+{
+    if (!file || frame_id < 0 || frame_id >= MAX_FRAMES) {
+        return false;
+    }
+    return *(const char *)&file->frames[frame_id].present == '\x01';
+}
+
+bool FUN_0040d940(int param_1)
+{
+    return lf2_frame_is_present((const file_t *)in_ECX, param_1);
+}
