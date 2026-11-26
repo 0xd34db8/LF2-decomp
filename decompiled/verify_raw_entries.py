@@ -8,6 +8,7 @@ Verifies that:
 4. Each file is non-empty and contains authentic decompiler output or metadata.
 """
 
+import csv
 import os
 import re
 import sys
@@ -72,6 +73,33 @@ def main():
         expected_func = f"FUN_00{match.group(1).lower()}"
         if not re.search(rf'\b{expected_func}\s*\(', code_no_comments, re.IGNORECASE):
             errors.append(f"{filename}: Missing genuine Ghidra procedure definition '{expected_func}(...)'")
+
+    csv_path = os.path.join(repo_root, 'decompiled', 'functions.csv')
+    if os.path.isfile(csv_path):
+        with open(csv_path, 'r', encoding='utf-8', newline='') as cf:
+            rows = list(csv.DictReader(cf))
+        expected_norm = {f"0x00{a[2:].lower()}" for a in VERIFIED_ENTRIES}
+        seen_norm = {f"0x00{k[2:].lower()}": v for k, v in seen_addresses.items()}
+        csv_addrs = []
+        for row in rows:
+            addr = row.get('address', '')
+            csv_addrs.append(addr)
+            raw_rel = row.get('raw_file', '')
+            if addr in seen_norm:
+                expected_rel = "decompiled/RAW/" + os.path.relpath(
+                    next(p for p, fn in raw_files if fn == seen_norm[addr]),
+                    raw_dir,
+                ).replace(os.sep, '/')
+                if raw_rel != expected_rel:
+                    errors.append(
+                        f"functions.csv: {addr} raw_file={raw_rel!r} does not match {expected_rel!r}"
+                    )
+            elif raw_rel:
+                errors.append(f"functions.csv: {addr} lists non-existent raw_file={raw_rel!r}")
+        if set(csv_addrs) != expected_norm or len(csv_addrs) != len(expected_norm):
+            errors.append(
+                f"functions.csv: address set mismatch (csv={len(csv_addrs)}, verified={len(expected_norm)})"
+            )
 
     if errors:
         print(f"[FAIL] Archive integrity verification FAILED with {len(errors)} error(s):", file=sys.stderr)
