@@ -1,0 +1,44 @@
+name: Progress report
+
+on:
+  pull_request:
+    paths:
+      - 'decompiled/**'
+      - 'lifted/src/**'
+      - 'tools/**'
+      - '.github/workflows/progress-pr.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compare base vs head progress
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          out="$RUNNER_TEMP/progress-diff"
+          mkdir -p "$out"
+          git worktree add --detach "$RUNNER_TEMP/base" HEAD^1
+          python3 tools/progress.py --root "$RUNNER_TEMP/base" "$out/base"
+          python3 tools/progress.py "$out/head"
+          git worktree remove --force "$RUNNER_TEMP/base"
+          body=$(python3 tools/progress.py --compare "$out/base/progress.json" "$out/head/progress.json")
+          if [ -n "$body" ]; then
+            printf '### Progress report (%s -> %s)\n\n%s\n' "$(git rev-parse --short HEAD^1)" "${HEAD_SHA::7}" "$body" >> "$GITHUB_STEP_SUMMARY"
+          else
+            printf '### Progress report (%s -> %s)\n\nNo function-level coverage changes.\n' "$(git rev-parse --short HEAD^1)" "${HEAD_SHA::7}" >> "$GITHUB_STEP_SUMMARY"
+          fi
