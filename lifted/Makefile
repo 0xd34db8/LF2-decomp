@@ -11,7 +11,7 @@ SYSTEM_LIBS = $(SDL2_LIB) -lws2_32 -lz -lmfplat -lmfreadwrite -lmfuuid -lole32
 INCLUDES = -Isrc -Isrc/core -Isrc/gameplay -Isrc/data -Isrc/graphics -Isrc/app -I. $(SDL2_INC)
 CXXFLAGS ?= -std=c++20 -Wall -Wextra -O2 -MMD -MP $(INCLUDES)
 
-ifeq ($(OS),Windows_NT)
+ifeq ($(shell echo "check_quotes"),"check_quotes")
     ifneq ($(wildcard C:/msys64/usr/bin/rm.exe),)
         RM = C:/msys64/usr/bin/rm.exe -f
     else
@@ -41,12 +41,12 @@ define NOTICE_DATA
 	)
 endef
 else
-    RM ?= rm -f
+    RM = rm -f
 define MKDIR_BUILD
 	@mkdir -p "$(BUILD_DIR)"
 endef
 define COPY_SDL_DLL
-	@cp -u $(SDL2_DIR)/bin/SDL2.dll $(BUILD_DIR)/ 2>/dev/null || true
+	@if [ ! -f "$(BUILD_DIR)/SDL2.dll" ] && [ -f "$(SDL2_DIR)/bin/SDL2.dll" ]; then cp -f "$(SDL2_DIR)/bin/SDL2.dll" "$(BUILD_DIR)/SDL2.dll"; fi
 endef
 define NOTICE_DATA
 	@if [ ! -d "$(BUILD_DIR)/data" ]; then \
