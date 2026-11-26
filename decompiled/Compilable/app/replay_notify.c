@@ -16,6 +16,7 @@
  *   - State 3 (Red    0x000000FF): "Recording canceled!"
  */
 
+// FUNCTION: LF2 0x004028a0
 void func_004028a0_recording_notify(void)
 {
     char vol_buf[20];
@@ -74,6 +75,7 @@ void func_004028a0_recording_notify(void)
     }
 }
 
+// COMPAT: LF2 0x00402980
 void func_00402980_replay_notify(void)
 {
     func_004028a0_recording_notify();

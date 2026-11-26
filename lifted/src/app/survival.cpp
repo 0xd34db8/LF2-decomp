@@ -27,6 +27,7 @@ int32_t survival_manager_t::calculate_heal_amount() const {
     return (static_cast<int32_t>(m_difficulty) + 2) * 50;
 }
 
+// VERIFIED: LF2 0x00436fc0
 void survival_manager_t::apply_wave_clear_vitals(std::vector<object_t*>& players) {
     int32_t heal_bonus = calculate_heal_amount();
 
@@ -169,6 +170,7 @@ survival_wave_spec_t survival_manager_t::generate_wave(uint32_t wave_number) con
     return wave;
 }
 
+// PARTIAL: LF2 0x00434ab0
 survival_wave_spec_t survival_manager_t::generate_wave_from_stage_data(const stage_manager_t& stage_mgr, uint32_t wave_number) const {
     const stage_definition_t* s50 = stage_mgr.get_stage(50);
     if (s50 && wave_number >= 1 && wave_number <= s50->phases.size()) {
@@ -207,6 +209,7 @@ std::string survival_manager_t::generate_replay_filename() const {
     return std::string(buf);
 }
 
+// VERIFIED: LF2 0x00437220
 void survival_manager_t::update_curtain_step(bool action_key_pressed) {
     // 1:1 with 0x00437220 state machine
     m_anim_tick = (m_anim_tick + 1) % 10;

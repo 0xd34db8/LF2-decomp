@@ -10,6 +10,7 @@ tournament_manager_t::tournament_manager_t() {
     init(tournament_match_type_t::MATCH_1ON1, 8);
 }
 
+// VERIFIED: LF2 0x00432ab0
 void tournament_manager_t::init(tournament_match_type_t match_type, uint32_t contestant_count) {
     m_match_type = match_type;
     m_state = tournament_state_t::RESET;

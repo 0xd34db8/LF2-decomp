@@ -20,6 +20,7 @@ extern int g_game_mode;             // 0x00450BE4
 extern int g_stage_number;          // 0x00450B94
 extern int g_recording_state;       // 0x00450B70
 
+// COMPAT: LF2 0x0042d080
 void func_0042d080_replay_filename(int mode, int stage) {
     time_t rawtime;
     struct tm* timeinfo;
@@ -56,6 +57,7 @@ void func_0042d080_replay_filename(int mode, int stage) {
     g_recording_state = 1; // "Start recording..."
 }
 
+// FUNCTION: LF2 0x00429730
 void FUN_00429730(void)
 {
     func_0042d080_replay_filename(g_game_mode, g_stage_number);

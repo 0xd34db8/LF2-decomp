@@ -10,6 +10,7 @@
  * Calling Convention: __thiscall (ECX = stage_data_t*)
  */
 
+// FUNCTION: LF2 0x0040d0a0
 void FUN_0040d0a0(char *param_1)
 
 {

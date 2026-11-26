@@ -8,6 +8,7 @@
  * Math Parity: 1:1 with x86 MSVC assembly
  */
 
+// FUNCTION: LF2 0x004034e0
 int lf2_abs(int val)
 {
     return (val < 0) ? -val : val;

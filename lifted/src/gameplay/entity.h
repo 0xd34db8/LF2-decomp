@@ -10,6 +10,7 @@ namespace lf2 {
 void object_init(object_t* obj);
 
 // 1:1 Lift of 0x004061A0: 1D interval betweenness test (checks if b is strictly between a and c)
+// VERIFIED: LF2 0x004061a0
 inline bool is_between(int32_t a, int32_t b, int32_t c) {
     return ((a < b && b < c) || (c < b && b < a));
 }

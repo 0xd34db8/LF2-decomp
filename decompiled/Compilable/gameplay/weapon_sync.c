@@ -183,6 +183,7 @@ void lf2_weapon_sync(global_t *global, uint32_t char_id)
     }
 }
 
+// FUNCTION: LF2 0x00417f80
 void FUN_00417f80(void)
 {
     global_t *global = (global_t *)in_ECX;
@@ -199,6 +200,7 @@ void FUN_00417f80(void)
 }
 
 // AI held-weapon & drink decision helper (0x00408CB0)
+// FUNCTION: LF2 0x00408cb0
 int FUN_00408cb0(int target_id, int self_id, int self_state, int target_state, int z_close, int incoming_proj)
 {
     global_t *global = (global_t *)in_ECX;
@@ -369,6 +371,7 @@ int FUN_00408cb0(int target_id, int self_id, int self_state, int target_state, i
     return 0;
 }
 
+// COMPAT: LF2 0x00408ce0
 void FUN_00408ce0(void)
 {
     FUN_00417f80();

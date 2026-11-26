@@ -33,6 +33,7 @@ static void strip_trailing_spaces_and_newlines(char *str)
     }
 }
 
+// FUNCTION: LF2 0x00423480
 int FUN_00423480(void)
 {
     FILE *fp = fopen("data\\control.txt", "r");
@@ -98,6 +99,7 @@ int FUN_00423480(void)
     return 1;
 }
 
+// FUNCTION: LF2 0x00423230
 void FUN_00423230(void)
 {
     FILE *fp = fopen("data\\control.txt", "w");
@@ -183,6 +185,7 @@ int func_00423230_save_control_txt(void)
     return 1;
 }
 
+// COMPAT: LF2 0x004233e0
 int func_004233e0_save_control_txt(void)
 {
     FUN_00423230();

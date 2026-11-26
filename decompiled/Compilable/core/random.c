@@ -12,6 +12,7 @@
  *   range: Modulus upper bound (returns 0 if range < 1)
  */
 
+// FUNCTION: LF2 0x00417170
 int lf2_random(unsigned int seed_hint, int range)
 {
     (void)seed_hint;
@@ -39,6 +40,7 @@ int lf2_random_reseed(void)
  * Address: 0x00422AC0
  * Function: Circular PRNG table reseed
  */
+// FUNCTION: LF2 0x00422ac0
 int FUN_00422ac0(void)
 {
     int iVar1 = 0;

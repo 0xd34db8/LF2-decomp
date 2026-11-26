@@ -7,6 +7,7 @@ namespace lf2 {
 static uint32_t s_random_i = 0;
 static uint32_t s_random_j = 0;
 
+// VERIFIED: LF2 0x00417170
 int lf2_random([[maybe_unused]] uint32_t unused, int range) {
     if (range < 1) {
         return 0;

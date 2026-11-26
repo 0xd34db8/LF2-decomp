@@ -28,6 +28,7 @@ int32_t cycle_battle_multiplier_prev(int32_t current) {
     return current;
 }
 
+// VERIFIED: LF2 0x00438b40
 void calculate_squad_quota(int32_t base_active, int32_t base_total, int32_t scale_or_mult,
                            int32_t& out_active, int32_t& out_reserve) {
     // 1:1 with 0x00438B40 ratio distribution arithmetic
@@ -313,6 +314,7 @@ void battle_skirmish_simulator_t::add_army(const battle_army_t& army) {
     m_armies.push_back(army);
 }
 
+// VERIFIED: LF2 0x00437860
 int32_t battle_skirmish_simulator_t::replenish_reinforcements(size_t army_idx) {
     if (army_idx >= m_armies.size()) return 0;
     auto& army = m_armies[army_idx];

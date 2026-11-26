@@ -82,6 +82,7 @@ bool decompress_replay_stream(const uint8_t* src, size_t src_len, std::vector<ui
     return true;
 }
 
+// VERIFIED: LF2 0x00423480
 bool control_config_t::load_from_file(const std::string& filepath) {
     std::ifstream file(filepath);
     if (!file.is_open()) {
@@ -130,6 +131,7 @@ bool control_config_t::load_from_file(const std::string& filepath) {
     return true;
 }
 
+// VERIFIED: LF2 0x00423230
 bool control_config_t::save_to_file(const std::string& filepath) const {
     std::ofstream file(filepath);
     if (!file.is_open()) {
@@ -183,6 +185,7 @@ void replay_backup_state_t::write_to_block(std::vector<uint8_t>& block) const {
     std::strncpy(reinterpret_cast<char*>(block.data() + 0x630DB4), profile_email.c_str(), 99);
 }
 
+// VERIFIED: LF2 0x0043df00
 void replay_backup_state_t::restore_from_block(const std::vector<uint8_t>& block) {
     if (block.size() < AUTHENTIC_LFR_BLOCK_SIZE) return;
     const int32_t* u32 = reinterpret_cast<const int32_t*>(block.data());
@@ -296,6 +299,7 @@ void replay_recorder_t::record_frame(const uint8_t player_inputs[8], uint8_t con
     m_frames.push_back(frame);
 }
 
+// VERIFIED: LF2 0x0043db40
 bool replay_recorder_t::record_frame_10(const replay_frame_10_t& rec, int32_t active_hp_sum) {
     if (!m_recording) return false;
     if (!m_authentic_v2) {
@@ -324,6 +328,7 @@ bool replay_recorder_t::record_frame_10(const replay_frame_10_t& rec, int32_t ac
     return true;
 }
 
+// VERIFIED: LF2 0x0043dd60
 bool replay_recorder_t::finish_recording() {
     if (!m_recording) return false;
 
@@ -404,6 +409,8 @@ replay_player_t::~replay_player_t() {
     close();
 }
 
+// VERIFIED: LF2 0x0043e620
+// VERIFIED: LF2 0x0043dfa0
 bool replay_player_t::open_replay(const std::string& filepath) {
     close();
 
@@ -529,6 +536,7 @@ bool replay_player_t::read_frame(uint8_t out_inputs[8], uint8_t& out_flags) {
     return true;
 }
 
+// VERIFIED: LF2 0x0043dc50
 bool replay_player_t::read_frame_10(replay_frame_10_t& out_rec, int32_t current_hp_sum, bool& out_checksum_ok) {
     out_checksum_ok = true;
     if (!m_loaded) return false;
@@ -561,6 +569,7 @@ bool replay_player_t::read_frame_10(replay_frame_10_t& out_rec, int32_t current_
     return true;
 }
 
+// LIFTED: LF2 0x0043d2a0
 void replay_player_t::close() {
     m_loaded = false;
     m_frames.clear();

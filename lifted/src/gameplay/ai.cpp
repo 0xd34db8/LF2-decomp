@@ -161,6 +161,7 @@ uint32_t ai_find_nearest_target(const global_t* world, uint32_t ai_id)
     return best_target;
 }
 
+// VERIFIED: LF2 0x00403a40
 int32_t ai_evaluate_character_special(global_t* world, int32_t target_id, int32_t ai_id,
                                       int32_t self_state, int32_t target_state,
                                       int32_t incoming_proj, int32_t dist, int32_t z_close,
@@ -692,6 +693,7 @@ bool ai_evaluate_character_special(object_t* self, const object_t* target, input
     return false;
 }
 
+// VERIFIED: LF2 0x00408cb0
 int32_t ai_evaluate_weapon_decision(global_t* world, int32_t target_id, int32_t ai_id,
                                     int32_t self_state, int32_t target_state,
                                     int32_t z_close, int32_t incoming_proj,
@@ -881,6 +883,7 @@ bool ai_evaluate_weapon_decision(const global_t* world, uint32_t ai_id, uint32_t
             out_input.left || out_input.right || out_input.up || out_input.down);
 }
 
+// VERIFIED: LF2 0x004034f0
 int32_t ai_evaluate_dodge(global_t* world, int32_t target_id, int32_t ai_id,
                             int32_t target_state, int32_t hazard_right, int32_t hazard_left,
                             int32_t skill3, int32_t skill5)
@@ -994,6 +997,7 @@ bool ai_evaluate_dodge(const global_t* world, uint32_t ai_id, uint32_t target_id
     return (out_input.attack || out_input.defend || out_input.jump);
 }
 
+// VERIFIED: LF2 0x004094b0
 void ai_control_object(global_t* world, int32_t ai_id, const ai_world_params_t& params)
 {
     if (!world || ai_id < 0 || ai_id >= static_cast<int32_t>(MAX_OBJECTS) ||

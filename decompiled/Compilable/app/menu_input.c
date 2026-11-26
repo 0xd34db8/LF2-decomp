@@ -14,6 +14,7 @@
  *   and signals new-player-join transition flags (DAT_004513a4..DAT_004513bc).
  */
 
+// FUNCTION: LF2 0x00431b70
 void lf2_menu_check_player_join_input(global_t *global)
 {
     if (!global) return;

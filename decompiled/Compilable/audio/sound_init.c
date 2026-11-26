@@ -9,6 +9,7 @@
  * Class / Subsystem: Audio Engine / DirectSound
  */
 
+// FUNCTION: LF2 0x00401970
 int FUN_00401970(HWND param_1)
 {
     (void)param_1;
@@ -29,6 +30,7 @@ int func_00401970_sound_init(void* hwnd)
     return FUN_00401970((HWND)hwnd);
 }
 
+// FUNCTION: LF2 0x004019b0
 void FUN_004019b0(void)
 {
     /*

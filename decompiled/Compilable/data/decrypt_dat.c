@@ -15,6 +15,7 @@
 static const char LF2_CIPHER_KEY[] = "SiuHungIsAGoodBearBecauseHeIsVeryGood";
 enum { LF2_KEY_LEN = 37, LF2_HEADER_LEN = 123 };
 
+// FUNCTION: LF2 0x004148a0
 void FUN_004148a0(const char *param_1)
 {
     FILE *in = fopen(param_1, "r");
@@ -49,6 +50,7 @@ void FUN_004148a0(const char *param_1)
     fclose(out);
 }
 
+// FUNCTION: LF2 0x00414a30
 void FUN_00414a30(const char *in_path, const char *out_path)
 {
     FILE *in = fopen(in_path, "r");
@@ -115,6 +117,7 @@ void lf2_encrypt_txt(const char *txt_path, const char *dat_path)
     fclose(out);
 }
 
+// FUNCTION: LF2 0x004146b0
 void FUN_004146b0(const char *txt_path)
 {
     char dat_path[260];

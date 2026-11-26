@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+// FUNCTION: LF2 0x0043ef70
 int lf2_clip_rect(int *dst_x1, int *dst_y1, int *dst_x2, int *dst_y2,
                   int *src_x1, int *src_y1, int *src_x2, int *src_y2,
                   int screen_w, int screen_h)

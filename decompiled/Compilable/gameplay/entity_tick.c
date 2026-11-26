@@ -29,6 +29,7 @@ static int32_t resolve_frame_sound_id(const frame_t *frame)
 }
 
 // 0x0040E450: 5-entry input history shift register
+// FUNCTION: LF2 0x0040e450
 void lf2_input_history_push(object_t *obj, uint32_t key_code)
 {
     if (!obj) return;
@@ -45,6 +46,7 @@ void FUN_0040e450(undefined4 param_1)
 }
 
 // 0x0040E170: Combo timer window (== 5) check helper
+// FUNCTION: LF2 0x0040e170
 int lf2_combo_interrupted(const object_t *obj, char expected_key, int advanced)
 {
     if (!obj) return 0;
@@ -116,6 +118,7 @@ int FUN_0040e170(char param_1, int param_2)
 }
 
 // 0x0040E2D0: Frame transition & MP/HP cost helper
+// FUNCTION: LF2 0x0040e2d0
 int lf2_frame_transition(object_t *obj, int target_frame)
 {
     if (!obj || !obj->file) return 0;
@@ -179,6 +182,7 @@ int FUN_0040e2d0(int param_1)
 }
 
 // 0x00412800: Combo D > R > A (hit_Fa, face right)
+// FUNCTION: LF2 0x00412800
 void FUN_00412800(void)
 {
     object_t *obj = (object_t *)in_ECX;
@@ -222,6 +226,7 @@ void FUN_00412800(void)
 }
 
 // 0x004128F0: Combo D > L > A (hit_Fa, face left)
+// FUNCTION: LF2 0x004128f0
 void FUN_004128f0(void)
 {
     object_t *obj = (object_t *)in_ECX;
@@ -265,6 +270,7 @@ void FUN_004128f0(void)
 }
 
 // 0x004129E0: Combo D > U > A (hit_Ua)
+// FUNCTION: LF2 0x004129e0
 void FUN_004129e0(void)
 {
     object_t *obj = (object_t *)in_ECX;
@@ -307,6 +313,7 @@ void FUN_004129e0(void)
 }
 
 // 0x00412AC0: Combo D > D > A (hit_Da)
+// FUNCTION: LF2 0x00412ac0
 void FUN_00412ac0(void)
 {
     object_t *obj = (object_t *)in_ECX;
@@ -349,6 +356,7 @@ void FUN_00412ac0(void)
 }
 
 // 0x00412BA0: Combo D > R > J (hit_Fj, face right)
+// FUNCTION: LF2 0x00412ba0
 void FUN_00412ba0(void)
 {
     object_t *obj = (object_t *)in_ECX;
@@ -392,6 +400,7 @@ void FUN_00412ba0(void)
 }
 
 // 0x00412C90: Combo D > L > J (hit_Fj, face left)
+// FUNCTION: LF2 0x00412c90
 void FUN_00412c90(void)
 {
     object_t *obj = (object_t *)in_ECX;
@@ -435,6 +444,7 @@ void FUN_00412c90(void)
 }
 
 // 0x00412D80: Combo D > U > J (hit_Uj)
+// FUNCTION: LF2 0x00412d80
 void FUN_00412d80(void)
 {
     object_t *obj = (object_t *)in_ECX;
@@ -477,6 +487,7 @@ void FUN_00412d80(void)
 }
 
 // 0x00412E60: Combo D > D > J (hit_Dj)
+// FUNCTION: LF2 0x00412e60
 void FUN_00412e60(void)
 {
     object_t *obj = (object_t *)in_ECX;
@@ -519,6 +530,7 @@ void FUN_00412e60(void)
 }
 
 // 0x00412F40: Combo D > J > A (hit_ja, Louis EX transform / Firzen defusion)
+// FUNCTION: LF2 0x00412f40
 void FUN_00412f40(void)
 {
     object_t *obj = (object_t *)in_ECX;
@@ -565,6 +577,7 @@ void FUN_00412f40(void)
 }
 
 // 0x0040D960: Per-object frame timer, sound trigger & frame.next advancement
+// FUNCTION: LF2 0x0040d960
 void lf2_object_frame_advance(object_t *obj, int mode, int obj_idx)
 {
     if (!obj || !obj->file) return;
@@ -738,6 +751,7 @@ void FUN_0040d960(int param_1, int param_2)
 }
 
 // 0x0040E490: Per-object physics, velocity integration, gravity & ground landing
+// FUNCTION: LF2 0x0040e490
 void lf2_object_physics_tick(object_t *obj)
 {
     if (!obj) return;
@@ -1061,6 +1075,7 @@ void FUN_0040e490(void)
 }
 
 // 0x00413080: Master per-object input/state tick & combo dispatcher
+// FUNCTION: LF2 0x00413080
 void lf2_object_input_tick(object_t *obj)
 {
     if (!obj || !obj->file || obj->frame_id1 >= MAX_FRAMES) return;

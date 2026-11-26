@@ -71,6 +71,7 @@ bgm_manager_t::~bgm_manager_t()
     cleanup();
 }
 
+// LIFTED: LF2 0x00401c90
 bool bgm_manager_t::init()
 {
     if (m_initialized) return true;
@@ -86,6 +87,7 @@ bool bgm_manager_t::init()
     return true;
 }
 
+// LIFTED: LF2 0x00401d30
 void bgm_manager_t::cleanup()
 {
     stop();
@@ -137,6 +139,7 @@ std::string bgm_manager_t::find_audio_file(const std::string& path) const
     return norm;
 }
 
+// LIFTED: LF2 0x00401da0
 bool bgm_manager_t::decode_file_to_pcm(const std::string& path, std::vector<uint8_t>& out_pcm)
 {
     out_pcm.clear();
@@ -225,6 +228,7 @@ bool bgm_manager_t::decode_file_to_pcm(const std::string& path, std::vector<uint
     return false;
 }
 
+// VERIFIED: LF2 0x00402020
 bool bgm_manager_t::play(const std::string& filepath)
 {
     if (!m_initialized) {
@@ -263,6 +267,7 @@ bool bgm_manager_t::play(const std::string& filepath)
     return true;
 }
 
+// VERIFIED: LF2 0x004025d0
 bool bgm_manager_t::play_track(int32_t track_id)
 {
     if (track_id == BGM_TRACK_OFF) {
@@ -292,6 +297,7 @@ bool bgm_manager_t::play_track(int32_t track_id)
     return play(path);
 }
 
+// LIFTED: LF2 0x004025b0
 bool bgm_manager_t::play_staged()
 {
     if (!m_staged_track_path.empty()) {
@@ -300,6 +306,7 @@ bool bgm_manager_t::play_staged()
     return false;
 }
 
+// LIFTED: LF2 0x00402000
 void bgm_manager_t::stop()
 {
     m_playing = false;
@@ -307,11 +314,13 @@ void bgm_manager_t::stop()
     m_current_track_path.clear();
 }
 
+// LIFTED: LF2 0x00402100
 void bgm_manager_t::pause()
 {
     m_playing = false;
 }
 
+// VERIFIED: LF2 0x00401f30
 void bgm_manager_t::set_volume(int32_t vol)
 {
     m_volume = std::clamp(vol, 0, 100);
@@ -325,6 +334,7 @@ void bgm_manager_t::set_enabled(bool enabled)
     }
 }
 
+// VERIFIED: LF2 0x00402130
 void bgm_manager_t::menu_input(int32_t toggle_mode, int32_t left, int32_t right)
 {
     // Authentic LF2 menu BGM cycler (0x00402130)
@@ -411,6 +421,7 @@ void bgm_manager_t::on_boss_defeated()
     }
 }
 
+// VERIFIED: LF2 0x00401e90
 void bgm_manager_t::mix_audio(uint8_t* stream, int32_t len, SDL_AudioFormat format)
 {
     if (!m_playing || !m_enabled || m_decoded_pcm.empty() || len <= 0) {

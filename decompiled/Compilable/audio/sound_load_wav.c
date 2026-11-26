@@ -16,6 +16,7 @@
 
 #include <stdint.h>
 
+// FUNCTION: LF2 0x004014e0
 int func_004014e0_sound_load_wav(const char* filepath, uint32_t sound_id)
 {
     /*

@@ -14,6 +14,7 @@
  *   and records successful hit candidates into attacker's hit registry.
  */
 
+// FUNCTION: LF2 0x00417400
 void lf2_does_attack_success(global_t *global, uint32_t attacker_id, uint32_t injured_id, uint32_t mode)
 {
     if (!global || attacker_id >= MAX_OBJECTS || injured_id >= MAX_OBJECTS) return;

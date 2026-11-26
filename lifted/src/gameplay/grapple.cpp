@@ -279,6 +279,7 @@ void cpoint_chain_single(global_t* world, int32_t obj_id)
 
 } // namespace
 
+// VERIFIED: LF2 0x00418c30
 void world_process_cpoint_chain(global_t* world)
 {
     if (!world) return;
@@ -287,6 +288,7 @@ void world_process_cpoint_chain(global_t* world)
     }
 }
 
+// VERIFIED: LF2 0x004187b0
 void world_process_cpoint_sync(global_t* world)
 {
     if (!world) return;
@@ -301,6 +303,7 @@ void process_grapple_sync(global_t* world, uint32_t catcher_id)
     cpoint_sync_single(world, static_cast<int32_t>(catcher_id));
 }
 
+// VERIFIED: LF2 0x004064d0
 void world_process_firzen_fusion(global_t* world, int32_t unlock_chars)
 {
     if (!world) return;

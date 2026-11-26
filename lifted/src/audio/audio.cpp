@@ -61,6 +61,7 @@ audio_system_t::~audio_system_t()
     cleanup();
 }
 
+// VERIFIED: LF2 0x00401970
 bool audio_system_t::init()
 {
     if (m_initialized) return true;
@@ -100,6 +101,7 @@ bool audio_system_t::init()
     return true;
 }
 
+// VERIFIED: LF2 0x004019b0
 void audio_system_t::cleanup()
 {
     stop_all();
@@ -117,6 +119,7 @@ void audio_system_t::cleanup()
     m_initialized = false;
 }
 
+// VERIFIED: LF2 0x004014e0
 bool audio_system_t::load_sound(uint32_t sound_id, const std::string& filepath)
 {
     if (!m_initialized) {
@@ -236,6 +239,7 @@ bool audio_system_t::load_sound_from_memory(uint32_t sound_id, const uint8_t* da
     return true;
 }
 
+// VERIFIED: LF2 0x00401a30
 int32_t audio_system_t::play_sound(uint32_t sound_id, bool loop, int volume, int left_gain, int right_gain)
 {
     auto it = m_samples.find(sound_id);
@@ -308,6 +312,7 @@ void audio_system_t::stop_all()
     }
 }
 
+// VERIFIED: LF2 0x00402810
 void audio_system_t::set_master_volume(int volume)
 {
     m_master_volume = std::clamp(volume, 0, static_cast<int>(SDL_MIX_MAXVOLUME));
@@ -327,6 +332,7 @@ uint32_t audio_system_t::get_active_channel_count() const
     return count;
 }
 
+// VERIFIED: LF2 0x00416fb0
 void audio_system_t::queue_item_sound(int32_t world_x, int32_t camera_x, int32_t sound_id)
 {
     if (sound_id < 0 || sound_id >= static_cast<int32_t>(MAX_ITEM_SOUNDS)) return;
@@ -341,6 +347,7 @@ void audio_system_t::queue_item_sound(int32_t world_x, int32_t camera_x, int32_t
     m_item_queued[sound_id] = 1;
 }
 
+// VERIFIED: LF2 0x00417090
 void audio_system_t::queue_fixed_sound(int32_t world_x, int32_t camera_x, int32_t fixed_idx)
 {
     if (fixed_idx < 0 || fixed_idx >= static_cast<int32_t>(MAX_FIXED_SOUNDS)) return;
@@ -355,6 +362,7 @@ void audio_system_t::queue_fixed_sound(int32_t world_x, int32_t camera_x, int32_
     m_fixed_queued[fixed_idx] = 1;
 }
 
+// VERIFIED: LF2 0x00419e60
 void audio_system_t::flush_queued_sounds()
 {
     int master_pct = (m_master_volume * 100) / SDL_MIX_MAXVOLUME;

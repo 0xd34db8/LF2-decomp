@@ -49,6 +49,7 @@ lf2_net_packet_t g_incoming_packet = {0}; /* 0x0044F198 */
 unsigned int g_current_frame = 0;
 
 /* 0x00416C70: Toggle unlocked characters (lf2.net) & set replay record byte 9 |= 0x01 */
+// FUNCTION: LF2 0x00416c70
 void FUN_00416c70(uint8_t *param_1)
 {
     if (param_1) {
@@ -59,6 +60,7 @@ void FUN_00416c70(uint8_t *param_1)
 }
 
 /* 0x00416CA0: Toggle unlocked stage F-keys (herofighter.com) & set replay record byte 9 |= 0x02 */
+// FUNCTION: LF2 0x00416ca0
 void FUN_00416ca0(uint8_t *param_1)
 {
     if (param_1) {
@@ -69,6 +71,7 @@ void FUN_00416ca0(uint8_t *param_1)
 }
 
 /* 0x00416CD0: F4 exit match, cancel replay recording, or restore config after replay */
+// FUNCTION: LF2 0x00416cd0
 void FUN_00416cd0(int *param_1, int *param_2)
 {
     if (!param_1 || !param_2) return;
@@ -110,6 +113,7 @@ void FUN_00416cd0(int *param_1, int *param_2)
 }
 
 /* 0x00416DD0: F1 pause toggle */
+// FUNCTION: LF2 0x00416dd0
 void FUN_00416dd0(int *param_1)
 {
     if (param_1 && *param_1 == 0) {
@@ -119,6 +123,7 @@ void FUN_00416dd0(int *param_1)
 }
 
 /* 0x00416DF0: F2 single-frame step while paused */
+// FUNCTION: LF2 0x00416df0
 void FUN_00416df0(int *param_1)
 {
     if (param_1 && *param_1 == 0) {
@@ -128,6 +133,7 @@ void FUN_00416df0(int *param_1)
 }
 
 /* 0x00416E10: F3 lock function keys */
+// FUNCTION: LF2 0x00416e10
 void FUN_00416e10(uint8_t *param_1, int *param_2)
 {
     if (param_2 && *param_2 == 0) {
@@ -139,6 +145,7 @@ void FUN_00416e10(uint8_t *param_1, int *param_2)
 }
 
 /* 0x00416E30: F5 toggle normal/fast speed */
+// FUNCTION: LF2 0x00416e30
 void FUN_00416e30(undefined4 param_1, int *param_2)
 {
     (void)param_1;
@@ -149,6 +156,7 @@ void FUN_00416e30(undefined4 param_1, int *param_2)
 }
 
 /* 0x00416E60: F6 unlimited MP toggle */
+// FUNCTION: LF2 0x00416e60
 void FUN_00416e60(uint8_t *param_1, int *param_2, int *param_3)
 {
     if (!param_2 || !param_3) return;
@@ -163,6 +171,7 @@ void FUN_00416e60(uint8_t *param_1, int *param_2, int *param_3)
 }
 
 /* 0x00416EB0: F7 recover full HP & MP */
+// FUNCTION: LF2 0x00416eb0
 void FUN_00416eb0(uint8_t *param_1, int *param_2, int *param_3)
 {
     if (!param_2 || !param_3) return;
@@ -179,6 +188,7 @@ void FUN_00416eb0(uint8_t *param_1, int *param_2, int *param_3)
 }
 
 /* 0x00416F10: F8 drop weapons from sky */
+// FUNCTION: LF2 0x00416f10
 void FUN_00416f10(uint8_t *param_1, int *param_2, int *param_3)
 {
     if (!param_2 || !param_3) return;
@@ -195,6 +205,7 @@ void FUN_00416f10(uint8_t *param_1, int *param_2, int *param_3)
 }
 
 /* 0x00416F60: F9 destroy all items / stage enemies */
+// FUNCTION: LF2 0x00416f60
 void FUN_00416f60(uint8_t *param_1, int *param_2, int *param_3)
 {
     if (!param_2 || !param_3) return;
@@ -328,6 +339,7 @@ static int run_lockstep_exchange(global_t *global, int use_global_buffers)
     return 0;
 }
 
+// COMPAT: LF2 0x0041c5f0
 int func_0041c5f0_net_lockstep(void)
 {
     return run_lockstep_exchange((global_t *)in_ECX, 0);
@@ -341,6 +353,7 @@ int func_0041c5f0_net_lockstep(void)
  * transforms, regeneration, opoint spawner, weapon break shards, team orders,
  * ice/fire FX, and end-of-frame spatialized sound dispatch.
  */
+// FUNCTION: LF2 0x0041bc90
 int lf2_battle_frame_tick(global_t *global, int *game_mode)
 {
     if (!global || !game_mode) {

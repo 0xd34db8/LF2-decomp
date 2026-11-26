@@ -52,16 +52,19 @@ void lf2_replay_cipher_decrypt(uint8_t *buffer, size_t size) {
 }
 
 // 1:1 Parity with 0x0043F4B0: zlib compress wrapper
+// LIBRARY: LF2 0x0043f4b0
 int FUN_0043f4b0(void *dst, unsigned long *dst_len, const void *src, unsigned long src_len) {
     return compress((Bytef *)dst, dst_len, (const Bytef *)src, src_len);
 }
 
 // 1:1 Parity with 0x0043F4D0: zlib uncompress wrapper
+// LIBRARY: LF2 0x0043f4d0
 int FUN_0043f4d0(void *dst, unsigned long *dst_len, const void *src, unsigned long src_len) {
     return uncompress((Bytef *)dst, dst_len, (const Bytef *)src, src_len);
 }
 
 // 1:1 Parity with 0x0043DD60: Save replay file with zlib compression and secondary cipher
+// FUNCTION: LF2 0x0043dd60
 void FUN_0043dd60(void) {
     if (!DAT_004588a8) return;
 
@@ -98,6 +101,7 @@ void FUN_0043dd60(void) {
 }
 
 // 1:1 Parity with 0x0043E620: Load replay file with secondary decipher and zlib decompression
+// FUNCTION: LF2 0x0043e620
 int FUN_0043e620(char *param_1) {
     DAT_0044d030 = 1;
     DAT_00450b74 = 0;
@@ -159,6 +163,7 @@ int FUN_0043e620(char *param_1) {
 }
 
 // 1:1 Parity with 0x0043D280: Free single heap buffer pointer slot
+// FUNCTION: LF2 0x0043d280
 void FUN_0043d280(void *ptr_slot) {
     if (!ptr_slot) return;
     void **slot = (void **)ptr_slot;
@@ -169,12 +174,14 @@ void FUN_0043d280(void *ptr_slot) {
 }
 
 // 1:1 Parity with 0x0043D2A0: Free recording (DAT_004588a8) and playback (DAT_004588ac) buffers
+// FUNCTION: LF2 0x0043d2a0
 void FUN_0043d2a0(void) {
     FUN_0043d280(&DAT_004588a8);
     FUN_0043d280(&DAT_004588ac);
 }
 
 // 1:1 Parity with 0x0043DB40: Write 10-byte per-frame input record into recording buffer
+// FUNCTION: LF2 0x0043db40
 void FUN_0043db40(const uint8_t *param_1) {
     if (!DAT_004588a8 || !param_1) return;
     uint8_t *dst = (uint8_t *)DAT_004588a8 + 0x2b38 + (size_t)DAT_00450b8c * 10;
@@ -184,6 +191,7 @@ void FUN_0043db40(const uint8_t *param_1) {
 }
 
 // 1:1 Parity with 0x0043DC50: Read 10-byte per-frame input record from playback buffer
+// FUNCTION: LF2 0x0043dc50
 void FUN_0043dc50(uint8_t *param_1) {
     if (!DAT_004588ac || !param_1) return;
     const uint8_t *src = (const uint8_t *)(uintptr_t)DAT_004588ac + 0x2b38 + (size_t)DAT_00450b8c * 10;
@@ -193,6 +201,7 @@ void FUN_0043dc50(uint8_t *param_1) {
 }
 
 // 1:1 Parity with 0x0043DF00: Restore difficulty, 8 player names, and 3 profile strings after replay
+// FUNCTION: LF2 0x0043df00
 void FUN_0043df00(void) {
     DAT_00450c30 = DAT_0045877c;
     for (int offset = 0; offset < 0x58; offset += 0x0b) {
@@ -218,6 +227,7 @@ void FUN_0043df00(void) {
 }
 
 // 1:1 Parity with 0x0043DFA0: Unpack replay header, config backups, 18 slots, PRNG table & random fighters
+// FUNCTION: LF2 0x0043dfa0
 void FUN_0043dfa0(int *param_1, char *param_2, void *param_3, void *param_4) {
     if (!DAT_004588ac || !param_1 || !param_2 || !param_3) return;
 

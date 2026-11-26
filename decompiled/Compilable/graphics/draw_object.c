@@ -25,6 +25,7 @@ void lf2_draw_object(int32_t obj_x, int32_t obj_y, int32_t obj_z,
     *out_screen_y = obj_y + obj_z - camera_y - centery;
 }
 
+// FUNCTION: LF2 0x0040bf30
 int FUN_0040bf30(int frame_id)
 {
     file_t *file = (file_t *)in_ECX;
@@ -44,6 +45,7 @@ int FUN_0040bf30(int frame_id)
     return 0;
 }
 
+// FUNCTION: LF2 0x0040de30
 void FUN_0040de30(int camera_x, void *dest_surface, int shake_dir)
 {
     object_t *obj = (object_t *)in_ECX;
@@ -96,6 +98,7 @@ void FUN_0040de30(int camera_x, void *dest_surface, int shake_dir)
     in_ECX = saved_ecx;
 }
 
+// FUNCTION: LF2 0x0041a5a0
 void FUN_0041a5a0(void *param_1, int param_2)
 {
     global_t *global = (global_t *)in_ECX;

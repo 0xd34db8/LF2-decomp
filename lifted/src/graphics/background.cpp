@@ -96,6 +96,7 @@ bool background_t::parse_content(const std::string& content) {
     return true;
 }
 
+// VERIFIED: LF2 0x0041a250
 int32_t background_t::calculate_layer_x(size_t layer_idx, int32_t camera_x) const {
     if (layer_idx >= layers.size()) return 0;
     const auto& layer = layers[layer_idx];

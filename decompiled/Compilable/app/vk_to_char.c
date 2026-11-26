@@ -10,6 +10,7 @@
  * Calling Convention: __cdecl
  */
 
+// FUNCTION: LF2 0x00422f60
 char lf2_vk_to_ascii(int key_code)
 {
     return FUN_00422f60(key_code);

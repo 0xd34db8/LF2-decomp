@@ -45,6 +45,7 @@ static const char* const BGM_TRACK_NAMES[] = {
     "Final Boss"
 };
 
+// FUNCTION: LF2 0x00401c90
 int FUN_00401c90(void)
 {
     // Emulated DirectShow Graph initialization
@@ -56,6 +57,7 @@ int FUN_00401c90(void)
     return 0;
 }
 
+// FUNCTION: LF2 0x00401d30
 void FUN_00401d30(void)
 {
     // DirectShow Interface Release & Graph Teardown
@@ -65,6 +67,7 @@ void FUN_00401d30(void)
     DAT_0044f040 = NULL;
 }
 
+// FUNCTION: LF2 0x00401da0
 void FUN_00401da0(const char *param_1)
 {
     if (!param_1) return;
@@ -72,23 +75,27 @@ void FUN_00401da0(const char *param_1)
     DAT_0044ef04[sizeof(DAT_0044ef04) - 1] = '\0';
 }
 
+// FUNCTION: LF2 0x00401e90
 void FUN_00401e90(void)
 {
     // BGM track loop event pump
     // In authentic binary: checks EC_COMPLETE event, rewinds position to 0
 }
 
+// FUNCTION: LF2 0x00401f30
 int FUN_00401f30(int vol)
 {
     DAT_0044d000 = vol;
     return 0;
 }
 
+// FUNCTION: LF2 0x00402000
 void FUN_00402000(void)
 {
     // BGM Playback Stop
 }
 
+// FUNCTION: LF2 0x00402020
 void FUN_00402020(const char *param_1)
 {
     if (DAT_0044d010 == 0 || !param_1 || param_1[0] == '\0') {
@@ -114,12 +121,14 @@ void func_00402020_bgm_play(const char *filepath)
     FUN_00402020(filepath);
 }
 
+// FUNCTION: LF2 0x00402100
 void FUN_00402100(void)
 {
     // BGM Pause & Rewind to Origin
     DAT_0044ef04[0] = '\0';
 }
 
+// FUNCTION: LF2 0x00402130
 void FUN_00402130(int param_1, int param_2, int param_3, void *param_4)
 {
     (void)param_4;
@@ -186,6 +195,7 @@ update_status:
     }
 }
 
+// FUNCTION: LF2 0x004025b0
 void FUN_004025b0(void)
 {
     if (DAT_0044eed0[0] != '\0') {
@@ -193,6 +203,7 @@ void FUN_004025b0(void)
     }
 }
 
+// FUNCTION: LF2 0x004025d0
 void FUN_004025d0(int track_id)
 {
     if (DAT_0044d010 == 0) {

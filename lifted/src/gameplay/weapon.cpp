@@ -180,6 +180,7 @@ void wpoint_sync_single(global_t* world, int32_t weapon_id)
 
 } // namespace
 
+// VERIFIED: LF2 0x00417f80
 void world_process_weapons(global_t* world)
 {
     if (!world) return;

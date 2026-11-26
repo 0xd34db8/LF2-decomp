@@ -34,6 +34,7 @@ int32_t lf2_parallax_calc(int32_t layer_x, int32_t layer_width, int32_t total_st
     return layer_x + offset;
 }
 
+// FUNCTION: LF2 0x0041a250
 int FUN_0041a250(void *param_1)
 {
     char *ecx_base = (char *)in_ECX;
@@ -103,6 +104,7 @@ int FUN_0041a250(void *param_1)
     return 0;
 }
 
+// COMPAT: LF2 0x0041a2dd
 int FUN_0041a2dd(void)
 {
     return FUN_0041a250(NULL);

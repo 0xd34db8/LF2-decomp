@@ -11,6 +11,7 @@
 
 
 
+// FUNCTION: LF2 0x00438b40
 void FUN_00438b40(undefined4 param_1,int *param_2,int *param_3,int *param_4,int *param_5,
 
                  int *param_6,int param_7)

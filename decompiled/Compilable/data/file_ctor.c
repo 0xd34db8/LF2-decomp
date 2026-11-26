@@ -11,6 +11,7 @@
  * then invokes master dat script parser (0x0040EF70).
  */
 
+// FUNCTION: LF2 0x004143d0
 int lf2_file_ctor(file_t *file, undefined4 param_1, undefined4 param_2, const char *dat_path)
 {
     if (!file) return 0;

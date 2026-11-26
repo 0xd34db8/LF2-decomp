@@ -18,6 +18,8 @@ static std::string to_lower(std::string_view s) {
     return res;
 }
 
+// VERIFIED: LF2 0x0040bbf0
+// VERIFIED: LF2 0x004143d0
 void dat_loader_t::init_file(file_t* file, uint32_t id, uint32_t type) {
     std::memset(file, 0, sizeof(file_t));
     file->id = id;
@@ -95,6 +97,7 @@ bool dat_loader_t::load_file(file_t* file, const std::string& path, uint32_t id,
     return parse_content(file, plaintext, id, type);
 }
 
+// VERIFIED: LF2 0x0040ef70
 bool dat_loader_t::parse_content(file_t* file, const std::string& content, uint32_t id, uint32_t type) {
     if (!file) return false;
 
@@ -536,6 +539,7 @@ std::string dat_loader_t::serialize_to_string(const file_t* file) {
     return ss.str();
 }
 
+// VERIFIED: LF2 0x0040d0a0
 bool dat_loader_t::save_file(const file_t* file, const std::string& path, bool encrypt) {
     if (!file) return false;
 
