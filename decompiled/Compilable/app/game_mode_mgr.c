@@ -10,6 +10,7 @@
  * Calling Convention: __cdecl (parameters on stack)
  */
 
+// FUNCTION: LF2 0x0043e9a0
 int FUN_0043e9a0(void)
 
 {

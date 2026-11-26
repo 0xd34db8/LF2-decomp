@@ -1040,6 +1040,7 @@ void apply_non_zero_itr(global_t* world,
 } // namespace
 
 // func_00417400: Check and resolve attack collision between attacker and injured entity
+// VERIFIED: LF2 0x00417400
 void global_t::does_attack_success(uint32_t attacker_id, uint32_t injured_id, uint32_t mode) {
     if (attacker_id >= MAX_OBJECTS || !is_object_exists[attacker_id] ||
         injured_id >= MAX_OBJECTS || !is_object_exists[injured_id]) {
@@ -1292,6 +1293,7 @@ void global_t::does_attack_success(uint32_t attacker_id, uint32_t injured_id, ui
 }
 
 // 1:1 Lift of 0x0042E100: Full Combat Damage, Fall State, Knockback, Armor, Projectiles, Specials & Sparks
+// VERIFIED: LF2 0x0042e100
 void global_t::attack_process(uint32_t attacker_id, int32_t counter_12)
 {
     if (attacker_id >= MAX_OBJECTS || !is_object_exists[attacker_id]) {

@@ -91,6 +91,7 @@ static void lf2_ai_edge_move(object_t *self, const object_t *target, int width_l
     }
 }
 
+// FUNCTION: LF2 0x00406a20
 int FUN_00406a20(int file_id, int owner, int frame_id, int team,
                  int x, int y, int z,
                  double vx, double vy, double vz, int facing)
@@ -139,6 +140,7 @@ int FUN_00406a20(int file_id, int owner, int frame_id, int team,
 }
 
 // hit_Fa projectile homing / chase / volcano physics (0x00406BA0)
+// FUNCTION: LF2 0x00406ba0
 void FUN_00406ba0(int param_1)
 {
     global_t *global = (global_t *)in_ECX;
@@ -495,6 +497,7 @@ void FUN_00406ba0(int param_1)
 }
 
 // AI character-specific special move decision (0x00403A40)
+// FUNCTION: LF2 0x00403a40
 int FUN_00403a40(int target_id, int self_id, int self_state, int target_state,
                  int incoming_proj, int dist, int z_close)
 {
@@ -981,6 +984,7 @@ int FUN_00403a40(int target_id, int self_id, int self_state, int target_state,
 }
 
 // AI combat dodge / roll and shield defense maneuver (0x004034F0)
+// FUNCTION: LF2 0x004034f0
 int FUN_004034f0(int target_id, int self_id, int param_3, int target_state, int param_5, int hazard_right, int hazard_left)
 {
     global_t *global = (global_t *)in_ECX;
@@ -1057,6 +1061,7 @@ int FUN_004034f0(int target_id, int self_id, int param_3, int target_state, int 
 }
 
 // Primary AI Controller (0x004094B0)
+// FUNCTION: LF2 0x004094b0
 void FUN_004094b0(int obj_id, int mode)
 {
     global_t *global = (global_t *)in_ECX;

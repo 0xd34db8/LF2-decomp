@@ -9,6 +9,7 @@
 
 namespace lf2 {
 
+// VERIFIED: LF2 0x004061d0
 void object_init(object_t* obj)
 {
     if (!obj) return;
@@ -37,6 +38,7 @@ void object_init(object_t* obj)
     obj->ai_target_z = -1000;          // 0x400
 }
 
+// VERIFIED: LF2 0x00406a20
 int32_t object_spawn_opoint(global_t* world, int32_t file_id, int32_t owner, int32_t frame_id,
                             int32_t team, int32_t x, int32_t y, int32_t z,
                             double vx, double vy, double vz, uint8_t facing)
@@ -85,6 +87,7 @@ int32_t object_spawn_opoint(global_t* world, int32_t file_id, int32_t owner, int
     return -1;
 }
 
+// VERIFIED: LF2 0x00406ba0
 void object_process_hit_fa(global_t* world, int32_t obj_idx)
 {
     if (!world || obj_idx < 0 || obj_idx >= static_cast<int32_t>(MAX_OBJECTS) ||
@@ -553,6 +556,7 @@ void apply_ground_drag(double& vel, double friction)
 } // namespace
 
 // 1:1 Lift of 0x0040E450: 5-entry input history shift register
+// VERIFIED: LF2 0x0040e450
 void object_input_history_push(object_t* obj, uint32_t key_code)
 {
     if (!obj) return;
@@ -564,6 +568,7 @@ void object_input_history_push(object_t* obj, uint32_t key_code)
 }
 
 // 1:1 Lift of 0x0040E170: Combo timer == 5 interruption check helper
+// VERIFIED: LF2 0x0040e170
 int32_t object_combo_interrupted(const object_t* obj, char expected_key, int32_t advanced)
 {
     if (!obj) return 0;
@@ -609,6 +614,7 @@ int32_t object_combo_interrupted(const object_t* obj, char expected_key, int32_t
 }
 
 // 1:1 Lift of 0x0040E2D0: Frame transition & HP/MP cost helper
+// VERIFIED: LF2 0x0040e2d0
 int32_t object_frame_transition(object_t* obj, int32_t target_frame, bool match_running)
 {
     if (!obj || !obj->file) return 0;
@@ -667,54 +673,63 @@ int32_t object_frame_transition(object_t* obj, int32_t target_frame, bool match_
 }
 
 // 1:1 Lifts of 0x00412800..0x00412F40: 9 special-move combo recognizers
+// VERIFIED: LF2 0x00412800
 void object_combo_dra(object_t* obj, bool match_running)
 {
     run_standard_combo(obj, obj->click_DRA, obj->right_press, 'R', obj->attack_press, 'a',
                        &frame_t::hit_Fa, FACING_RIGHT, match_running);
 }
 
+// VERIFIED: LF2 0x004128f0
 void object_combo_dla(object_t* obj, bool match_running)
 {
     run_standard_combo(obj, obj->click_DLA, obj->left_press, 'L', obj->attack_press, 'a',
                        &frame_t::hit_Fa, FACING_LEFT, match_running);
 }
 
+// VERIFIED: LF2 0x004129e0
 void object_combo_dua(object_t* obj, bool match_running)
 {
     run_standard_combo(obj, obj->click_DUA, obj->up_press, 'U', obj->attack_press, 'a',
                        &frame_t::hit_Ua, -1, match_running);
 }
 
+// VERIFIED: LF2 0x00412ac0
 void object_combo_dda(object_t* obj, bool match_running)
 {
     run_standard_combo(obj, obj->click_DDA, obj->down_press, 'D', obj->attack_press, 'a',
                        &frame_t::hit_Da, -1, match_running);
 }
 
+// VERIFIED: LF2 0x00412ba0
 void object_combo_drj(object_t* obj, bool match_running)
 {
     run_standard_combo(obj, obj->click_DRJ, obj->right_press, 'R', obj->jump_press, 'j',
                        &frame_t::hit_Fj, FACING_RIGHT, match_running);
 }
 
+// VERIFIED: LF2 0x00412c90
 void object_combo_dlj(object_t* obj, bool match_running)
 {
     run_standard_combo(obj, obj->click_DLJ, obj->left_press, 'L', obj->jump_press, 'j',
                        &frame_t::hit_Fj, FACING_LEFT, match_running);
 }
 
+// VERIFIED: LF2 0x00412d80
 void object_combo_duj(object_t* obj, bool match_running)
 {
     run_standard_combo(obj, obj->click_DUJ, obj->up_press, 'U', obj->jump_press, 'j',
                        &frame_t::hit_Uj, -1, match_running);
 }
 
+// VERIFIED: LF2 0x00412e60
 void object_combo_ddj(object_t* obj, bool match_running)
 {
     run_standard_combo(obj, obj->click_DDJ, obj->down_press, 'D', obj->jump_press, 'j',
                        &frame_t::hit_Dj, -1, match_running);
 }
 
+// VERIFIED: LF2 0x00412f40
 void object_combo_dja(object_t* obj, bool match_running, int32_t unlock_chars)
 {
     if (!obj || !obj->file) return;
@@ -760,6 +775,7 @@ void object_combo_dja(object_t* obj, bool match_running, int32_t unlock_chars)
 }
 
 // 1:1 Lift of 0x0040D960: Per-object frame timer, sound trigger & frame.next advancement
+// VERIFIED: LF2 0x0040d960
 void object_frame_advance(object_t* obj, int32_t mode, int32_t obj_idx, int32_t difficulty, bool match_running)
 {
     if (!obj || !obj->file) return;
@@ -921,6 +937,7 @@ void object_frame_advance(object_t* obj, int32_t mode, int32_t obj_idx, int32_t 
 }
 
 // 1:1 Lift of 0x0040E490: Per-object physics, velocity integration, gravity & ground landing
+// VERIFIED: LF2 0x0040e490
 void object_physics_tick(object_t* obj, int32_t counter_12)
 {
     if (!obj) return;
@@ -1227,6 +1244,7 @@ void object_physics_tick(object_t* obj, int32_t counter_12)
 }
 
 // 1:1 Lift of 0x00413080: Master per-object input/state tick & combo dispatcher
+// VERIFIED: LF2 0x00413080
 void object_input_tick(object_t* obj, bool match_running, int32_t unlock_chars)
 {
     if (!obj || !obj->file || obj->frame_id1 >= MAX_FRAMES) return;
@@ -1834,6 +1852,7 @@ void object_handle_input(object_t* obj, const input_state_t& input, bool match_r
 }
 
 // 1:1 Lift of 0x00417200: Broad-phase 2D bounding box overlap check between attacker and injured
+// VERIFIED: LF2 0x00417200
 bool is_broadphase_overlap(const global_t* world, uint32_t attacker_id, uint32_t injured_id)
 {
     if (!world || attacker_id >= MAX_OBJECTS || injured_id >= MAX_OBJECTS) {
@@ -1910,6 +1929,7 @@ bool is_broadphase_overlap(const global_t* world, uint32_t attacker_id, uint32_t
 }
 
 // 1:1 Lift of 0x00419380: Per-frame frame_id4/arest reset, pairwise vrest decrement & collision dispatch
+// VERIFIED: LF2 0x00419380
 void world_step_collisions(global_t* world, uint32_t mode)
 {
     if (!world) return;
@@ -1964,6 +1984,7 @@ void world_step_collisions(global_t* world, uint32_t mode)
 }
 
 // 1:1 Lift of 0x004196F0: Physics velocity/impulse averaging pass across active objects
+// VERIFIED: LF2 0x004196f0
 void world_average_velocities(global_t* world)
 {
     if (!world) return;
@@ -1989,6 +2010,7 @@ void world_average_velocities(global_t* world)
 }
 
 // 1:1 Lift of 0x004197A0: Network / remote input bit unpacking and holding state latching
+// VERIFIED: LF2 0x004197a0
 void slot_unpack_network_inputs(global_t* world, const uint8_t* packet_bytes, int32_t clear_mode)
 {
     if (!world) return;
@@ -2028,6 +2050,7 @@ void slot_unpack_network_inputs(global_t* world, const uint8_t* packet_bytes, in
 }
 
 // 1:1 Lift of 0x004198F0: Local player input latching & replay recording
+// VERIFIED: LF2 0x004198f0
 void slot_latch_local_inputs(global_t* world, const int32_t* slot_types, const uint8_t* input_bytes,
                              int32_t clear_mode, bool record_replay, uint8_t* replay_out, size_t replay_idx)
 {

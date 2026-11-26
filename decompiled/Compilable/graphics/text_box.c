@@ -9,6 +9,7 @@
  * Calling Convention: __thiscall (in_ECX = font_mgr*)
  */
 
+// FUNCTION: LF2 0x00423940
 void FUN_00423940(char *param_1, int param_2, int param_3, int param_4, int param_5, int param_6, int param_7)
 {
     char *pcVar2;
@@ -70,6 +71,7 @@ void FUN_00423940(char *param_1, int param_2, int param_3, int param_4, int para
     }
 }
 
+// FUNCTION: LF2 0x00423a70
 void FUN_00423a70(char *param_1, int param_2, int param_3, int param_4, int param_5, int param_6, int param_7)
 {
     /* First 3 passes draw black shadow (font index 0) at (-1,+1), (-1,0), (0,+1); 4th pass draws foreground (param_6) */

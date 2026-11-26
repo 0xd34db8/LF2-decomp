@@ -23,6 +23,7 @@
  *   Also handles clickable website hyperlinks to martiwong.com, littlefighter.com, and lf2.net.
  */
 
+// FUNCTION: LF2 0x00431d10
 void FUN_00431d10(undefined4 param_1,undefined4 *param_2,uint *param_3,undefined4 *param_4)
 {
   int iVar1;

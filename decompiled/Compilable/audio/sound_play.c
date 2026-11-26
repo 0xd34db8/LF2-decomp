@@ -11,6 +11,7 @@
  *   - 0x00417090: FUN_00417090 - Spatial stereo sound pan/attenuation calculator 2
  */
 
+// FUNCTION: LF2 0x00401a30
 void FUN_00401a30(void)
 {
     int **slot = (int **)in_ECX;
@@ -31,6 +32,7 @@ void func_00401a30_sound_play(uint32_t sound_id, int loop)
     FUN_00401a30();
 }
 
+// FUNCTION: LF2 0x00402810
 void FUN_00402810(int param_1)
 {
     DAT_0044d000 += param_1;
@@ -44,6 +46,7 @@ void FUN_00402810(int param_1)
     FUN_00401f30(DAT_0044d000);
 }
 
+// FUNCTION: LF2 0x00416fb0
 void FUN_00416fb0(int param_1, int param_2)
 {
     if (param_2 < 0 || param_2 >= 400) return;
@@ -79,6 +82,7 @@ void FUN_00416fb0(int param_1, int param_2)
     DAT_00457588[param_2] = 1;
 }
 
+// FUNCTION: LF2 0x00417090
 void FUN_00417090(int param_1, int param_2)
 {
     if (param_2 < 0 || param_2 >= 400) return;
@@ -120,6 +124,7 @@ void FUN_00417090(int param_1, int param_2)
  * Dispatches queued item sounds [0..399] and fixed battle sounds [0..79]
  * with exact DirectSound pan & volume dB attenuation math.
  */
+// FUNCTION: LF2 0x00419e60
 void FUN_00419e60(void)
 {
     if (DAT_0044eecc == 0) {

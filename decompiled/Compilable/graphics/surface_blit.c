@@ -22,6 +22,7 @@ typedef struct {
 } lf2_surface_t;
 
 // Blits surface to back buffer with clipping and color keying (0x0043f010)
+// FUNCTION: LF2 0x0043f010
 void lf2_surface_blit(lf2_surface_t* surf, int dst_x, int dst_y, int src_x, int src_y,
                       int w, int h, int color_key_flag, int alpha_flag)
 {

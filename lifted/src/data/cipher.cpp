@@ -5,6 +5,7 @@
 
 namespace lf2 {
 
+// VERIFIED: LF2 0x004148a0
 std::string cipher_t::decrypt(const uint8_t* data, size_t size) {
     if (!data || size <= CIPHER_HEADER_SIZE) {
         return {};
@@ -36,6 +37,7 @@ std::string cipher_t::decrypt(const std::vector<uint8_t>& data) {
     return decrypt(data.data(), data.size());
 }
 
+// VERIFIED: LF2 0x004146b0
 std::vector<uint8_t> cipher_t::encrypt(const std::string_view plaintext) {
     const size_t key_len = CIPHER_KEY.size();
     std::vector<uint8_t> result;
@@ -82,6 +84,7 @@ bool cipher_t::decrypt_file(const std::string& dat_path, std::string& out_plaint
     return true;
 }
 
+// VERIFIED: LF2 0x00414a30
 bool cipher_t::decrypt_file_to_file(const std::string& dat_path, const std::string& out_txt_path) {
     std::string plaintext;
     if (!decrypt_file(dat_path, plaintext)) {

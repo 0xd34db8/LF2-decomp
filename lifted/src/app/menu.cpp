@@ -35,6 +35,7 @@ const std::vector<roster_entry_t>& get_game_roster() {
     return roster;
 }
 
+// COMPAT: LF2 0x00436900
 void setup_battle_characters(global_t* world, const std::vector<player_slot_t>& slots,
                              int32_t stage_min_x, int32_t stage_max_x,
                              int32_t stage_min_z, int32_t stage_max_z)

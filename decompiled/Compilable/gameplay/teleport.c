@@ -19,6 +19,7 @@
  *   Velocities are zeroed and positions are synchronized.
  */
 
+// FUNCTION: LF2 0x00403270
 void lf2_teleport(global_t *global, int teleported_id, int teleport_to)
 {
     if (!global || teleported_id < 0 || teleported_id >= MAX_OBJECTS) return;

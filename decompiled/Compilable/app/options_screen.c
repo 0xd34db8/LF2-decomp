@@ -16,6 +16,7 @@ void lf2_options_screen(void *param_1)
     FUN_004246b0(param_1);
 }
 
+// FUNCTION: LF2 0x004246b0
 void FUN_004246b0(void *param_1)
 {
     int iVar4;

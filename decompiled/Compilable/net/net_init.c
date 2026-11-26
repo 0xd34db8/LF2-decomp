@@ -27,6 +27,7 @@ struct sockaddr_in g_local_addr = {0};
 struct sockaddr_in g_remote_addr = {0};
 char g_local_ip[64] = {0};
 
+// FUNCTION: LF2 0x00402ad0
 int FUN_00402ad0(char **addr_list)
 {
     if (!addr_list || !addr_list[0]) return 0;
@@ -51,6 +52,7 @@ int FUN_00402ad0(char **addr_list)
     return best_idx;
 }
 
+// FUNCTION: LF2 0x00402b60
 int func_00402b60_net_init(HWND hwnd)
 {
     WSADATA wsa_data;
@@ -109,6 +111,7 @@ int func_00402b60_net_init(HWND hwnd)
     return 1;
 }
 
+// COMPAT: LF2 0x00402b80
 int func_00402b80_net_init(HWND hwnd)
 {
     return func_00402b60_net_init(hwnd);

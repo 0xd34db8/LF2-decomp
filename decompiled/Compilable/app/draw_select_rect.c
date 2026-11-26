@@ -2,6 +2,7 @@
 #include "legacy_globals.h"
 #include "legacy_signatures.h"
 
+// FUNCTION: LF2 0x004389a0
 void FUN_004389a0(int param_1, int param_2, int param_3, int param_4, undefined4 param_5)
 {
     DAT_00451b80 = (DAT_00451b80 + 1) & 0x80000003;

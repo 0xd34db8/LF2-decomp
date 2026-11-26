@@ -271,6 +271,7 @@ void lf2_grapple_sync(global_t *global, uint32_t catcher_id)
     lf2_cpoint_chain_throw_single(global, (int32_t)catcher_id);
 }
 
+// FUNCTION: LF2 0x004187b0
 void FUN_004187b0(void)
 {
     global_t *global = (global_t *)in_ECX;
@@ -280,6 +281,7 @@ void FUN_004187b0(void)
     }
 }
 
+// FUNCTION: LF2 0x00418c30
 void FUN_00418c30(void)
 {
     global_t *global = (global_t *)in_ECX;
@@ -290,6 +292,7 @@ void FUN_00418c30(void)
 }
 
 // Firen (id 7) + Freeze (id 8) -> Firzen (id 51) fusion & defusion (0x004064D0)
+// FUNCTION: LF2 0x004064d0
 void FUN_004064d0(void)
 {
     global_t *global = (global_t *)in_ECX;
@@ -402,6 +405,7 @@ void FUN_004064d0(void)
     }
 }
 
+// COMPAT: LF2 0x004068b0
 void FUN_004068b0(void)
 {
     FUN_004064d0();

@@ -413,10 +413,12 @@ int   lf2_last_fixed_pan[80] = {0};
 int   lf2_last_fixed_vol[80] = {0};
 int   lf2_last_fixed_played[80] = {0};
 
+// STUB: LF2 0x00401290
 void FUN_00401290(const char *msg) {
     (void)msg;
 }
 
+// COMPAT: LF2 0x004450d0
 int FUN_004450d0(void) {
     return 0;
 }

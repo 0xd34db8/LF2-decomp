@@ -19,6 +19,7 @@
 
 #include <stdint.h>
 
+// COMPAT: LF2 0x00436900
 void func_00436900_battle_setup(void* world_ptr, uint32_t slot, uint32_t char_id, uint32_t team)
 {
     /*

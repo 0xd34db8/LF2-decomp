@@ -180,6 +180,7 @@ void stage_manager_t::spawn_phase_enemies(global_t* world, const stage_phase_t& 
     }
 }
 
+// VERIFIED: LF2 0x0041b5d0
 void stage_manager_t::update_stage(global_t* world, double camera_x)
 {
     (void)camera_x;

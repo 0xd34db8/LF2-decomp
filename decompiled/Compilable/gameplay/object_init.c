@@ -12,6 +12,7 @@
  *   of an object instance in the game world.
  */
 
+// FUNCTION: LF2 0x004061d0
 void lf2_object_init(object_t *obj)
 {
     if (!obj) return;
@@ -63,6 +64,7 @@ void lf2_object_init(object_t *obj)
 }
 
 // Virtual Address: 0x004061A0 - 1D interval betweenness test
+// FUNCTION: LF2 0x004061a0
 int FUN_004061a0(int a, int b, int c)
 {
     if (((a < b) && (b < c)) || ((c < b) && (b < a))) {
@@ -82,6 +84,7 @@ void FUN_004061d0(void)
  * Function: lf2_global_ctor / Global manager reset
  * Calling Convention: __thiscall (ECX = global_t*)
  */
+// FUNCTION: LF2 0x00419e40
 void lf2_global_ctor(global_t *global)
 {
     if (!global) return;

@@ -4,6 +4,7 @@
 
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
+// FUNCTION: LF2 0x00437220
 void FUN_00437220(undefined4 param_1,undefined4 *param_2)
 
 {

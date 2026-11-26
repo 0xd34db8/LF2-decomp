@@ -8,6 +8,7 @@
 namespace lf2 {
 
 // 1:1 Parity with 0x00422B00 (FUN_00422b00)
+// VERIFIED: LF2 0x00422b00
 std::string get_key_name(int key_code) {
     if (key_code == 0x20) return "Space";
     if (key_code == 0x0D) return "Enter";
@@ -104,6 +105,7 @@ int get_key_name_width_adj(int key_code) {
 }
 
 // 1:1 Parity with 0x00422F60 (FUN_00422f60)
+// VERIFIED: LF2 0x00422f60
 char vk_to_ascii(int key_code, bool shift_down, bool caps_lock) {
     if (key_code == 0x20) return ' ';
 
@@ -321,6 +323,7 @@ void options_ui_t::toggle_fullscreen(app_t* app) {
     }
 }
 
+// VERIFIED: LF2 0x004246b0
 bool options_ui_t::handle_event(const SDL_Event& event, app_t* app) {
     if (event.type == SDL_KEYDOWN) {
         SDL_Keycode sym = event.key.keysym.sym;

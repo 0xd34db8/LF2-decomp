@@ -22,6 +22,7 @@
  *   - State 0x1D: Tournament champion celebration and victory podium screen
  */
 
+// FUNCTION: LF2 0x00432ab0
 void FUN_00432ab0(undefined4 param_1,int *param_2,undefined4 *param_3)
 {
   int iVar1;

@@ -31,6 +31,7 @@ typedef struct {
     // frames array begins at 0x7a4 (each frame is 0x178 bytes)
 } lf2_file_decomp_t;
 
+// FUNCTION: LF2 0x0040be70
 int lf2_calc_frame_coords(lf2_file_decomp_t* file, int frame_id, int facing, int pic_offset)
 {
     (void)facing;

@@ -11,6 +11,7 @@
  * and interval [itr_y, itr_y + itr_h) overlaps [bdy_y, bdy_y + bdy_h).
  */
 
+// FUNCTION: LF2 0x004171c0
 int lf2_overlap(int bdy_x, int bdy_y, int bdy_w, int bdy_h,
                 int itr_x, int itr_y, int itr_w, int itr_h)
 {

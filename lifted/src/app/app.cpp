@@ -222,12 +222,14 @@ app_t::~app_t() {
     shutdown();
 }
 
+// LIFTED: LF2 0x00431c70
 void app_t::reset_input() {
     std::memset(m_key_states, 0x75, sizeof(m_key_states));
     m_mouse_lbutton = 0;
     m_mouse_rbutton = 0;
 }
 
+// VERIFIED: LF2 0x0043cf40
 bool app_t::init(int width, int height, bool fullscreen, bool test_mode) {
     m_width = width;
     m_height = height;
@@ -456,6 +458,7 @@ uint8_t app_t::sdl_key_to_vk(SDL_Keycode key, SDL_Scancode scancode) {
     }
 }
 
+// VERIFIED: LF2 0x0043b3d0
 void app_t::on_key_down(uint8_t vk) {
     m_key_states[vk] = 'd';
 
@@ -530,6 +533,7 @@ void app_t::on_key_up(uint8_t vk) {
     m_key_states[vk] = 'u';
 }
 
+// VERIFIED: LF2 0x0043e9a0
 void app_t::process_events() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -661,6 +665,7 @@ void app_t::change_scene(scene_t next_scene) {
     }
 }
 
+// LIFTED: LF2 0x00431d10
 void app_t::update_title() {
     if (is_any_player_key_just_pressed(ctrl_action_t::UP)) {
         m_title_cursor = (m_title_cursor + 4) % 5;
@@ -843,6 +848,7 @@ void app_t::render_mode_select() {
     m_graphics.draw_text("http://www.LittleFighter.com", 540, 509, 120, 160, 220, 1);
 }
 
+// LIFTED: LF2 0x00431b70
 void app_t::update_char_select() {
     const auto& roster = get_game_roster();
     int roster_count = static_cast<int>(roster.size());
@@ -981,6 +987,7 @@ void app_t::update_char_select() {
     }
 }
 
+// PARTIAL: LF2 0x00429730
 void app_t::render_char_select() {
     m_graphics.draw_rect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0, 0, 16, 255, true);
 
@@ -1094,6 +1101,7 @@ void app_t::render_loading() {
     }
 }
 
+// LIFTED: LF2 0x00437400
 void app_t::start_battle() {
     for (uint32_t i = 0; i < MAX_FILES; ++i) {
         if (m_loaded_files[i]) {
@@ -1319,31 +1327,37 @@ void app_t::clear_vrest_for_slot(int32_t slot) {
 void app_t::dispatch_fkey_action(uint8_t fkey_vk, replay_frame_10_t& rec_out) {
     const bool stage_fkeys_ok = (m_selected_mode == MODE_VS || m_cheat_herofighter == 'd');
     switch (fkey_vk) {
+    // VERIFIED: LF2 0x00416c70
     case 0xFE: // Secret lf2.net toggle (0x00416C70)
         rec_out.unlock_flags |= REPLAY_UNLOCK_LF2NET;
         m_cheat_lf2net = (m_cheat_lf2net == 'd') ? 'u' : 'd';
         play_ui_sound(SOUND_OK);
         break;
+    // VERIFIED: LF2 0x00416ca0
     case 0xFF: // Secret herofighter.com toggle (0x00416CA0)
         rec_out.unlock_flags |= REPLAY_UNLOCK_HEROFIGHTER;
         m_cheat_herofighter = (m_cheat_herofighter == 'd') ? 'u' : 'd';
         play_ui_sound(SOUND_OK);
         break;
+    // VERIFIED: LF2 0x00416dd0
     case VK_LF2_F1: // Pause toggle (0x00416DD0)
         m_pause_req = 1 - m_pause_state;
         m_pause_next = m_pause_req;
         m_battle_paused = (m_pause_req == 1);
         play_ui_sound(SOUND_OK);
         break;
+    // VERIFIED: LF2 0x00416df0
     case VK_LF2_F2: // Single-frame step (0x00416DF0)
         m_pause_next = 1;
         m_pause_req = 0;
         m_battle_paused = false;
         break;
+    // VERIFIED: LF2 0x00416e10
     case VK_LF2_F3: // Lock F6-F9 keys (0x00416E10)
         rec_out.func_flags |= REPLAY_FKEY_F3;
         m_fkey_state = 2;
         break;
+    // VERIFIED: LF2 0x00416cd0
     case VK_LF2_F4: // Match exit / round trigger (0x00416CD0)
         m_pause_state = 0;
         m_pause_req = 0;
@@ -1368,10 +1382,12 @@ void app_t::dispatch_fkey_action(uint8_t fkey_vk, replay_frame_10_t& rec_out) {
             if (m_window) return_to_menu();
         }
         break;
+    // VERIFIED: LF2 0x00416e30
     case VK_LF2_F5: // Simulation speed toggle (0x00416E30)
         m_fast_forward = !m_fast_forward;
         m_key_states[VK_LF2_F5] = 'u';
         break;
+    // VERIFIED: LF2 0x00416e60
     case VK_LF2_F6: // Unlimited MP toggle (0x00416E60)
         if (m_fkey_state < 2 && stage_fkeys_ok) {
             rec_out.func_flags |= REPLAY_FKEY_F6;
@@ -1380,6 +1396,7 @@ void app_t::dispatch_fkey_action(uint8_t fkey_vk, replay_frame_10_t& rec_out) {
             m_fkey_state = 1;
         }
         break;
+    // VERIFIED: LF2 0x00416eb0
     case VK_LF2_F7: // Recover HP/MP (0x00416EB0)
         if (m_fkey_state < 2 && stage_fkeys_ok) {
             rec_out.func_flags |= REPLAY_FKEY_F7;
@@ -1390,6 +1407,7 @@ void app_t::dispatch_fkey_action(uint8_t fkey_vk, replay_frame_10_t& rec_out) {
             }
         }
         break;
+    // VERIFIED: LF2 0x00416f10
     case VK_LF2_F8: // Drop weapons from sky (0x00416F10)
         if (m_fkey_state < 2 && stage_fkeys_ok) {
             rec_out.func_flags |= REPLAY_FKEY_F8;
@@ -1400,6 +1418,7 @@ void app_t::dispatch_fkey_action(uint8_t fkey_vk, replay_frame_10_t& rec_out) {
             }
         }
         break;
+    // VERIFIED: LF2 0x00416f60
     case VK_LF2_F9: // Destroy items / stage enemies (0x00416F60)
         if (m_fkey_state < 2 && stage_fkeys_ok) {
             rec_out.func_flags |= REPLAY_FKEY_F9;
@@ -1425,6 +1444,8 @@ void app_t::dispatch_replay_fkey_flags(const replay_frame_10_t& rec, replay_fram
     if (rec.func_flags & REPLAY_FKEY_F9) dispatch_fkey_action(VK_LF2_F9, rec_out);
 }
 
+// VERIFIED: LF2 0x0041bc90
+// LIFTED: LF2 0x00419a60
 void app_t::step_battle_frame() {
     // 1. Two-frame input phase alternation (0 <-> 1) & phase-0 pause latch
     m_input_phase = (m_input_phase + 1) & 1;
@@ -2551,6 +2572,7 @@ void app_t::update_battle() {
     step_battle_frame();
 }
 
+// LIFTED: LF2 0x0041a5a0
 void app_t::render_battle() {
     SDL_SetRenderDrawColor(m_renderer, 10, 10, 16, 255);
     SDL_RenderClear(m_renderer);
@@ -2661,6 +2683,7 @@ void app_t::update() {
     std::memcpy(m_prev_key_states, m_key_states, sizeof(m_key_states));
 }
 
+// LIFTED: LF2 0x004028a0
 void app_t::render() {
     if (!m_renderer) return;
 

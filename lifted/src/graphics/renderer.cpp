@@ -10,6 +10,7 @@ namespace lf2 {
 // -------------------------------------------------------------
 // Authentic Software Clipping from lf2.exe (0x0043ef70)
 // -------------------------------------------------------------
+// VERIFIED: LF2 0x0043ef70
 extern "C" int lf2_clip_rect(int *dst_x1, int *dst_y1, int *dst_x2, int *dst_y2,
                              int *src_x1, int *src_y1, int *src_x2, int *src_y2,
                              int screen_w, int screen_h)
@@ -154,6 +155,7 @@ SDL_Texture* renderer_t::get_texture(const std::string& path) const {
     return nullptr;
 }
 
+// VERIFIED: LF2 0x0040be70
 bool renderer_t::get_sprite_rect(const file_t* file, uint32_t pic, int& out_sheet_idx, SDL_Rect& out_src_rect) const {
     if (!file) return false;
 
@@ -186,6 +188,7 @@ bool renderer_t::get_sprite_rect(const file_t* file, uint32_t pic, int& out_shee
     return false;
 }
 
+// LIFTED: LF2 0x0043f010
 void renderer_t::draw_sprite(SDL_Texture* tex, const SDL_Rect* src_rect, int32_t dst_x, int32_t dst_y,
                              bool flip_horizontal, uint8_t alpha) {
     if (!m_renderer || !tex) return;
@@ -267,6 +270,7 @@ void renderer_t::draw_frame(const file_t* file, uint32_t frame_id,
     draw_sprite(tex, &src_rect, screen_x, screen_y, facing == FACING_LEFT);
 }
 
+// LIFTED: LF2 0x0040de30
 void renderer_t::draw_character(const file_t* file, const object_t* obj,
                                 int32_t camera_x, int32_t camera_y, int32_t pic_offset) {
     if (!file || !obj) return;
@@ -353,6 +357,8 @@ void renderer_t::draw_rect(int32_t x, int32_t y, int32_t w, int32_t h,
     }
 }
 
+// LIFTED: LF2 0x00423940
+// LIFTED: LF2 0x00423a70
 void renderer_t::draw_text(const std::string& text, int32_t x, int32_t y,
                            uint8_t r, uint8_t g, uint8_t b, int32_t scale, bool shadow) {
     if (!m_renderer || text.empty()) return;
@@ -394,6 +400,7 @@ void renderer_t::draw_text(const std::string& text, int32_t x, int32_t y,
     }
 }
 
+// LIFTED: LF2 0x0041ae60
 void renderer_t::draw_hud(int32_t player_idx, int32_t hp, int32_t max_hp, int32_t mp, int32_t max_mp,
                           SDL_Texture* face_texture) {
     if (!m_renderer) return;

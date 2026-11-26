@@ -2,6 +2,7 @@
 #include "legacy_globals.h"
 #include "legacy_signatures.h"
 
+// FUNCTION: LF2 0x00437400
 void FUN_00437400(int *param_1, int param_2)
 {
     int *piVar1;

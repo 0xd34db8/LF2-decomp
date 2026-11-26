@@ -7,6 +7,7 @@ namespace lf2 {
 // ECX: global_t* this
 // param_1: teleported_id
 // param_2: teleport_to
+// VERIFIED: LF2 0x00403270
 void global_t::teleport(uint32_t teleported_id, uint32_t teleport_to) {
     if (teleported_id >= MAX_OBJECTS || !is_object_exists[teleported_id]) {
         return;

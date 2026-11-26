@@ -13,6 +13,7 @@
  */
 
 // 0x00417200: Broad-phase 2D bounding box overlap test between attacker and injured
+// FUNCTION: LF2 0x00417200
 int FUN_00417200(int param_1, int param_2)
 {
     global_t *global = (global_t *)in_ECX;
@@ -90,6 +91,7 @@ int FUN_00417200(int param_1, int param_2)
 }
 
 // 0x00419380: Per-frame frame_id4/arest reset, pairwise vrest decrement & collision dispatch
+// FUNCTION: LF2 0x00419380
 void FUN_00419380(int param_1)
 {
     global_t *global = (global_t *)in_ECX;
@@ -144,6 +146,7 @@ void FUN_00419380(int param_1)
 }
 
 // 0x004196F0: Physics velocity/impulse averaging pass across active objects
+// FUNCTION: LF2 0x004196f0
 void FUN_004196f0(void)
 {
     global_t *global = (global_t *)in_ECX;
@@ -170,6 +173,7 @@ void FUN_004196f0(void)
 }
 
 // 0x004197A0: Remote / network input bits unpacking & flag latching
+// FUNCTION: LF2 0x004197a0
 void FUN_004197a0(const uint8_t *param_1, int param_2)
 {
     global_t *global = (global_t *)in_ECX;
@@ -211,6 +215,7 @@ void FUN_004197a0(const uint8_t *param_1, int param_2)
 }
 
 // 0x004198F0: Local player input bits latching & replay recording
+// FUNCTION: LF2 0x004198f0
 void FUN_004198f0(uint8_t *param_1, int param_2, int param_3)
 {
     global_t *global = (global_t *)in_ECX;
@@ -256,6 +261,7 @@ void FUN_004198f0(uint8_t *param_1, int param_2, int param_3)
 }
 
 // 0x00419A60: Master per-slot controller / AI input dispatch & loop
+// FUNCTION: LF2 0x00419a60
 void FUN_00419a60(int param_1, int param_2, uint8_t *param_3)
 {
     global_t *global = (global_t *)in_ECX;

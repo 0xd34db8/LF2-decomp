@@ -23,6 +23,7 @@ extern int32_t g_mouse_lbutton;        // 0x00457580: mouse left button state
 extern int32_t g_mouse_rbutton;        // 0x004527e4: mouse right button state
 extern int32_t g_active_state;         // 0x00451dac: active state flag
 
+// FUNCTION: LF2 0x0043b3d0
 LRESULT CALLBACK LF2_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg) {

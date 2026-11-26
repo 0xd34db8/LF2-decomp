@@ -976,6 +976,7 @@ static void apply_non_zero_itr(global_t *global,
     }
 }
 
+// FUNCTION: LF2 0x0042e100
 void lf2_attack_process(global_t *global, int attacker_id)
 {
     if (!global || attacker_id < 0 || attacker_id >= MAX_OBJECTS || !global->is_object_exists[attacker_id]) {

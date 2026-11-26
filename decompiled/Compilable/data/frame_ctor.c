@@ -8,6 +8,7 @@
  * Calling Convention: __thiscall (ECX = frame_t*)
  */
 
+// FUNCTION: LF2 0x0040bbf0
 void lf2_frame_ctor(frame_t *frame)
 {
     if (!frame) return;
@@ -26,6 +27,7 @@ void FUN_0040bbf0(void)
  * Function: lf2_frame_is_present / Frame slot presence check
  * Calling Convention: __thiscall (ECX = const file_t*)
  */
+// FUNCTION: LF2 0x0040d940
 bool lf2_frame_is_present(const file_t *file, int frame_id)
 {
     if (!file || frame_id < 0 || frame_id >= MAX_FRAMES) {

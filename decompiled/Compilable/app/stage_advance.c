@@ -16,6 +16,7 @@
  *   criminals, and excess clones in slots 20..399.
  */
 
+// FUNCTION: LF2 0x00436fc0
 int *lf2_stage_advance(global_t *global)
 {
     int clone_counts[20];

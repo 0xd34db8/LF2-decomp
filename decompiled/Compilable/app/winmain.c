@@ -8,6 +8,7 @@
  *              Handles window messages, game state updates, and rendering.
  * Calling Convention: __stdcall (parameters on stack)
  */
+// FUNCTION: LF2 0x0043cf40
 undefined4 FUN_0043cf40(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
 
 

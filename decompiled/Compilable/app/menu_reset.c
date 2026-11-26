@@ -13,6 +13,7 @@
  *   Clears active player flags and input signals.
  */
 
+// FUNCTION: LF2 0x00431c70
 void lf2_menu_reset_input_and_keys(global_t *global)
 {
     // Clear button trigger signals

@@ -29,6 +29,7 @@ network_manager_t::~network_manager_t() {
     disconnect();
 }
 
+// LIFTED: LF2 0x00402b60
 bool network_manager_t::initialize_subsystem() {
 #if defined(_WIN32)
     WSADATA wsa_data;
@@ -309,6 +310,7 @@ void network_manager_t::encode_data_crc(net_packet_t& pkt, int32_t data_crc) {
     pkt.data_crc_hi = static_cast<uint8_t>((data_crc + ((data_crc < 0) ? 0xFF : 0)) >> 8);
 }
 
+// COMPAT: LF2 0x0041c5f0
 bool network_manager_t::exchange_lockstep(const net_packet_t& local_pkt, net_packet_t& out_remote_pkt) {
     if (m_socket == -1 || !m_connected) return false;
 

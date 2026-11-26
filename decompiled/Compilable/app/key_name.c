@@ -9,6 +9,7 @@
  * Calling Convention: __cdecl
  */
 
+// FUNCTION: LF2 0x00422b00
 void lf2_get_key_name(int key_code, char *out_name, int *out_width_adj)
 {
     FUN_00422b00(key_code, out_name, out_width_adj);

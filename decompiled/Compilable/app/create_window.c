@@ -10,6 +10,7 @@
  * Calling Convention: __cdecl
  */
 
+// FUNCTION: LF2 0x0043bdd0
 undefined4 FUN_0043bdd0(void)
 
 
