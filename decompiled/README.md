@@ -18,6 +18,8 @@ decompiled/
 │   └── net/
 ├── Compilable/      # Self-contained, compilable legacy C suite
 │   ├── README.md    # Dedicated documentation, compilation instructions & type map
+│   ├── Makefile     # GNU Make build & verification harness rules
+│   ├── test_legacy.c # Parity verification suite across decompiled subsystems
 │   ├── include/     # legacy_types.h, legacy_globals.h, legacy_signatures.h
 │   ├── app/
 │   ├── audio/
@@ -26,6 +28,7 @@ decompiled/
 │   ├── gameplay/
 │   ├── graphics/
 │   └── net/
+├── verify_raw_entries.py # Automated entry-address verifier for RAW exports
 └── resources/       # Embedded PE resources extracted from the binary
     ├── icon/        # Application icon (lf2.ico)
     ├── manifest/    # Assembly dependency manifest (lf2.exe.manifest)
@@ -37,7 +40,7 @@ decompiled/
 ## Suite Summary & Documentation
 
 - **[`decompiled/RAW/`](RAW/README.md):**
-  Houses the 141 pristine decompiler exports directly as emitted by Ghidra, verified 1:1 against genuine function entry points in `lf2.exe` via `verify_raw_entries.py`. Preserves raw `DAT_` pointers, synthetic registers (`in_ECX`), and original formatting without hand-written shortcuts. Serves as immutable forensic evidence for mathematical validation.
+  Houses the 141 pristine decompiler exports directly as emitted by Ghidra, verified 1:1 against genuine function entry points in `lf2.exe` via [`verify_raw_entries.py`](verify_raw_entries.py). Preserves raw `DAT_` pointers, synthetic registers (`in_ECX`), and original formatting without hand-written shortcuts. Serves as immutable forensic evidence for mathematical validation.
   *Read the full guide: [RAW/README.md](RAW/README.md)*
 
 - **[`decompiled/Compilable/`](Compilable/README.md):**
@@ -171,6 +174,7 @@ decompiled/
 | `0x00431d10` | App | Main menu navigation, replay loader & links | [`RAW/app`](RAW/app/func_00431d10_menu_main.c) | [`Compilable/app`](Compilable/app/menu_main.c) |
 | `0x00432ab0` | App | Championship tournament bracket state machine | [`RAW/app`](RAW/app/func_00432ab0_tournament.c) | [`Compilable/app`](Compilable/app/tournament.c) |
 | `0x00434ab0` | App | 2-on-2 championship tournament state machine | [`RAW/app`](RAW/app/func_00434ab0_tournament_2on2.c) | [`Compilable/app`](Compilable/app/tournament_2on2.c) |
+| `0x00436900` | App | Player/CPU entity spawn helper (interior compat wrapper) | — | [`Compilable/app`](Compilable/app/battle_setup.c) |
 | `0x00436fc0` | App | Stage/survival wave advance & player vitals recovery | [`RAW/app`](RAW/app/func_00436fc0_stage_advance.c) | [`Compilable/app`](Compilable/app/stage_advance.c) |
 | `0x00437220` | App | Stage clear / survival game-over transition curtain | [`RAW/app`](RAW/app/func_00437220_survival_curtain.c) | [`Compilable/app`](Compilable/app/survival_curtain.c) |
 | `0x00437400` | App | Unit spawn allocation & world object table insert | [`RAW/app`](RAW/app/func_00437400_spawn_unit.c) | [`Compilable/app`](Compilable/app/spawn_unit.c) |

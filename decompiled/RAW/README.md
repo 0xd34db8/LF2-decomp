@@ -1,8 +1,8 @@
 # Untouched Ghidra Exports
 
-This dir contains the **pristine, unmodified decompiler output** extracted directly from `lf2.exe` (v1.9c / v2.0a, 32-bit x86 MSVC++) using Ghidra and REA.
+This directory contains the **pristine, unmodified decompiler output** extracted directly from `lf2.exe` (v1.9c / v2.0a, 32-bit x86 MSVC++) using Ghidra and REA.
 
-Every file in this directory corresponds 1:1 to a verified procedure entry point in the binary, validated by the automated verifier `verify_raw_entries.py`. All files preserve authentic decompiler semantics as forensic ground truth without hand-written shortcuts.
+Every file in this directory corresponds 1:1 to a verified procedure entry point in the binary, validated by the automated verifier [`verify_raw_entries.py`](../verify_raw_entries.py). All files preserve authentic decompiler semantics as forensic ground truth without hand-written shortcuts.
 
 ---
 
@@ -72,7 +72,7 @@ For a buildable C target with all synthetic types, calling convention shims, and
 | `0x004094b0` | [`gameplay/func_004094b0_ai_controller.c`](gameplay/func_004094b0_ai_controller.c) | Gameplay | Primary AI controller, target acquisition & state machine |
 | `0x0040bbf0` | [`data/func_0040bbf0_frame_ctor.c`](data/func_0040bbf0_frame_ctor.c) | Data | Frame structure constructor & zeroing |
 | `0x0040be70` | [`data/func_0040be70_calc_frame_coords.c`](data/func_0040be70_calc_frame_coords.c) | Data | Sprite sheet UV cell coordinate calculator |
-| `0x0040d0a0` | [`data/func_0040d0a0_save_dat.c`](data/func_0040d0a0_save_dat.c) | Data | Character .dat file serializer |
+| `0x0040d0a0` | [`data/func_0040d0a0_save_dat.c`](data/func_0040d0a0_save_dat.c) | Data | Character `.dat` file serializer |
 | `0x0040d940` | [`data/func_0040d940_frame_present.c`](data/func_0040d940_frame_present.c) | Data | Frame presence validation check on `.dat` slot |
 | `0x0040d960` | [`gameplay/func_0040d960_object_frame_advance.c`](gameplay/func_0040d960_object_frame_advance.c) | Gameplay | Per-object frame timer, sound trigger & `frame.next` advancement |
 | `0x0040de30` | [`graphics/func_0040de30_draw_entity.c`](graphics/func_0040de30_draw_entity.c) | Graphics | Sprite entity rendering, facing flip & palette blit |
@@ -80,7 +80,7 @@ For a buildable C target with all synthetic types, calling convention shims, and
 | `0x0040e2d0` | [`gameplay/func_0040e2d0_frame_transition.c`](gameplay/func_0040e2d0_frame_transition.c) | Gameplay | Frame transition, MP cost deduction & hit-state reset helper |
 | `0x0040e450` | [`gameplay/func_0040e450_input_history_push.c`](gameplay/func_0040e450_input_history_push.c) | Gameplay | 5-entry object input history shift register (`+0x408..+0x418`) |
 | `0x0040e490` | [`gameplay/func_0040e490_object_physics_tick.c`](gameplay/func_0040e490_object_physics_tick.c) | Gameplay | Per-object physics, velocity integration, gravity, landing & opoint tick |
-| `0x0040ef70` | [`data/func_0040ef70_load_dat.c`](data/func_0040ef70_load_dat.c) | Data | Master .dat script lexer & block parser |
+| `0x0040ef70` | [`data/func_0040ef70_load_dat.c`](data/func_0040ef70_load_dat.c) | Data | Master `.dat` script lexer & block parser |
 | `0x00412800` | [`gameplay/func_00412800_combo_dra.c`](gameplay/func_00412800_combo_dra.c) | Gameplay | Special-move combo recognizer (`D > R > A` -> `hit_Fa`) |
 | `0x004128f0` | [`gameplay/func_004128f0_combo_dla.c`](gameplay/func_004128f0_combo_dla.c) | Gameplay | Special-move combo recognizer (`D > L > A` -> `hit_Fa`) |
 | `0x004129e0` | [`gameplay/func_004129e0_combo_dua.c`](gameplay/func_004129e0_combo_dua.c) | Gameplay | Special-move combo recognizer (`D > U > A` -> `hit_Ua` + Louis armor break) |
@@ -92,10 +92,10 @@ For a buildable C target with all synthetic types, calling convention shims, and
 | `0x00412f40` | [`gameplay/func_00412f40_combo_dja.c`](gameplay/func_00412f40_combo_dja.c) | Gameplay | Special-move combo recognizer (`D > J > A` -> `hit_ja`) |
 | `0x00413080` | [`gameplay/func_00413080_object_input_tick.c`](gameplay/func_00413080_object_input_tick.c) | Gameplay | Master per-object input/state tick & combo recognizer dispatcher |
 | `0x004143d0` | [`data/func_004143d0_file_ctor.c`](data/func_004143d0_file_ctor.c) | Data | Character file data structure constructor |
-| `0x004146b0` | [`data/func_004146b0_encrypt_dat.c`](data/func_004146b0_encrypt_dat.c) | Data | Character .dat encryption cipher serializer |
+| `0x004146b0` | [`data/func_004146b0_encrypt_dat.c`](data/func_004146b0_encrypt_dat.c) | Data | Character `.dat` encryption cipher serializer |
 | `0x004148a0` | [`data/func_004148a0_decrypt_dat.c`](data/func_004148a0_decrypt_dat.c) | Data | 123-byte header skip & Vigenère cipher decrypter |
-| `0x00414a30` | [`data/func_00414a30_decrypt_dat_to_file.c`](data/func_00414a30_decrypt_dat_to_file.c) | Data | Decrypted .dat file exporter |
-| `0x00414b70` | [`data/func_00414b70_stage_dat_loader.c`](data/func_00414b70_stage_dat_loader.c) | Data | Interactive .dat encrypt/decrypt CLI tool ("Doing what ('E'=encrp, 'D'=decrp)?", `helpme`) |
+| `0x00414a30` | [`data/func_00414a30_decrypt_dat_to_file.c`](data/func_00414a30_decrypt_dat_to_file.c) | Data | Decrypted `.dat` file exporter |
+| `0x00414b70` | [`data/func_00414b70_stage_dat_loader.c`](data/func_00414b70_stage_dat_loader.c) | Data | Interactive `.dat` encrypt/decrypt CLI tool ("Doing what ('E'=encrp, 'D'=decrp)?", `helpme`) |
 | `0x004151d0` | [`graphics/func_004151d0_frame_debugger.c`](graphics/func_004151d0_frame_debugger.c) | Graphics | Frame debugger HUD, sprite rendering dispatch & box overlay |
 | `0x00416c70` | [`app/func_00416c70_unlock_chars_toggle.c`](app/func_00416c70_unlock_chars_toggle.c) | App | Secret character unlock toggle (`lf2.net`) & replay unlock flag |
 | `0x00416ca0` | [`app/func_00416ca0_unlock_fkeys_toggle.c`](app/func_00416ca0_unlock_fkeys_toggle.c) | App | Secret F-key unlock toggle (`herofighter.com`) & replay unlock flag |

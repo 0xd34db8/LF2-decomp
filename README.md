@@ -40,7 +40,7 @@ LF2/
 │   │   ├── gameplay/           # Raw combat dispatcher, hitboxes, AI & weapon attachment
 │   │   ├── graphics/           # Raw DirectDraw blitters, clipping & parallax math
 │   │   └── net/                # Raw lockstep network exchange & packet verifiers
-│   ├── Compilable/             # Self-contained, compilable legacy C suite (55 translation units + test runner, 100+ routines)
+│   ├── Compilable/             # Self-contained, compilable legacy C suite (55 library C units + test runner, 125 mapped routines)
 │   │   ├── include/            # legacy_types.h (typed structs), legacy_signatures.h, legacy_globals.h
 │   │   ├── app/                # Clean C routines: winmain.c, wndproc.c, battle_mode.c, etc.
 │   │   ├── audio/              # Clean C routines: sound_init.c, sound_load_wav.c, sound_play.c, bgm_manager.c
@@ -61,19 +61,17 @@ LF2/
 │   ├── src/                    # Modernized game engine code
 │   │   ├── app/                # SDL2 windowing, event pump, scene transitions, fixed 30 FPS pacing
 │   │   ├── audio/              # DirectSound & DirectShow replacement via SDL2 audio pipeline, mixer & BGM streamer
-│   │   ├── core/               # Domain structures, deterministic PRNG, replay pipeline
+│   │   ├── core/               # Domain structures (object_t/global_t/frame_t), deterministic PRNG, replay pipeline
 │   │   ├── data/               # Lexer, Vigenère cipher decrypter & control configuration parser
 │   │   ├── gameplay/           # Combat dispatcher, hitbox intersection, entity physics & AI
 │   │   ├── graphics/           # SDL2 software renderer, parallax background & embedded UI
 │   │   └── net/                # Modern lockstep network sync & packet serialization
-│   ├── data/                   # UI source bitmaps & default control.txt configurations
-│   ├── tests/                  # 16 comprehensive unit test suites
+│   ├── tests/                  # 16 unit test suites (+ 30-frame engine smoke verification)
 │   ├── tools/                  # Embedded UI generation pipeline (generate_embedded_ui.py)
 │   ├── third_party/            # Self-contained MinGW-w64 SDL2 development headers & libraries
 │   ├── Makefile                # Independent build system for the lifted engine
 │   └── README.md               # Documentation for the modern source lift
 ├── AGENTS.md                   # Pair programming directives & architectural rules
-├── REFERENCE_ERRORS.md         # Reference error catalog of past community decompilations
 ├── .gitignore                  # Git ignore rules
 └── README.md                   # Master repository documentation (this file)
 ```
@@ -174,11 +172,11 @@ mingw32-make -C decompiled/Compilable clean
 ```
 
 **Verification Suite (`test_legacy.exe`) checks:**
-- 1:1 Fast integer absolute value computation (`0x004034e0`)
-- 2D Bounding box overlap arithmetic (`0x004171c0`)
-- Deterministic 3,000-byte circular PRNG table lookup (`0x00417170`)
-- Exact `sizeof` and `offsetof` alignments for all 10 domain structures
-- Rudolf teleportation gameplay positioning logic (`0x00403270`)
+- Fast integer absolute value (`0x004034e0`), 2D overlap arithmetic (`0x004171c0`), circular PRNG & re-seed (`0x00417170` / `0x00422ac0`), and `sizeof`/`offsetof` alignment across all domain structures
+- Rudolf teleportation (`0x00403270`), key-name & VK-to-ASCII mapping (`0x00422b00` / `0x00422f60`), LF2 v2.0 replay cipher & zlib wrappers (`0x0043dd60` / `0x0043e620`), and BGM track dispatcher (`0x00402020` / `0x004025d0`)
+- Per-object input/physics tick, special-move combo recognizers (`D>R>A`, `D>U>A`, `D>D>A`, etc.), 3D AABB combat (`0x00417400`), `wpoint`/`cpoint` grapple chains, and Firzen fusion (`0x004064d0`)
+- AI controller (`0x004094b0`), `opoint` spawner (`0x00406a20`), `hit_Fa` seekers (`0x00406ba0`), weapon AI (`0x00408cb0`), and defensive rolls (`0x004034f0`)
+- Master battle frame loop (`0x0041bc90`), F1–F9 debug keys, 10-byte replay record/playback (`0x0043db40` / `0x0043dc50`), and end-of-frame spatialized sound flush (`0x00419e60`)
 
 ---
 
@@ -206,11 +204,11 @@ cd lifted && ./build/lf2.exe
 cd lifted && ./build/lf2.exe --fullscreen
 ```
 
-* **Controls & Player Mapping:** Player keys are configured via `control.txt`.
+* **Controls & Player Mapping:** Player keys are configured via `data/control.txt`.
 * **Fullscreen Toggle:** Press `Alt + Enter` to switch between windowed (794x550) and fullscreen.
 * **Secret Cheat Codes:**
   - Type `lf2.net` on the main menu to unlock Julian, Firzen, LouisEX, and all enemy henchmen.
-  - Type `herofighter.com` to enable stage debug function keys.
+  - Type `herofighter.com` to unlock function keys (`F6`–`F9`) in Stage mode.
   - Type `ABC` to unlock the internal frame and hitbox inspector.
 
 ---
@@ -241,10 +239,10 @@ Ghidra decompilation and binary disassembly revealed several fascinating, histor
 * **The Cipher Architecture:** LF2 encodes all game resources (`.dat` files) using a byte-wise additive/subtractive variant of the Vigenère cipher operating modulo 256.
 * **The 123-Byte Header Trick:** Every `.dat` file begins with a 123-byte (`0x7B`) padding header. In `FUN_004148a0`, the decryptor steps through the key `(key_idx + 1) % 37` for each of the 123 dummy bytes before decrypting any payload data. Since `123 % 37 = 12`, payload decryption always begins at key index `12` (the character `'G'` in `"GoodBear..."`):
   $$\text{plaintext}[i] = (\text{ciphertext}[i] - \text{key}[k] + 256) \pmod{256}$$
-* **Modding Community Nostalgia:** For over two decades, this hardcoded string has been celebrated among LF2 modders who reverse-engineered the binary to create data decrypters (e.g. *LF2 Data Changer*).
+* **Modding Community Nostalgia:** For over two decades, this hardcoded string has been celebrated among LF2 modders who reverse-engineered the binary to create data decrypters (e.g., *LF2 Data Changer*).
 
 ### 2. The Replay (.lfr) Secondary Obfuscation Cipher (`0x0043DD60` / `0x0044D7A0`)
-* **Two-Layer Protection in LF2 v2.0:** While legacy versions saved raw frame records, Little Fighter 2 v2.0 introduced a dual compression and encryption pipeline in `0x0043DD60` to protect replay recordings (`.lfr` files in `recording\`) from tampering and desynchronization.
+* **Two-Layer Protection in LF2 v2.0:** While legacy versions saved raw frame records, Little Fighter 2 v2.0 introduced a dual compression and encryption pipeline in `0x0043DD60` to protect replay recordings (`.lfr` files in `recording/`) from tampering and desynchronization.
 * **zlib Deflation:** The memory buffer containing all recorded battle input frames is first compressed using a statically linked build of `zlib 1.1.4` (`compress()` / `deflate()` at `0x0043F4B0`).
 * **The Obfuscation Pass:** Immediately after deflation, the engine loops through the compressed payload byte-by-byte and applies an additive character cipher using a hardcoded 1,345-byte ASCII digit key stored in `.data` at `0x0044D7A0`:
   ```text
@@ -256,8 +254,8 @@ Ghidra decompilation and binary disassembly revealed several fascinating, histor
 
 ### 3. Secret Cheat Code State Machines in WindowProc (`0x0043b3d0`)
 The original window procedure maintains static state counters that detect sequential keystrokes typed anywhere in the application:
-* **`"lf2.net"` (Roster Unlock):** Typing `L` -> `F` -> `2` -> `.` -> `N` -> `E` -> `T` increments state tracker `DAT_0045857c` and sets `DAT_00455471 = 'd'` (ASCII 0x64). This unlocks Julian, Firzen, and LouisEX on the character selection screen along with other enemy characters, which are non playable by default.
-* **`"herofighter.com"` (Sequel Easter Egg):** Typing `H` -> `E` -> `R` -> `O` -> `F` -> `I` -> `G` -> `H` -> `T` -> `E` -> `R` -> `.` -> `C` -> `O` -> `M` advances tracker `DAT_00458578` and sets `DAT_00455470 = 'd'`. Marti Wong embedded this secret domain name in later versions of LF2 as a nod to his next major project, *Hero Fighter*! It enables the user to use function keys in the Stage mode of the game.
+* **`"lf2.net"` (Roster Unlock):** Typing `L` -> `F` -> `2` -> `.` -> `N` -> `E` -> `T` increments state tracker `DAT_0045857c` and sets `DAT_00455471 = 'd'` (ASCII `0x64`). This unlocks Julian, Firzen, and LouisEX on the character selection screen along with other enemy characters, which are non-playable by default.
+* **`"herofighter.com"` (Sequel Easter Egg):** Typing `H` -> `E` -> `R` -> `O` -> `F` -> `I` -> `G` -> `H` -> `T` -> `E` -> `R` -> `.` -> `C` -> `O` -> `M` advances tracker `DAT_00458578` and sets `DAT_00455470 = 'd'`. Marti Wong embedded this secret domain name in later versions of LF2 as a nod to his next major project, *Hero Fighter*! It unlocks function keys (`F6`–`F9`) in Stage mode (they are active by default in VS mode).
 * **`"ABC"` (Internal Data Debugger):** In `FUN_0043e9a0`, pressing `A` -> `B` -> `C` sequentially sets `DAT_00450bec = 1`, unlocking mode switching via keys `'1'`, `'2'`, `'3'` to access the built-in frame/weapon inspector mode.
 
 ### 4. Window & Platform Identity Artifacts
@@ -291,15 +289,16 @@ Through Ghidra decompilation and binary disassembly of `lf2.exe`, we reverse-eng
 
 ### 1. The Anatomy of the Infamous "Synchronisation Error!" (`0x0041CAD9` / `0x0041CCB5`)
 For over two decades, Little Fighter 2 players experienced sudden match freezes with a `"Synchronisation Error!"` modal dialog. Disassembly of the lockstep network routine in `0x0041C5F0` revealed the exact mechanism:
-* **The 22-Byte Lockstep Packet:** At `0x0041CB80`, every frame exchange transmits a compact 22-byte packet (`net_packet_t`) containing 8 packed player controller states (Up `0x02`, Right `0x04`, Attack `0x08`, Jump `0x10`, Defend `0x20`, Down `0x40`, Left `0x80`, with `0x01` idle bit), frame sequence counter, version byte, and active HP checksum.
-* **Three-Tier Desynchronization Checks:** Disassembly at `0x0041CB50`–`0x0041CCD0` reveals the exact single-byte checks:
-  * **Offset `+9` (Sequence Counter):** Frame counter modulo 50 (`idiv $0x32`, `DAT_00450bf0`). Checked at `0x0041CC27`; a mismatch halts with `"Connection Lost!"` (`0x004493B4`).
-  * **Offset `+11` (Version Tag):** Game version byte (`DAT_0044d03c`). Checked at `0x0041CC78`; a mismatch halts with `"Version not matched!"` (`0x0044939C`).
-  * **Offset `+13` (HP Checksum):** Cumulative active player HP checksum (`DAT_00450bf4`). Checked at `0x0041CCB5`; if remote and local checksums differ by even 1 HP, execution halts with `"Synchronisation Error!"` (`0x00449384`).
-* **The 3-Phase Handshake Pipeline:**
-  * **Phase 1 (14 Bytes):** Host transmits `"u can connect\0"` (hardcoded at `0x00448900`).
-  * **Phase 2 (77 Bytes):** Slot negotiation (`"11110000"` host slots 1–4 vs `"00001111"` client slots 5–8) + four 10-byte player name strings delimited with `_`.
-  * **Phase 3 (3,001 Bytes):** 1-byte command tag + 3,000-byte precomputed circular PRNG table (`0x0044FF90`) so both peers share identical pseudo-random sequences.
+* **The 22-Byte Lockstep Packet:** At `0x0041C5F0`–`0x0041CB80`, every input exchange transmits a compact 22-byte packet containing 8 packed player controller states (`Up 0x80`, `Down 0x40`, `Left 0x20`, `Right 0x10`, `Attack 0x08`, `Jump 0x04`, `Defend 0x02`, base `0x01` idle bit), frame sequence counter, function-key & cheat flags (`+10`, `+12`), version byte, active HP checksum, and `.dat` file CRC.
+* **Four-Tier Desynchronization Checks:** Disassembly at `0x0041CB50`–`0x0041CCD0` reveals the exact packet validation checks:
+  * **Offset `+9` (Sequence Counter):** Frame counter modulo 50 (`DAT_00450bf0`). Checked at `0x0041CC27`; a mismatch halts with `"Connection Lost!"`.
+  * **Offset `+11` (Version Tag):** Game version byte (`DAT_0044d03c`). Checked at `0x0041CC78`; a mismatch halts with `"Version not matched!"`.
+  * **Offset `+13` (HP Checksum):** Cumulative 20-slot active character HP checksum (`(hp_sum % 100) + 1`, `DAT_00450bf4`). Checked at `0x0041CCB5`; if remote and local checksums differ by even 1 HP, execution halts with `"Synchronisation Error!"`.
+  * **Offsets `+14..+15` (Data File CRC):** 16-bit split checksum derived from `DAT_0044f620`. Checked at `0x0041CCCE`; a mismatch halts with `"Data Error! You and your opponent have different set of data files."`.
+* **The 3-Step Handshake Pipeline:**
+  * **Step 1 (14 Bytes):** Host transmits `"u can connect\0"` (hardcoded at `0x00448900`).
+  * **Step 2 (77 Bytes):** Slot negotiation (`"11110000"` host slots 1–4 vs `"00001111"` client slots 5–8) + four 10-byte player name strings delimited with `_`.
+  * **Step 3 (3,001 Bytes):** 1-byte command tag + 3,000-byte precomputed circular PRNG table (`0x0044FF90`) so both peers share identical pseudo-random sequences.
 
 ### 2. The 400-Slot World Object Array & Screen Overflow Crash (`0x0042E100` / `0x004061D0`)
 * **Static Allocation Ceiling:** Little Fighter 2 manages all entities on screen through a fixed global array in `global_t` (`0x00458B00`) capped at exactly **400 object slots** (`objects[400]` at offset `0x194`–`0x7D4`, matching `is_object_exists[400]` at `0x004`–`0x194`).
@@ -314,8 +313,8 @@ For over two decades, Little Fighter 2 players experienced sudden match freezes 
   ```
 * At `0x0042353A`, during game boot, the parser reads the string and converts every `` '`' `` back to a space (`' '`). Players who opened `control.txt` in Notepad over the years often wondered why mysterious backticks appeared in their usernames!
 
-### 4. Deterministic Battle Replay Recording (`.lfr` at `0x00429730` / `0x004028A0`)
-* **100% Deterministic Playback:** Rather than saving full video or large coordinate streams, LF2 replays (`.lfr` files) record only the initial 3,000-byte circular PRNG table seed (`0x0044D024`), character choices, and 8 bytes of packed controller input states per frame.
+### 4. Deterministic Battle Replay Recording (`.lfr` at `0x00429730` / `0x004028A0` / `0x0043DB40`)
+* **100% Deterministic Playback:** Rather than saving full video or large coordinate streams, LF2 v2.0 replays (`.lfr` files) pack the initial 3,000-byte circular PRNG table seed (`0x0044D024`), character choices, periodic 150-frame cumulative HP checksums (`+0x14B8`), and **10-byte per-frame records** (`8` player controller bytes + function-key flags `+8` + cheat-unlock flags `+9`) into a `0x630E18`-byte compressed stream.
 * **On-Screen HUD Indicators:** At `0x004028A0` (interior `0x00402980`), the engine uses DirectDraw to render color-coded notification banners at the bottom of the viewport ($y = 531$ / `0x213`):
   * **Orange (`0x00FF7800`):** `"Start recording '%s'..."` upon match commencement.
   * **Green (`0x0000FF00`):** `"Recording file '%s' saved!"` upon successful match conclusion.

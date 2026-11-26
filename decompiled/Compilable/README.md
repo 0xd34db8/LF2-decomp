@@ -28,7 +28,10 @@ decompiled/Compilable/
 ├── data/                    # Dat lexer, Vigenère cipher, frame ctor, control.txt
 ├── gameplay/                # Combat dispatcher, hitbox checks, grapple, AI logic
 ├── graphics/                # DirectDraw initialization, blits, clipping, parallax
-└── net/                     # Lockstep networking, socket initialization, packets
+├── net/                     # Lockstep networking, socket initialization, packets
+├── Makefile                 # Static library & test harness build rules (links -lz -lws2_32 on Windows)
+├── test_legacy.c            # Parity verification test suite
+└── README.md                # Suite architecture, build instructions & routine index
 ```
 
 ---
@@ -56,22 +59,19 @@ To enable standard C compilers (GCC, Clang, MSVC) to compile the raw assembly ps
 
 ## Compilation Instructions
 
-Any individual file or the entire suite can be compiled into object files using standard GCC (UCRT64/MinGW) or Clang (or built together with `mingw32-make -C decompiled/Compilable test`):
+Any individual file or the entire suite can be compiled into object files using standard GCC (UCRT64/MinGW) or Clang, or built and verified together via GNU Make (`mingw32-make -C decompiled/Compilable test`, which links `-lz -lws2_32` on Windows or `-lz` on POSIX):
 
 ```powershell
 # Compile a single routine
-gcc -c -Iinclude gameplay/attack_process.c -o attack_process.o
+gcc -std=c11 -Iinclude -Wno-int-conversion -Wno-incompatible-pointer-types -c gameplay/attack_process.c -o attack_process.o
 
-# Verify all 55 library C translation units + test_legacy.c compile cleanly
-Get-ChildItem -Recurse -Filter *.c | ForEach-Object {
-    gcc -c -Iinclude $_.FullName -o ($_.BaseName + ".o")
-}
-Remove-Item *.o
+# Build and run the full Compilable archive + test_legacy.exe verification suite
+mingw32-make -C decompiled/Compilable test
 ```
 
 ---
 
-## Routine Inventory
+## Routine Inventory (125 Mapped Routines)
 
 | Virtual Address | File Path | Subsystem | Function Name / Description |
 | :--- | :--- | :--- | :--- |
