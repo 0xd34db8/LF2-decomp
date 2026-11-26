@@ -1,0 +1,243 @@
+address,size_bytes,ghidra_name,name,subsystem,category,priority,status,raw_file,compilable_file,lifted_file,notes
+0x00401000,0,FUN_00401000,ddraw_create_init,graphics,game,P2,unmapped,,,,DirectDraw 6 object creation & cooperative level init
+0x00401090,0,FUN_00401090,sub_00401090,graphics,game,P2,unmapped,,,,Unmapped DirectDraw helper
+0x00401110,0,FUN_00401110,sub_00401110,graphics,game,P2,unmapped,,,,Unmapped DirectDraw helper
+0x004011d0,0,FUN_004011d0,ddraw_create_surfaces,graphics,game,P2,unmapped,,,,DirectDraw primary & backbuffer surface creation
+0x00401250,0,FUN_00401250,ddraw_set_surface_state,graphics,game,P2,unmapped,,,,DirectDraw surface/GDI state helper
+0x00401290,0,FUN_00401290,gdi_draw_text,graphics,game,P2,stub,,decompiled/Compilable/core/legacy_globals.c,,GDI text draw helper (stubbed in Compilable/core/legacy_globals.c)
+0x00401300,0,FUN_00401300,ddraw_attach_clipper,graphics,game,P2,unmapped,,,,DirectDraw clipper attachment helper
+0x004013d0,0,FUN_004013d0,sub_004013d0,graphics,game,P2,unmapped,,,,Unmapped DirectDraw/GDI helper
+0x004014e0,0,FUN_004014e0,sound_load_wav,audio,game,P1,verified,decompiled/RAW/audio/func_004014e0_sound_load_wav.c,decompiled/Compilable/audio/sound_load_wav.c,lifted/src/audio/audio.cpp,RIFF WAVE audio parser & secondary buffer allocation
+0x00401970,0,FUN_00401970,sound_init,audio,game,P1,verified,decompiled/RAW/audio/func_00401970_sound_init.c,decompiled/Compilable/audio/sound_init.c,lifted/src/audio/audio.cpp,DirectSound subsystem initialization
+0x004019b0,0,FUN_004019b0,sound_cleanup,audio,game,P1,verified,decompiled/RAW/audio/func_004019b0_sound_cleanup.c,decompiled/Compilable/audio/sound_init.c,lifted/src/audio/audio.cpp,DirectSound device release & buffer destruction
+0x00401a30,0,FUN_00401a30,sound_play,audio,game,P1,verified,decompiled/RAW/audio/func_00401a30_sound_play.c,decompiled/Compilable/audio/sound_play.c,lifted/src/audio/audio.cpp,Sound buffer playback cursor reset & voice trigger
+0x00401a80,0,FUN_00401a80,ddraw_release,graphics,game,P2,raw,decompiled/RAW/graphics/func_00401a80_ddraw_release.c,,,DirectDraw surface release & interface cleanup
+0x00401ae0,0,FUN_00401ae0,window_destroy,graphics,game,P2,raw,decompiled/RAW/graphics/func_00401ae0_window_destroy.c,,,Win32 main window destruction
+0x00401b00,0,FUN_00401b00,create_window_windowed,graphics,game,P2,raw,decompiled/RAW/graphics/func_00401b00_create_window_windowed.c,,,Windowed display mode creation & viewport setup
+0x00401bf0,0,FUN_00401bf0,create_window_fullscreen,graphics,game,P2,raw,decompiled/RAW/graphics/func_00401bf0_create_window_fullscreen.c,,,Fullscreen exclusive display mode window creation
+0x00401c90,0,FUN_00401c90,bgm_init,audio,game,P1,lifted,decompiled/RAW/audio/func_00401c90_bgm_init.c,decompiled/Compilable/audio/bgm_manager.c,lifted/src/audio/bgm.cpp,DirectShow COM Filter Graph & Interface Init
+0x00401d30,0,FUN_00401d30,bgm_close,audio,game,P1,lifted,decompiled/RAW/audio/func_00401d30_bgm_close.c,decompiled/Compilable/audio/bgm_manager.c,lifted/src/audio/bgm.cpp,DirectShow Graph Release & Cleanup
+0x00401da0,0,FUN_00401da0,bgm_load,audio,game,P1,lifted,decompiled/RAW/audio/func_00401da0_bgm_load.c,decompiled/Compilable/audio/bgm_manager.c,lifted/src/audio/bgm.cpp,DirectShow Media File Render & graph.log diagnostics
+0x00401e90,0,FUN_00401e90,bgm_loop,audio,game,P1,verified,decompiled/RAW/audio/func_00401e90_bgm_loop.c,decompiled/Compilable/audio/bgm_manager.c,lifted/src/audio/bgm.cpp,DirectShow Media Seeking & Track Loop Check
+0x00401f30,0,FUN_00401f30,bgm_volume,audio,game,P1,verified,decompiled/RAW/audio/func_00401f30_bgm_volume.c,decompiled/Compilable/audio/bgm_manager.c,lifted/src/audio/bgm.cpp,DirectShow Audio Volume Control (dB calculation)
+0x00402000,0,FUN_00402000,bgm_stop,audio,game,P1,lifted,decompiled/RAW/audio/func_00402000_bgm_stop.c,decompiled/Compilable/audio/bgm_manager.c,lifted/src/audio/bgm.cpp,DirectShow Playback Stop
+0x00402020,0,FUN_00402020,bgm_play,audio,game,P1,verified,decompiled/RAW/audio/func_00402020_bgm_play.c,decompiled/Compilable/audio/bgm_manager.c,lifted/src/audio/bgm.cpp,DirectShow Playback Run & Graph Init Dispatch
+0x00402100,0,FUN_00402100,bgm_pause,audio,game,P1,lifted,decompiled/RAW/audio/func_00402100_bgm_pause.c,decompiled/Compilable/audio/bgm_manager.c,lifted/src/audio/bgm.cpp,DirectShow Playback Pause
+0x00402130,0,FUN_00402130,bgm_menu,audio,game,P1,verified,decompiled/RAW/audio/func_00402130_bgm_menu.c,decompiled/Compilable/audio/bgm_manager.c,lifted/src/audio/bgm.cpp,BGM Track Selection HUD & Menu Input Handling
+0x004025b0,0,FUN_004025b0,bgm_play_current,audio,game,P1,lifted,decompiled/RAW/audio/func_004025b0_bgm_play_current.c,decompiled/Compilable/audio/bgm_manager.c,lifted/src/audio/bgm.cpp,Play Current Track Selection
+0x004025d0,0,FUN_004025d0,bgm_select,audio,game,P1,verified,decompiled/RAW/audio/func_004025d0_bgm_select.c,decompiled/Compilable/audio/bgm_manager.c,lifted/src/audio/bgm.cpp,Stage / Boss / Random Track Selection
+0x00402810,0,FUN_00402810,volume_adjust,audio,game,P1,verified,decompiled/RAW/audio/func_00402810_volume_adjust.c,decompiled/Compilable/audio/sound_play.c,lifted/src/audio/audio.cpp,Master sound effects volume attenuator
+0x004028a0,0,FUN_004028a0,recording_notify,app,game,P1,lifted,decompiled/RAW/app/func_004028a0_recording_notify.c,decompiled/Compilable/app/replay_notify.c,lifted/src/app/app.cpp,Recording screen HUD notifications & volume
+0x00402a60,0,FUN_00402a60,sub_00402a60,net,game,P1,unmapped,,,,Unmapped networking helper
+0x00402ad0,0,FUN_00402ad0,net_select_local_ip,net,game,P1,compilable,,decompiled/Compilable/net/net_init.c,,Local IP address & adapter resolution helper
+0x00402b60,0,FUN_00402b60,net_init,net,game,P1,lifted,decompiled/RAW/net/func_00402b60_net_init.c,decompiled/Compilable/net/net_init.c,lifted/src/net/network.cpp,"WinSock initialization, socket binding & WSAAsyncSelect"
+0x00402d70,0,FUN_00402d70,net_lobby_dialog,net,game,P1,unmapped,,,,Network connection & lobby dialog handler
+0x00402ec0,0,FUN_00402ec0,net_async_socket_msg,net,game,P1,unmapped,,,,WSAAsyncSelect socket event handler
+0x004031d0,0,FUN_004031d0,net_lobby_key_msg,net,game,P1,unmapped,,,,Network lobby window keyboard message helper
+0x00403270,0,FUN_00403270,teleport,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_00403270_teleport.c,decompiled/Compilable/gameplay/teleport.c,lifted/src/gameplay/teleport.cpp,Rudolf team teleportation coordinate resolution
+0x004034e0,0,FUN_004034e0,abs,core,game,P0,compilable,decompiled/RAW/core/func_004034e0_abs.c,decompiled/Compilable/core/abs.c,,Fast integer absolute value computation
+0x004034f0,0,FUN_004034f0,ai_dodge,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_004034f0_ai_dodge.c,decompiled/Compilable/gameplay/ai_process.c,lifted/src/gameplay/ai.cpp,AI combat dodge / evasive roll maneuver & defense
+0x00403a40,0,FUN_00403a40,ai_char_special,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_00403a40_ai_char_special.c,decompiled/Compilable/gameplay/ai_process.c,lifted/src/gameplay/ai.cpp,AI character-specific special move decision tree
+0x004061a0,0,FUN_004061a0,is_between,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_004061a0_is_between.c,decompiled/Compilable/gameplay/object_init.c,lifted/src/gameplay/entity.h,1D interval coordinate betweenness test
+0x004061d0,0,FUN_004061d0,object_init,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_004061d0_object_init.c,decompiled/Compilable/gameplay/object_init.c,lifted/src/gameplay/entity.cpp,Entity constructor & default state initialization
+0x004064d0,0,FUN_004064d0,firzen_fusion,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_004064d0_firzen_fusion.c,decompiled/Compilable/gameplay/grapple_sync.c,lifted/src/gameplay/grapple.cpp,Firen + Freeze -> Firzen fusion collision check & transformation
+0x00406a20,0,FUN_00406a20,opoint_spawn,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_00406a20_opoint_spawn.c,decompiled/Compilable/gameplay/ai_process.c,lifted/src/gameplay/entity.cpp,"Dynamic world object, projectile & particle spawner (slots 50..399)"
+0x00406ba0,0,FUN_00406ba0,hit_fa_chase,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_00406ba0_hit_fa_chase.c,decompiled/Compilable/gameplay/ai_process.c,lifted/src/gameplay/entity.cpp,`hit_Fa` homing projectile & chase physics
+0x00408cb0,0,FUN_00408cb0,ai_weapon_decision,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_00408cb0_ai_weapon_decision.c,decompiled/Compilable/gameplay/weapon_sync.c,lifted/src/gameplay/ai.cpp,"AI weapon pickup, throw & drink decision helper"
+0x004094b0,0,FUN_004094b0,ai_controller,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_004094b0_ai_controller.c,decompiled/Compilable/gameplay/ai_process.c,lifted/src/gameplay/ai.cpp,"Primary AI controller, target acquisition & state machine"
+0x0040bbf0,0,FUN_0040bbf0,frame_ctor,data,game,P0,verified,decompiled/RAW/data/func_0040bbf0_frame_ctor.c,decompiled/Compilable/data/frame_ctor.c,lifted/src/data/dat_loader.cpp,Frame structure constructor & zeroing
+0x0040bd90,0,FUN_0040bd90,load_sprite_bmp_sheet,data,game,P1,unmapped,,,,Sprite sheet BMP surface loader called by load_dat
+0x0040be70,0,FUN_0040be70,calc_frame_coords,data,game,P0,verified,decompiled/RAW/data/func_0040be70_calc_frame_coords.c,decompiled/Compilable/data/calc_frame_coords.c,lifted/src/graphics/renderer.cpp,Sprite sheet UV cell coordinate calculator
+0x0040bf30,0,FUN_0040bf30,file_get_frame_wait,graphics,game,P0,compilable,,decompiled/Compilable/graphics/draw_object.c,,Frame wait/lookup helper called by draw_entity
+0x0040bfb0,0,FUN_0040bfb0,file_get_frame_next,graphics,game,P2,unmapped,,,,Frame next index helper called by frame_debugger
+0x0040c030,0,FUN_0040c030,load_bg_surfaces,graphics,game,P1,unmapped,,,,Stage background surface loader
+0x0040c0e0,0,FUN_0040c0e0,free_bg_surfaces,graphics,game,P1,unmapped,,,,Stage background surface releaser
+0x0040c160,0,FUN_0040c160,sub_0040c160,data,game,P2,unmapped,,,,Unmapped data/background parser helper
+0x0040c910,0,FUN_0040c910,sub_0040c910,data,game,P2,unmapped,,,,Unmapped data/background parser helper
+0x0040d0a0,0,FUN_0040d0a0,save_dat,data,game,P0,verified,decompiled/RAW/data/func_0040d0a0_save_dat.c,decompiled/Compilable/data/save_dat.c,lifted/src/data/dat_loader.cpp,Character `.dat` file serializer
+0x0040d940,0,FUN_0040d940,frame_present,data,game,P0,compilable,decompiled/RAW/data/func_0040d940_frame_present.c,decompiled/Compilable/data/frame_ctor.c,,Frame presence validation check on `.dat` slot
+0x0040d960,0,FUN_0040d960,object_frame_advance,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_0040d960_object_frame_advance.c,decompiled/Compilable/gameplay/entity_tick.c,lifted/src/gameplay/entity.cpp,"Per-object frame timer, sound trigger & `frame.next` advancement"
+0x0040de30,0,FUN_0040de30,draw_entity,graphics,game,P0,lifted,decompiled/RAW/graphics/func_0040de30_draw_entity.c,decompiled/Compilable/graphics/draw_object.c,lifted/src/graphics/renderer.cpp,"Sprite entity rendering, facing flip & palette blit"
+0x0040e170,0,FUN_0040e170,combo_timer_check,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_0040e170_combo_timer_check.c,decompiled/Compilable/gameplay/entity_tick.c,lifted/src/gameplay/entity.cpp,Combo timer window (`== 5`) interruption check helper
+0x0040e2d0,0,FUN_0040e2d0,frame_transition,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_0040e2d0_frame_transition.c,decompiled/Compilable/gameplay/entity_tick.c,lifted/src/gameplay/entity.cpp,"Frame transition, MP cost deduction & hit-state reset helper"
+0x0040e450,0,FUN_0040e450,input_history_push,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_0040e450_input_history_push.c,decompiled/Compilable/gameplay/entity_tick.c,lifted/src/gameplay/entity.cpp,5-entry object input history shift register (`+0x408..+0x418`)
+0x0040e490,0,FUN_0040e490,object_physics_tick,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_0040e490_object_physics_tick.c,decompiled/Compilable/gameplay/entity_tick.c,lifted/src/gameplay/entity.cpp,"Per-object physics, velocity integration, gravity, landing & opoint tick"
+0x0040ef70,0,FUN_0040ef70,load_dat,data,game,P0,verified,decompiled/RAW/data/func_0040ef70_load_dat.c,decompiled/Compilable/data/load_dat.c,lifted/src/data/dat_loader.cpp,Master `.dat` script lexer & block parser
+0x004122f0,0,FUN_004122f0,stage_data_helper,data,game,P1,unmapped,,,,Stage/battle frame helper called from battle_main_loop
+0x00412800,0,FUN_00412800,combo_dra,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_00412800_combo_dra.c,decompiled/Compilable/gameplay/entity_tick.c,lifted/src/gameplay/entity.cpp,Special-move combo recognizer (`D > R > A` -> `hit_Fa`)
+0x004128f0,0,FUN_004128f0,combo_dla,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_004128f0_combo_dla.c,decompiled/Compilable/gameplay/entity_tick.c,lifted/src/gameplay/entity.cpp,Special-move combo recognizer (`D > L > A` -> `hit_Fa`)
+0x004129e0,0,FUN_004129e0,combo_dua,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_004129e0_combo_dua.c,decompiled/Compilable/gameplay/entity_tick.c,lifted/src/gameplay/entity.cpp,Special-move combo recognizer (`D > U > A` -> `hit_Ua` + Louis armor break)
+0x00412ac0,0,FUN_00412ac0,combo_dda,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_00412ac0_combo_dda.c,decompiled/Compilable/gameplay/entity_tick.c,lifted/src/gameplay/entity.cpp,Special-move combo recognizer (`D > D > A` -> `hit_Da` + Firzen counter reset)
+0x00412ba0,0,FUN_00412ba0,combo_drj,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_00412ba0_combo_drj.c,decompiled/Compilable/gameplay/entity_tick.c,lifted/src/gameplay/entity.cpp,Special-move combo recognizer (`D > R > J` -> `hit_Fj`)
+0x00412c90,0,FUN_00412c90,combo_dlj,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_00412c90_combo_dlj.c,decompiled/Compilable/gameplay/entity_tick.c,lifted/src/gameplay/entity.cpp,Special-move combo recognizer (`D > L > J` -> `hit_Fj`)
+0x00412d80,0,FUN_00412d80,combo_duj,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_00412d80_combo_duj.c,decompiled/Compilable/gameplay/entity_tick.c,lifted/src/gameplay/entity.cpp,Special-move combo recognizer (`D > U > J` -> `hit_Uj`)
+0x00412e60,0,FUN_00412e60,combo_ddj,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_00412e60_combo_ddj.c,decompiled/Compilable/gameplay/entity_tick.c,lifted/src/gameplay/entity.cpp,Special-move combo recognizer (`D > D > J` -> `hit_Dj`)
+0x00412f40,0,FUN_00412f40,combo_dja,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_00412f40_combo_dja.c,decompiled/Compilable/gameplay/entity_tick.c,lifted/src/gameplay/entity.cpp,Special-move combo recognizer (`D > J > A` -> `hit_ja`)
+0x00413080,0,FUN_00413080,object_input_tick,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_00413080_object_input_tick.c,decompiled/Compilable/gameplay/entity_tick.c,lifted/src/gameplay/entity.cpp,Master per-object input/state tick & combo recognizer dispatcher
+0x004143d0,0,FUN_004143d0,file_ctor,data,game,P0,verified,decompiled/RAW/data/func_004143d0_file_ctor.c,decompiled/Compilable/data/file_ctor.c,lifted/src/data/dat_loader.cpp,Character file data structure constructor
+0x00414450,0,FUN_00414450,dat_char_helper,data,game,P2,unmapped,,,,Character data helper called from stage_dat_loader
+0x004146b0,0,FUN_004146b0,encrypt_dat,data,game,P0,verified,decompiled/RAW/data/func_004146b0_encrypt_dat.c,decompiled/Compilable/data/decrypt_dat.c,lifted/src/data/cipher.cpp,Character `.dat` encryption cipher serializer
+0x004148a0,0,FUN_004148a0,decrypt_dat,data,game,P0,verified,decompiled/RAW/data/func_004148a0_decrypt_dat.c,decompiled/Compilable/data/decrypt_dat.c,lifted/src/data/cipher.cpp,123-byte header skip & Vigenère cipher decrypter
+0x00414a30,0,FUN_00414a30,decrypt_dat_to_file,data,game,P0,verified,decompiled/RAW/data/func_00414a30_decrypt_dat_to_file.c,decompiled/Compilable/data/decrypt_dat.c,lifted/src/data/cipher.cpp,Decrypted `.dat` file exporter
+0x00414b70,0,FUN_00414b70,stage_dat_loader,data,game,P3,raw,decompiled/RAW/data/func_00414b70_stage_dat_loader.c,,,"Interactive `.dat` encrypt/decrypt CLI tool (""Doing what ('E'=encrp, 'D'=decrp)?"", `helpme`)"
+0x00415140,0,FUN_00415140,debug_text_helper,graphics,game,P3,unmapped,,,,Frame debugger text/color helper
+0x00415160,0,FUN_00415160,fill_color_rect,graphics,game,P1,unmapped,,,,DirectDraw solid color rectangle fill helper
+0x004151d0,0,FUN_004151d0,frame_debugger,graphics,game,P3,raw,decompiled/RAW/graphics/func_004151d0_frame_debugger.c,,,"Frame debugger HUD, sprite rendering dispatch & box overlay"
+0x00416c70,0,FUN_00416c70,unlock_chars_toggle,app,game,P1,verified,decompiled/RAW/app/func_00416c70_unlock_chars_toggle.c,decompiled/Compilable/net/net_lockstep.c,lifted/src/app/app.cpp,Secret character unlock toggle (`lf2.net`) & replay unlock flag
+0x00416ca0,0,FUN_00416ca0,unlock_fkeys_toggle,app,game,P1,verified,decompiled/RAW/app/func_00416ca0_unlock_fkeys_toggle.c,decompiled/Compilable/net/net_lockstep.c,lifted/src/app/app.cpp,Secret F-key unlock toggle (`herofighter.com`) & replay unlock flag
+0x00416cd0,0,FUN_00416cd0,fkey_f4_exit,app,game,P1,verified,decompiled/RAW/app/func_00416cd0_fkey_f4_exit.c,decompiled/Compilable/net/net_lockstep.c,lifted/src/app/app.cpp,"F4 match exit, recording cancel & replay restoration handler"
+0x00416dd0,0,FUN_00416dd0,fkey_f1_pause,app,game,P1,verified,decompiled/RAW/app/func_00416dd0_fkey_f1_pause.c,decompiled/Compilable/net/net_lockstep.c,lifted/src/app/app.cpp,F1 battle pause toggle handler
+0x00416df0,0,FUN_00416df0,fkey_f2_step,app,game,P1,verified,decompiled/RAW/app/func_00416df0_fkey_f2_step.c,decompiled/Compilable/net/net_lockstep.c,lifted/src/app/app.cpp,F2 single-frame step handler
+0x00416e10,0,FUN_00416e10,fkey_f3_lock,app,game,P1,verified,decompiled/RAW/app/func_00416e10_fkey_f3_lock.c,decompiled/Compilable/net/net_lockstep.c,lifted/src/app/app.cpp,F3 function-key lock handler
+0x00416e30,0,FUN_00416e30,fkey_f5_speed,app,game,P1,verified,decompiled/RAW/app/func_00416e30_fkey_f5_speed.c,decompiled/Compilable/net/net_lockstep.c,lifted/src/app/app.cpp,F5 simulation speed toggle handler
+0x00416e60,0,FUN_00416e60,fkey_f6_mp,app,game,P1,verified,decompiled/RAW/app/func_00416e60_fkey_f6_mp.c,decompiled/Compilable/net/net_lockstep.c,lifted/src/app/app.cpp,F6 unlimited MP toggle handler
+0x00416eb0,0,FUN_00416eb0,fkey_f7_recover,app,game,P1,verified,decompiled/RAW/app/func_00416eb0_fkey_f7_recover.c,decompiled/Compilable/net/net_lockstep.c,lifted/src/app/app.cpp,F7 HP/MP full recovery handler
+0x00416f10,0,FUN_00416f10,fkey_f8_weapons,app,game,P1,verified,decompiled/RAW/app/func_00416f10_fkey_f8_weapons.c,decompiled/Compilable/net/net_lockstep.c,lifted/src/app/app.cpp,F8 sky weapon drop trigger handler
+0x00416f60,0,FUN_00416f60,fkey_f9_destroy,app,game,P1,verified,decompiled/RAW/app/func_00416f60_fkey_f9_destroy.c,decompiled/Compilable/net/net_lockstep.c,lifted/src/app/app.cpp,F9 destroy items / stage enemies handler
+0x00416fb0,0,FUN_00416fb0,sound_pan_calc_1,audio,game,P1,verified,decompiled/RAW/audio/func_00416fb0_sound_pan_calc_1.c,decompiled/Compilable/audio/sound_play.c,lifted/src/audio/audio.cpp,Positional audio panning calculator pass 1
+0x00417090,0,FUN_00417090,sound_pan_calc_2,audio,game,P1,verified,decompiled/RAW/audio/func_00417090_sound_pan_calc_2.c,decompiled/Compilable/audio/sound_play.c,lifted/src/audio/audio.cpp,Positional audio panning calculator pass 2
+0x00417170,0,FUN_00417170,random,core,game,P0,verified,decompiled/RAW/core/func_00417170_random.c,decompiled/Compilable/core/random.c,lifted/src/core/random.cpp,"3,000-byte precomputed circular PRNG lookup"
+0x004171c0,0,FUN_004171c0,overlap,core,game,P0,verified,decompiled/RAW/core/func_004171c0_overlap.c,decompiled/Compilable/core/overlap.c,lifted/src/core/overlap.h,1D coordinate interval overlap detector
+0x00417200,0,FUN_00417200,broadphase_overlap,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_00417200_broadphase_overlap.c,decompiled/Compilable/gameplay/slot_input.c,lifted/src/gameplay/entity.cpp,Broad-phase `itr` vs `bdy` 2D bounding box overlap pre-check
+0x00417400,0,FUN_00417400,does_attack_success,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_00417400_does_attack_success.c,decompiled/Compilable/gameplay/does_attack_success.c,lifted/src/gameplay/attack.cpp,3D AABB hitbox intersection testing (itr vs bdy)
+0x00417f80,0,FUN_00417f80,wpoint_process,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_00417f80_wpoint_process.c,decompiled/Compilable/gameplay/weapon_sync.c,lifted/src/gameplay/weapon.cpp,Held weapon wpoint anchor synchronization
+0x004187b0,0,FUN_004187b0,cpoint_process,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_004187b0_cpoint_process.c,decompiled/Compilable/gameplay/grapple_sync.c,lifted/src/gameplay/grapple.cpp,Grapple cpoint caught anchor synchronization
+0x00418c30,0,FUN_00418c30,cpoint_chain,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_00418c30_cpoint_chain.c,decompiled/Compilable/gameplay/grapple_sync.c,lifted/src/gameplay/grapple.cpp,Grapple cpoint throw release & damage chaining
+0x00419380,0,FUN_00419380,entity_tick,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_00419380_entity_tick.c,decompiled/Compilable/gameplay/slot_input.c,lifted/src/gameplay/entity.cpp,Master 400x400 pairwise collision pass & rest-timer reset
+0x004196f0,0,FUN_004196f0,velocity_average,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_004196f0_velocity_average.c,decompiled/Compilable/gameplay/slot_input.c,lifted/src/gameplay/entity.cpp,Physics velocity/impulse averaging pass across 400 objects
+0x004197a0,0,FUN_004197a0,input_unpack_net,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_004197a0_input_unpack_net.c,decompiled/Compilable/gameplay/slot_input.c,lifted/src/gameplay/entity.cpp,Remote/network input bits unpacking & flag latching
+0x004198f0,0,FUN_004198f0,input_latch_local,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_004198f0_input_latch_local.c,decompiled/Compilable/gameplay/slot_input.c,lifted/src/gameplay/entity.cpp,Local player input bits latching & replay recording
+0x00419a60,0,FUN_00419a60,input_ai_dispatch,gameplay,game,P0,lifted,decompiled/RAW/gameplay/func_00419a60_input_ai_dispatch.c,decompiled/Compilable/gameplay/slot_input.c,lifted/src/app/app.cpp,Master per-slot controller / AI input dispatch & loop
+0x00419e40,0,FUN_00419e40,global_ctor,gameplay,game,P0,compilable,decompiled/RAW/gameplay/func_00419e40_global_ctor.c,decompiled/Compilable/gameplay/object_init.c,,Global game manager state constructor / existence reset
+0x00419e60,0,FUN_00419e60,sound_flush,audio,game,P1,verified,decompiled/RAW/audio/func_00419e60_sound_flush.c,decompiled/Compilable/audio/sound_play.c,lifted/src/audio/audio.cpp,Spatialized sound queue flush & DirectSound pan/volume dispatch
+0x0041a050,0,FUN_0041a050,bg_layer_blit_helper,graphics,game,P1,unmapped,,,,Background layer blit helper called by background_update
+0x0041a250,0,FUN_0041a250,background_update,graphics,game,P0,verified,decompiled/RAW/graphics/func_0041a250_background_update.c,decompiled/Compilable/graphics/parallax_calc.c,lifted/src/graphics/background.cpp,"Background update, parallax scrolling layer calculation & camera bounds"
+0x0041a5a0,0,FUN_0041a5a0,render_scene,graphics,game,P0,lifted,decompiled/RAW/graphics/func_0041a5a0_render_scene.c,decompiled/Compilable/graphics/draw_object.c,lifted/src/app/app.cpp,Master scene rendering dispatcher & Z-sorting pass
+0x0041ae60,0,FUN_0041ae60,render_hud_bars,graphics,game,P1,lifted,decompiled/RAW/graphics/func_0041ae60_render_hud_bars.c,,lifted/src/graphics/renderer.cpp,In-game HUD HP/MP gauge bar renderer
+0x0041b130,0,FUN_0041b130,render_hud_status,graphics,game,P1,raw,decompiled/RAW/graphics/func_0041b130_render_hud_status.c,,,In-game HUD player status & score renderer
+0x0041b390,0,FUN_0041b390,battle_summary_table,app,game,P1,unmapped,,,,Post-match battle summary table renderer
+0x0041b5d0,0,FUN_0041b5d0,camera_stage_bounds,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_0041b5d0_camera_stage_bounds.c,,lifted/src/app/stage.cpp,"Stage camera bounds, phase scroll lock & enemy wave spawner"
+0x0041bc90,0,FUN_0041bc90,battle_main_loop,net,game,P0,verified,decompiled/RAW/net/func_0041bc90_battle_main_loop.c,decompiled/Compilable/net/net_lockstep.c,lifted/src/app/app.cpp,"Master battle main loop, lockstep frame pacing & input sampling"
+0x00422ac0,0,FUN_00422ac0,prng_seed,core,game,P0,compilable,decompiled/RAW/core/func_00422ac0_prng_seed.c,decompiled/Compilable/core/random.c,,PRNG lookup table re-seed & linear congruential init
+0x00422b00,0,FUN_00422b00,key_name,app,game,P1,verified,decompiled/RAW/app/func_00422b00_key_name.c,decompiled/Compilable/app/key_name.c,lifted/src/app/options.cpp,Virtual Key to text name translation & width adjust
+0x00422f60,0,FUN_00422f60,vk_to_char,app,game,P1,verified,decompiled/RAW/app/func_00422f60_vk_to_char.c,decompiled/Compilable/app/vk_to_char.c,lifted/src/app/options.cpp,Virtual Key to ASCII char translation with shift/caps
+0x00423230,0,FUN_00423230,control_save,data,game,P0,verified,decompiled/RAW/data/func_00423230_control_save.c,decompiled/Compilable/data/control_txt.c,lifted/src/core/replay.cpp,Save key configuration to control.txt
+0x00423480,0,FUN_00423480,control_txt,data,game,P0,verified,decompiled/RAW/data/func_00423480_control_txt.c,decompiled/Compilable/data/control_txt.c,lifted/src/core/replay.cpp,Player key config & grave-accent serializer (control.txt)
+0x004236d0,0,FUN_004236d0,display_mode,graphics,game,P2,raw,decompiled/RAW/graphics/func_004236d0_display_mode.c,,,Display mode enumeration & resolution check
+0x004237e0,0,FUN_004237e0,display_validate,graphics,game,P2,raw,decompiled/RAW/graphics/func_004237e0_display_validate.c,,,Windowed display mode validation
+0x00423840,0,FUN_00423840,menu_bg,app,game,P2,raw,decompiled/RAW/app/func_00423840_menu_bg.c,,,Menu background image loader & DirectDraw surface cache
+0x00423910,0,FUN_00423910,menu_bg_free,app,game,P2,raw,decompiled/RAW/app/func_00423910_menu_bg_free.c,,,Menu background surface deallocation & release
+0x00423940,0,FUN_00423940,text_box,graphics,game,P1,lifted,decompiled/RAW/graphics/func_00423940_text_box.c,decompiled/Compilable/graphics/text_box.c,lifted/src/graphics/renderer.cpp,In-game text box string rendering with shadow
+0x00423a70,0,FUN_00423a70,text_shadow,graphics,game,P1,lifted,decompiled/RAW/graphics/func_00423a70_text_shadow.c,decompiled/Compilable/graphics/text_box.c,lifted/src/graphics/renderer.cpp,Drop-shadowed text blit helper
+0x00423b00,0,FUN_00423b00,ui_button_prompt,app,game,P1,unmapped,,,,Menu UI button/dialog prompt helper
+0x004242e0,0,FUN_004242e0,loading_progress_tick,app,game,P2,unmapped,,,,Asset loading progress screen tick
+0x004246b0,0,FUN_004246b0,options_screen,app,game,P1,verified,decompiled/RAW/app/func_004246b0_options_screen.c,decompiled/Compilable/app/options_screen.c,lifted/src/app/options.cpp,Options & control configuration screen state machine
+0x00429730,0,FUN_00429730,charmenu_flow,app,game,P1,partial,decompiled/RAW/app/func_00429730_charmenu_flow.c,decompiled/Compilable/app/replay_filename.c,lifted/src/app/app.cpp,"Character select menu flow, replay filename formatting & mode transitions"
+0x0042e100,0,FUN_0042e100,attack_process,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_0042e100_attack_process.c,decompiled/Compilable/gameplay/attack_process.c,lifted/src/gameplay/attack.cpp,"Master 4,000-line combat attack effect dispatcher"
+0x00431b70,0,FUN_00431b70,menu_input,app,game,P1,lifted,decompiled/RAW/app/func_00431b70_menu_input.c,decompiled/Compilable/app/menu_input.c,lifted/src/app/app.cpp,Menu player join & controller input polling
+0x00431c70,0,FUN_00431c70,menu_reset,app,game,P1,lifted,decompiled/RAW/app/func_00431c70_menu_reset.c,decompiled/Compilable/app/menu_reset.c,lifted/src/app/app.cpp,Menu input reset & keyboard buffer restore
+0x00431d10,0,FUN_00431d10,menu_main,app,game,P1,lifted,decompiled/RAW/app/func_00431d10_menu_main.c,decompiled/Compilable/app/menu_main.c,lifted/src/app/app.cpp,"Main menu navigation, replay loader & links"
+0x00432ab0,0,FUN_00432ab0,tournament,app,game,P1,verified,decompiled/RAW/app/func_00432ab0_tournament.c,decompiled/Compilable/app/tournament.c,lifted/src/app/tournament.cpp,Championship tournament bracket state machine
+0x00434ab0,0,FUN_00434ab0,tournament_2on2,app,game,P1,partial,decompiled/RAW/app/func_00434ab0_tournament_2on2.c,decompiled/Compilable/app/tournament_2on2.c,lifted/src/app/survival.cpp,2-on-2 championship tournament state machine
+0x00436fc0,0,FUN_00436fc0,stage_advance,app,game,P1,verified,decompiled/RAW/app/func_00436fc0_stage_advance.c,decompiled/Compilable/app/stage_advance.c,lifted/src/app/survival.cpp,Stage/survival wave advance & player vitals recovery
+0x00437220,0,FUN_00437220,survival_curtain,app,game,P1,verified,decompiled/RAW/app/func_00437220_survival_curtain.c,decompiled/Compilable/app/survival_curtain.c,lifted/src/app/survival.cpp,Stage clear / survival game-over transition curtain
+0x00437400,0,FUN_00437400,spawn_unit,app,game,P1,lifted,decompiled/RAW/app/func_00437400_spawn_unit.c,decompiled/Compilable/app/spawn_unit.c,lifted/src/app/app.cpp,Unit spawn allocation & world object table insert
+0x00437860,0,FUN_00437860,battle_status,app,game,P1,verified,decompiled/RAW/app/func_00437860_battle_status.c,decompiled/Compilable/app/battle_status.c,lifted/src/app/battle.cpp,"Battle status HUD, reinforcement waves & survival timer"
+0x004389a0,0,FUN_004389a0,draw_select_rect,app,game,P1,compilable,decompiled/RAW/app/func_004389a0_draw_select_rect.c,decompiled/Compilable/app/draw_select_rect.c,,Selection cursor animated border renderer
+0x00438ad0,0,FUN_00438ad0,draw_border_rect,app,game,P1,compilable,decompiled/RAW/app/func_00438ad0_draw_border_rect.c,decompiled/Compilable/app/draw_border_rect.c,,Outlined rectangle border renderer
+0x00438b40,0,FUN_00438b40,battle_mode,app,game,P1,verified,decompiled/RAW/app/func_00438b40_battle_mode.c,decompiled/Compilable/app/battle_mode.c,lifted/src/app/battle.cpp,Master Battle Mode army & skirmish squad manager
+0x0043a860,0,FUN_0043a860,post_match_summary_screen,app,game,P1,unmapped,,,,Match completion summary screen handler
+0x0043b3d0,0,FUN_0043b3d0,wndproc,app,game,P2,verified,decompiled/RAW/app/func_0043b3d0_wndproc.c,decompiled/Compilable/app/wndproc.c,lifted/src/app/app.cpp,"Win32 WindowProc, key table & cheat code recognizers"
+0x0043bdd0,0,FUN_0043bdd0,create_window,app,game,P2,compilable,decompiled/RAW/app/func_0043bdd0_create_window.c,decompiled/Compilable/app/create_window.c,,Win32 CreateWindowEx setup
+0x0043bec0,0,FUN_0043bec0,init_display,graphics,game,P2,compilable,decompiled/RAW/graphics/func_0043bec0_init_display.c,decompiled/Compilable/graphics/init_display.c,,DirectDraw 6 display mode initialization
+0x0043bf10,0,FUN_0043bf10,joystick_init,core,game,P2,raw,decompiled/RAW/core/func_0043bf10_joystick_init.c,,,DirectInput joystick controller initialization
+0x0043c0c0,0,FUN_0043c0c0,http_download,core,game,P3,raw,decompiled/RAW/core/func_0043c0c0_http_download.c,,,WinINet HTTP background update downloader
+0x0043c450,0,FUN_0043c450,ad_thread_start,core,game,P3,raw,decompiled/RAW/core/func_0043c450_ad_thread_start.c,,,Advertising banner worker thread starter
+0x0043c4a0,0,FUN_0043c4a0,ad_banner_init,app,game,P3,unmapped,,,,Advertising banner & WinINet launcher init
+0x0043c690,0,FUN_0043c690,cleanup_subsystems,app,game,P2,unmapped,,,,Application shutdown & subsystem cleanup
+0x0043c710,0,FUN_0043c710,cleanup_window_gdi,app,game,P2,unmapped,,,,Window/GDI resource cleanup helper
+0x0043c780,0,FUN_0043c780,load_ui_surfaces,graphics,game,P2,raw,decompiled/RAW/graphics/func_0043c780_load_ui_surfaces.c,,,Embedded UI bitmap surface loader
+0x0043cc60,0,FUN_0043cc60,load_ui_2_surface,graphics,game,P2,raw,decompiled/RAW/graphics/func_0043cc60_load_ui_2_surface.c,,,Embedded UI secondary surface cache loader
+0x0043cf40,0,FUN_0043cf40,winmain,app,game,P1,verified,decompiled/RAW/app/func_0043cf40_winmain.c,decompiled/Compilable/app/winmain.c,lifted/src/app/app.cpp,WinMain entry point & 30.3 FPS game loop
+0x0043d230,0,FUN_0043d230,alloc_load_context,app,game,P2,unmapped,,,,Loader context/file buffer setup helper
+0x0043d280,0,FUN_0043d280,replay_buffer_slot_free,data,game,P1,compilable,,decompiled/Compilable/data/replay_cipher.c,,Free single heap replay buffer pointer slot
+0x0043d2a0,0,FUN_0043d2a0,replay_buffers_free,data,game,P0,lifted,decompiled/RAW/data/func_0043d2a0_replay_buffers_free.c,decompiled/Compilable/data/replay_cipher.c,lifted/src/core/replay.cpp,Replay recording & playback buffer deallocator
+0x0043d2c0,0,FUN_0043d2c0,replay_pack_initial_state,app,game,P1,unmapped,,,,"Pack initial match state, PRNG table & slots into replay buffer"
+0x0043db40,0,FUN_0043db40,replay_write_frame,data,game,P0,verified,decompiled/RAW/data/func_0043db40_replay_write_frame.c,decompiled/Compilable/data/replay_cipher.c,lifted/src/core/replay.cpp,Per-frame 10-byte replay input recorder
+0x0043dc50,0,FUN_0043dc50,replay_read_frame,data,game,P0,verified,decompiled/RAW/data/func_0043dc50_replay_read_frame.c,decompiled/Compilable/data/replay_cipher.c,lifted/src/core/replay.cpp,Per-frame 10-byte replay input reader
+0x0043dd60,0,FUN_0043dd60,replay_save,data,game,P0,verified,decompiled/RAW/data/func_0043dd60_replay_save.c,decompiled/Compilable/data/replay_cipher.c,lifted/src/core/replay.cpp,"Replay file save, zlib compression & secondary cipher"
+0x0043df00,0,FUN_0043df00,replay_restore_cfg,data,game,P0,verified,decompiled/RAW/data/func_0043df00_replay_restore_cfg.c,decompiled/Compilable/data/replay_cipher.c,lifted/src/core/replay.cpp,"Replay difficulty, player name & profile string restorer"
+0x0043dfa0,0,FUN_0043dfa0,replay_unpack,data,game,P0,verified,decompiled/RAW/data/func_0043dfa0_replay_unpack.c,decompiled/Compilable/data/replay_cipher.c,lifted/src/core/replay.cpp,Replay memory buffer state unpacking & entity restoration
+0x0043e620,0,FUN_0043e620,replay_load,data,game,P0,verified,decompiled/RAW/data/func_0043e620_replay_load.c,decompiled/Compilable/data/replay_cipher.c,lifted/src/core/replay.cpp,"Replay file load, secondary cipher de-obfuscation & inflation"
+0x0043e860,0,FUN_0043e860,ddraw_check_surfaces,graphics,game,P2,unmapped,,,,DirectDraw surface lost check helper
+0x0043e890,0,FUN_0043e890,ddraw_restore,graphics,game,P2,raw,decompiled/RAW/graphics/func_0043e890_ddraw_restore.c,,,DirectDraw surface restoration handler
+0x0043e8e0,0,FUN_0043e8e0,init_resource_slots,app,game,P2,unmapped,,,,Initialize embedded UI resource slot table
+0x0043e940,0,FUN_0043e940,present_backbuffer,app,game,P2,unmapped,,,,DirectDraw primary/backbuffer flip & present
+0x0043e9a0,0,FUN_0043e9a0,game_mode_mgr,app,game,P1,verified,decompiled/RAW/app/func_0043e9a0_game_mode_mgr.c,decompiled/Compilable/app/game_mode_mgr.c,lifted/src/app/app.cpp,Game mode setup & developer cheat switches
+0x0043ed10,0,FUN_0043ed10,sub_0043ed10,graphics,game,P2,unmapped,,,,Unmapped DirectDraw surface helper
+0x0043ee50,0,FUN_0043ee50,load_bmp_surface,graphics,game,P2,unmapped,,,,Load BMP resource/file into DirectDraw surface
+0x0043ef50,0,FUN_0043ef50,release_surface,graphics,game,P2,unmapped,,,,Release DirectDraw surface wrapper
+0x0043ef70,0,FUN_0043ef70,clip_rect,graphics,game,P0,verified,decompiled/RAW/graphics/func_0043ef70_clip_rect.c,decompiled/Compilable/graphics/clip_rect.c,lifted/src/graphics/renderer.cpp,2D software clipping against screen boundaries
+0x0043f010,0,FUN_0043f010,surface_blit,graphics,game,P2,lifted,decompiled/RAW/graphics/func_0043f010_surface_blit.c,decompiled/Compilable/graphics/surface_blit.c,lifted/src/graphics/renderer.cpp,DirectDraw surface blit wrapper
+0x0043f310,0,FUN_0043f310,draw_bar_filled_rect,graphics,game,P1,unmapped,,,,DirectDraw color-filled rect used for HP/MP bars
+0x0043f37e,0,FUN_0043f37e,thunk_0043f37e,crt,import_thunk,-,excluded,,,,MSVC import jump thunk
+0x0043f384,0,FUN_0043f384,thunk_0043f384,crt,import_thunk,-,excluded,,,,MSVC import jump thunk
+0x0043f38a,0,FUN_0043f38a,thunk_0043f38a,crt,import_thunk,-,excluded,,,,MSVC import jump thunk
+0x0043f390,0,FUN_0043f390,thunk_0043f390,crt,import_thunk,-,excluded,,,,MSVC import jump thunk
+0x0043f396,0,FUN_0043f396,thunk_0043f396,crt,import_thunk,-,excluded,,,,MSVC import jump thunk
+0x0043f39c,0,FUN_0043f39c,thunk_0043f39c,crt,import_thunk,-,excluded,,,,MSVC import jump thunk
+0x0043f3a2,0,FUN_0043f3a2,thunk_0043f3a2,crt,import_thunk,-,excluded,,,,MSVC import jump thunk
+0x0043f3a8,0,FUN_0043f3a8,thunk_0043f3a8,crt,import_thunk,-,excluded,,,,MSVC import jump thunk
+0x0043f3ae,0,FUN_0043f3ae,thunk_0043f3ae,crt,import_thunk,-,excluded,,,,MSVC import jump thunk
+0x0043f3b4,0,FUN_0043f3b4,thunk_0043f3b4,crt,import_thunk,-,excluded,,,,MSVC import jump thunk
+0x0043f3ba,0,FUN_0043f3ba,thunk_0043f3ba,crt,import_thunk,-,excluded,,,,MSVC import jump thunk
+0x0043f3c0,0,FUN_0043f3c0,thunk_0043f3c0,crt,import_thunk,-,excluded,,,,MSVC import jump thunk
+0x0043f3c6,0,FUN_0043f3c6,thunk_0043f3c6,crt,import_thunk,-,excluded,,,,MSVC import jump thunk
+0x0043f3cc,0,FUN_0043f3cc,thunk_0043f3cc,crt,import_thunk,-,excluded,,,,MSVC import jump thunk
+0x0043f3d2,0,FUN_0043f3d2,thunk_0043f3d2,crt,import_thunk,-,excluded,,,,MSVC import jump thunk
+0x0043f3d8,0,FUN_0043f3d8,thunk_0043f3d8,crt,import_thunk,-,excluded,,,,MSVC import jump thunk
+0x0043f3de,0,FUN_0043f3de,thunk_0043f3de,crt,import_thunk,-,excluded,,,,MSVC import jump thunk
+0x0043f3e4,0,FUN_0043f3e4,thunk_0043f3e4,crt,import_thunk,-,excluded,,,,MSVC import jump thunk
+0x0043f3ea,0,FUN_0043f3ea,thunk_0043f3ea,crt,import_thunk,-,excluded,,,,MSVC import jump thunk
+0x0043f3f0,0,FUN_0043f3f0,thunk_0043f3f0,crt,import_thunk,-,excluded,,,,MSVC import jump thunk
+0x0043f3f6,0,FUN_0043f3f6,thunk_0043f3f6,crt,import_thunk,-,excluded,,,,MSVC import jump thunk
+0x0043f400,0,FUN_0043f400,zlib_sub_0043f400,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x0043f4b0,0,FUN_0043f4b0,zlib_compress,vendor,vendor_zlib,-,excluded,decompiled/RAW/data/func_0043f4b0_zlib_compress.c,decompiled/Compilable/data/replay_cipher.c,,zlib compress buffer wrapper
+0x0043f4d0,0,FUN_0043f4d0,zlib_uncompress,vendor,vendor_zlib,-,excluded,decompiled/RAW/data/func_0043f4d0_zlib_uncompress.c,decompiled/Compilable/data/replay_cipher.c,,zlib uncompress buffer wrapper
+0x0043f570,0,FUN_0043f570,zlib_sub_0043f570,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x0043f5a0,0,FUN_0043f5a0,zlib_sub_0043f5a0,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x0043f610,0,FUN_0043f610,zlib_sub_0043f610,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x0043f8a0,0,FUN_0043f8a0,zlib_sub_0043f8a0,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x0043f9c0,0,FUN_0043f9c0,zlib_sub_0043f9c0,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x004403a0,0,FUN_004403a0,zlib_sub_004403a0,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x00440420,0,FUN_00440420,zlib_sub_00440420,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x00440640,0,FUN_00440640,zlib_sub_00440640,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x00440670,0,FUN_00440670,zlib_sub_00440670,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x004406c0,0,FUN_004406c0,zlib_sub_004406c0,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x00440710,0,FUN_00440710,zlib_sub_00440710,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x00440810,0,FUN_00440810,zlib_sub_00440810,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x00440830,0,FUN_00440830,zlib_sub_00440830,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x00440d60,0,FUN_00440d60,zlib_sub_00440d60,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x00441de0,0,FUN_00441de0,zlib_sub_00441de0,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x00441e60,0,FUN_00441e60,zlib_sub_00441e60,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x00441ed0,0,FUN_00441ed0,zlib_sub_00441ed0,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x00441f60,0,FUN_00441f60,zlib_sub_00441f60,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x004422a0,0,FUN_004422a0,zlib_sub_004422a0,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x00442340,0,FUN_00442340,zlib_sub_00442340,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x00442730,0,FUN_00442730,zlib_sub_00442730,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x00442920,0,FUN_00442920,zlib_sub_00442920,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x004429a0,0,FUN_004429a0,zlib_sub_004429a0,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x00442a40,0,FUN_00442a40,zlib_sub_00442a40,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x004435a0,0,FUN_004435a0,zlib_sub_004435a0,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x00443cf0,0,FUN_00443cf0,zlib_sub_00443cf0,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x00443d30,0,FUN_00443d30,zlib_sub_00443d30,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x00444450,0,FUN_00444450,zlib_sub_00444450,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x00444470,0,FUN_00444470,zlib_sub_00444470,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x00444960,0,FUN_00444960,zlib_sub_00444960,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x00444a10,0,FUN_00444a10,zlib_sub_00444a10,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x00444ba0,0,FUN_00444ba0,zlib_sub_00444ba0,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x00444bd0,0,FUN_00444bd0,zlib_sub_00444bd0,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x00444d00,0,FUN_00444d00,zlib_sub_00444d00,vendor,vendor_zlib,-,excluded,,,,Statically linked zlib 1.1.4 internal routine (replaced by -lz)
+0x004450a0,0,FUN_004450a0,thunk_004450a0,crt,import_thunk,-,excluded,,,,MSVC import jump thunk
+0x004450a6,0,FUN_004450a6,thunk_004450a6,crt,import_thunk,-,excluded,,,,MSVC import jump thunk
+0x004450ac,0,FUN_004450ac,thunk_004450ac,crt,import_thunk,-,excluded,,,,MSVC import jump thunk
