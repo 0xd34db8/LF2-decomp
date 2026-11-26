@@ -27,11 +27,11 @@ OBJS = $(patsubst %.c, $(OBJ_DIR)/%.o, $(SRCS))
 LIB_TARGET = $(BUILD_DIR)/liblf2_legacy.a
 TEST_TARGET = $(BUILD_DIR)/test_legacy.exe
 
-ifeq ($(OS),Windows_NT)
+ifeq ($(shell echo "check_quotes"),"check_quotes")
     ifneq ($(wildcard C:/msys64/usr/bin/rm.exe),)
-        RM = C:/msys64/usr/bin/rm.exe -rf
+        RM_BUILD = C:/msys64/usr/bin/rm.exe -rf $(BUILD_DIR)
     else
-        RM = cmd /c "if exist $(subst /,\,$(BUILD_DIR)) rmdir /s /q $(subst /,\,$(BUILD_DIR))"
+        RM_BUILD = cmd /c "if exist $(subst /,\,$(BUILD_DIR)) rmdir /s /q $(subst /,\,$(BUILD_DIR))"
     endif
 define MKDIR_OBJ
 	@if not exist "$(@D)" mkdir "$(@D)"
@@ -47,7 +47,7 @@ define NOTICE_DATA
 	)
 endef
 else
-    RM ?= rm -rf
+    RM_BUILD = rm -rf "$(BUILD_DIR)"
 define MKDIR_OBJ
 	@mkdir -p "$(@D)"
 endef
@@ -91,4 +91,4 @@ test: $(TEST_TARGET)
 
 clean:
 	@echo [CLEAN] Removing $(BUILD_DIR)...
-	@$(RM)
+	@$(RM_BUILD)
