@@ -33,6 +33,7 @@ address,size_bytes,ghidra_name,name,subsystem,category,priority,status,raw_file,
 0x00402b60,0,FUN_00402b60,net_init,net,game,P1,lifted,decompiled/RAW/net/func_00402b60_net_init.c,decompiled/Compilable/net/net_init.c,lifted/src/net/network.cpp,"WinSock initialization, socket binding & WSAAsyncSelect"
 0x00402d70,0,FUN_00402d70,net_close_and_exit,net,game,P1,raw,decompiled/RAW/net/func_00402d70_net_close_and_exit.c,,,"Send ""Client want to EXIT."" disconnect packet, close socket & WSACleanup"
 0x00402ec0,0,FUN_00402ec0,net_async_socket_msg,net,game,P1,raw,decompiled/RAW/net/func_00402ec0_net_async_socket_msg.c,,,"WSAAsyncSelect handler for FD_ACCEPT handshake, PRNG sync, FD_READ/CONNECT/CLOSE"
+0x004031b0,0,FUN_004031b0,net_lobby_input_ctor,net,game,P1,raw,decompiled/RAW/net/func_004031b0_net_lobby_input_ctor.c,,,Network IP/lobby text field constructor (zeros state & length fields)
 0x004031d0,0,FUN_004031d0,net_lobby_key_msg,net,game,P1,raw,decompiled/RAW/net/func_004031d0_net_lobby_key_msg.c,,,"Network IP/lobby text field keystroke handler (alphanumeric, dot, backspace, enter)"
 0x00403270,0,FUN_00403270,teleport,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_00403270_teleport.c,decompiled/Compilable/gameplay/teleport.c,lifted/src/gameplay/teleport.cpp,Rudolf team teleportation coordinate resolution
 0x004034e0,0,FUN_004034e0,abs,core,game,P0,compilable,decompiled/RAW/core/func_004034e0_abs.c,decompiled/Compilable/core/abs.c,,Fast integer absolute value computation
@@ -152,6 +153,7 @@ address,size_bytes,ghidra_name,name,subsystem,category,priority,status,raw_file,
 0x0043bec0,0,FUN_0043bec0,init_display,graphics,game,P2,compilable,decompiled/RAW/graphics/func_0043bec0_init_display.c,decompiled/Compilable/graphics/init_display.c,,DirectDraw 6 display mode initialization
 0x0043bf10,0,FUN_0043bf10,joystick_init,core,game,P2,raw,decompiled/RAW/core/func_0043bf10_joystick_init.c,,,DirectInput joystick controller initialization
 0x0043c0c0,0,FUN_0043c0c0,http_download,core,game,P3,raw,decompiled/RAW/core/func_0043c0c0_http_download.c,,,WinINet HTTP background update downloader
+0x0043c240,0,FUN_0043c240,ad_thread_proc,core,game,P3,raw,decompiled/RAW/core/func_0043c240_ad_thread_proc.c,,,Background WinINet advertising manifest & banner download worker thread
 0x0043c450,0,FUN_0043c450,ad_thread_start,core,game,P3,raw,decompiled/RAW/core/func_0043c450_ad_thread_start.c,,,Advertising banner worker thread starter
 0x0043c4a0,0,FUN_0043c4a0,ad_banner_init,app,game,P3,raw,decompiled/RAW/app/func_0043c4a0_ad_banner_init.c,,,Parse data\adinfo.txt schedule timestamp and select active ad banner slot
 0x0043c690,0,FUN_0043c690,ad_info_reset,app,game,P2,raw,decompiled/RAW/app/func_0043c690_ad_info_reset.c,,,"Reset data\adinfo.txt to default (""now 0 4 <end>"") and init ad0 paths"
