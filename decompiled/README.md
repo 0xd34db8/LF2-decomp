@@ -44,7 +44,7 @@ decompiled/
   *Read the full guide: [RAW/README.md](RAW/README.md)*
 
 - **[`decompiled/Compilable/`](Compilable/README.md):**
-  Houses the complete compilable legacy suite (55 library translation units + test runner) with synthetic types (`legacy_types.h`), calling convention bridges, external global memory declarations (`legacy_globals.h`), and zeroed static allocations (`legacy_globals.c`). Compiles with 0 syntax or symbol errors under GCC and Clang.
+  Houses the complete compilable legacy suite (63 library translation units + test runner) with synthetic types (`legacy_types.h`), calling convention bridges, external global memory declarations (`legacy_globals.h`), and zeroed static allocations (`legacy_globals.c`). Compiles with 0 syntax or symbol errors under GCC and Clang.
   *Read the full guide: [Compilable/README.md](Compilable/README.md)*
 
 - **[`decompiled/resources/`](resources/):**

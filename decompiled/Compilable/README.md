@@ -23,13 +23,15 @@ decompiled/Compilable/
 ├── core/
 │   ├── legacy_globals.c     # Static allocation & zero-initialization of all external DAT_ globals
 │   ├── abs.c
+│   ├── http_ad_thread.c     # WinINet HTTP client & background ad banner loader thread
+│   ├── joystick_init.c      # WinMM joystick discovery & calibration slot initialization
 │   ├── random.c
 │   └── overlap.c
-├── data/                    # Dat lexer, Vigenère cipher, frame ctor, control.txt
-├── gameplay/                # Combat dispatcher, hitbox checks, grapple, AI logic
+├── data/                    # Dat lexer, Vigenère cipher, frame ctor, bg/stage/data loaders
+├── gameplay/                # Combat dispatcher, hitbox checks, grapple, AI logic, camera bounds
 ├── graphics/                # DirectDraw initialization, blits, clipping, parallax
 ├── net/                     # Lockstep networking, socket initialization, packets
-├── Makefile                 # Static library & test harness build rules (links -lz -lws2_32 on Windows)
+├── Makefile                 # Static library & test harness build rules (-lz -lws2_32 -lwinmm -lwininet on Windows)
 ├── test_legacy.c            # Parity verification test suite
 └── README.md                # Suite architecture, build instructions & routine index
 ```
@@ -59,7 +61,7 @@ To enable standard C compilers (GCC, Clang, MSVC) to compile the raw assembly ps
 
 ## Compilation Instructions
 
-Any individual file or the entire suite can be compiled into object files using standard GCC (UCRT64/MinGW) or Clang, or built and verified together via GNU Make (`mingw32-make -C decompiled/Compilable test`, which links `-lz -lws2_32` on Windows or `-lz` on POSIX):
+Any individual file or the entire suite can be compiled into object files using standard GCC (UCRT64/MinGW) or Clang, or built and verified together via GNU Make (`mingw32-make -C decompiled/Compilable test`, which links `-lz -lws2_32 -lwinmm -lwininet` on Windows or `-lz` on POSIX):
 
 ```powershell
 # Compile a single routine
@@ -71,7 +73,7 @@ mingw32-make -C decompiled/Compilable test
 
 ---
 
-## Routine Inventory (125 Mapped Routines)
+## Routine Inventory (136 Mapped Routines)
 
 | Virtual Address | File Path | Subsystem | Function Name / Description |
 | :--- | :--- | :--- | :--- |
@@ -106,8 +108,11 @@ mingw32-make -C decompiled/Compilable test
 | `0x00408cb0` | [`gameplay/weapon_sync.c`](gameplay/weapon_sync.c) | Gameplay | AI weapon pickup, throw & drink decision helper (includes `0x00408ce0` compat alias) |
 | `0x004094b0` | [`gameplay/ai_process.c`](gameplay/ai_process.c) | Gameplay | Primary AI controller, target acquisition & state machine |
 | `0x0040bbf0` | [`data/frame_ctor.c`](data/frame_ctor.c) | Data | Frame structure constructor & zeroing |
+| `0x0040bd90` | [`data/load_dat_sound.c`](data/load_dat_sound.c) | Data | Deduplicated `.dat` sound slot cache & DirectSound volume setup |
 | `0x0040be70` | [`data/calc_frame_coords.c`](data/calc_frame_coords.c) | Data | Sprite sheet UV cell coordinate calculator |
 | `0x0040bf30` | [`graphics/draw_object.c`](graphics/draw_object.c) | Graphics | Frame wait/next helper (`lf2_draw_object` sprite cell lookup) |
+| `0x0040c160` | [`data/load_bg_dat.c`](data/load_bg_dat.c) | Data | Background descriptor (`bg.dat` / `bg.txt`) parser & checksum |
+| `0x0040c910` | [`data/stage_dat_loader.c`](data/stage_dat_loader.c) | Data | Encrypted `data\stage.dat` wave & enemy spawn table loader |
 | `0x0040d0a0` | [`data/save_dat.c`](data/save_dat.c) | Data | Character `.dat` file serializer |
 | `0x0040d940` | [`data/frame_ctor.c`](data/frame_ctor.c) | Data | Frame presence validation check on `.dat` slot |
 | `0x0040d960` | [`gameplay/entity_tick.c`](gameplay/entity_tick.c) | Gameplay | Per-object frame timer, sound trigger & `frame.next` advancement |
@@ -117,6 +122,7 @@ mingw32-make -C decompiled/Compilable test
 | `0x0040e450` | [`gameplay/entity_tick.c`](gameplay/entity_tick.c) | Gameplay | 5-entry object input history shift register (`+0x408..+0x418`) |
 | `0x0040e490` | [`gameplay/entity_tick.c`](gameplay/entity_tick.c) | Gameplay | Per-object physics, velocity integration, gravity & ground landing |
 | `0x0040ef70` | [`data/load_dat.c`](data/load_dat.c) | Data | Master `.dat` script lexer & block parser |
+| `0x004122f0` | [`data/load_data_txt.c`](data/load_data_txt.c) | Data | Master `data.txt` manifest loader & arena slot 99 initializer |
 | `0x00412800` | [`gameplay/entity_tick.c`](gameplay/entity_tick.c) | Gameplay | Special-move combo recognizer (`D > R > A` -> `hit_Fa`) |
 | `0x004128f0` | [`gameplay/entity_tick.c`](gameplay/entity_tick.c) | Gameplay | Special-move combo recognizer (`D > L > A` -> `hit_Fa`) |
 | `0x004129e0` | [`gameplay/entity_tick.c`](gameplay/entity_tick.c) | Gameplay | Special-move combo recognizer (`D > U > A` -> `hit_Ua` + Louis transform) |
@@ -128,9 +134,11 @@ mingw32-make -C decompiled/Compilable test
 | `0x00412f40` | [`gameplay/entity_tick.c`](gameplay/entity_tick.c) | Gameplay | Special-move combo recognizer (`D > J > A` -> `hit_ja`) |
 | `0x00413080` | [`gameplay/entity_tick.c`](gameplay/entity_tick.c) | Gameplay | Master per-object input/state tick & combo recognizer dispatcher |
 | `0x004143d0` | [`data/file_ctor.c`](data/file_ctor.c) | Data | Character file data structure constructor |
+| `0x00414450` | [`data/dat_cipher_cli.c`](data/dat_cipher_cli.c) | Data | Virtual key to ASCII input mapper for developer cipher CLI |
 | `0x004146b0` | [`data/decrypt_dat.c`](data/decrypt_dat.c) | Data | Character `.dat` encryption cipher serializer |
 | `0x004148a0` | [`data/decrypt_dat.c`](data/decrypt_dat.c) | Data | 123-byte header skip & Vigenère cipher decrypter |
 | `0x00414a30` | [`data/decrypt_dat.c`](data/decrypt_dat.c) | Data | Decrypted `.dat` file exporter |
+| `0x00414b70` | [`data/dat_cipher_cli.c`](data/dat_cipher_cli.c) | Data | Interactive `.dat`/`.txt` developer encryption/decryption CLI |
 | `0x00416c70` | [`net/net_lockstep.c`](net/net_lockstep.c) | App | Secret character unlock toggle (`lf2.net`) & replay flag |
 | `0x00416ca0` | [`net/net_lockstep.c`](net/net_lockstep.c) | App | Secret F-key unlock toggle (`herofighter.com`) & replay flag |
 | `0x00416cd0` | [`net/net_lockstep.c`](net/net_lockstep.c) | App | F4 match exit, recording cancel & replay restoration handler |
@@ -160,6 +168,7 @@ mingw32-make -C decompiled/Compilable test
 | `0x00419e60` | [`audio/sound_play.c`](audio/sound_play.c) | Audio | Spatialized sound queue flush & DirectSound pan/volume dispatch |
 | `0x0041a250` | [`graphics/parallax_calc.c`](graphics/parallax_calc.c) | Graphics | Background update, parallax layer math & camera bounds (includes `0x0041a2dd` compat alias) |
 | `0x0041a5a0` | [`graphics/draw_object.c`](graphics/draw_object.c) | Graphics | Master scene rendering dispatcher & Z-sorting pass |
+| `0x0041b5d0` | [`gameplay/camera_stage_bounds.c`](gameplay/camera_stage_bounds.c) | Gameplay | Stage Z/X bounds clamp, entity despawn & smooth camera tracking |
 | `0x0041bc90` | [`net/net_lockstep.c`](net/net_lockstep.c) | Network | Master battle loop, lockstep pacing & input sampling (includes `0x0041c5f0` compat alias) |
 | `0x00422ac0` | [`core/random.c`](core/random.c) | Core | PRNG lookup table re-seed & LCG initialization |
 | `0x00422b00` | [`app/key_name.c`](app/key_name.c) | App | Virtual Key to text name translation & font width adjustment |
@@ -187,6 +196,10 @@ mingw32-make -C decompiled/Compilable test
 | `0x0043b3d0` | [`app/wndproc.c`](app/wndproc.c) | App | Win32 WindowProc, key table & cheat code recognizers |
 | `0x0043bdd0` | [`app/create_window.c`](app/create_window.c) | App | Win32 `CreateWindowEx` setup |
 | `0x0043bec0` | [`graphics/init_display.c`](graphics/init_display.c) | Graphics | DirectDraw 6 display mode initialization |
+| `0x0043bf10` | [`core/joystick_init.c`](core/joystick_init.c) | Core | WinMM joystick enumeration, capture & calibration slot init |
+| `0x0043c0c0` | [`core/http_ad_thread.c`](core/http_ad_thread.c) | Core | WinINet HTTP file downloader with primary/fallback URL retry |
+| `0x0043c240` | [`core/http_ad_thread.c`](core/http_ad_thread.c) | Core | Background ad-banner worker thread (`ad.php` & BMP downloader) |
+| `0x0043c450` | [`core/http_ad_thread.c`](core/http_ad_thread.c) | Core | Thread-safe background ad-banner worker launcher |
 | `0x0043cf40` | [`app/winmain.c`](app/winmain.c) | App | WinMain entry point & 30.3 FPS game loop |
 | `0x0043d2a0` | [`data/replay_cipher.c`](data/replay_cipher.c) | Data | Replay recording & playback buffer deallocator |
 | `0x0043db40` | [`data/replay_cipher.c`](data/replay_cipher.c) | Data | Per-frame 10-byte replay input recorder |

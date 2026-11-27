@@ -25,12 +25,12 @@ Forensic decompilation and modern C++20 / SDL2 source lift of the original *Litt
 | :--- | ---: | ---: | ---: | ---: | ---: | ---: |
 | `app` | 45 | 45 | 32 | 27 | 22 | 60.0% |
 | `audio` | 19 | 19 | 19 | 19 | 13 | 100.0% |
-| `core` | 8 | 8 | 4 | 2 | 2 | 25.0% |
-| `data` | 25 | 25 | 19 | 17 | 16 | 68.0% |
-| `gameplay` | 38 | 38 | 37 | 37 | 36 | 97.4% |
+| `core` | 8 | 8 | 8 | 2 | 2 | 25.0% |
+| `data` | 25 | 25 | 25 | 17 | 16 | 68.0% |
+| `gameplay` | 38 | 38 | 38 | 37 | 36 | 97.4% |
 | `graphics` | 40 | 40 | 9 | 8 | 2 | 20.0% |
 | `net` | 8 | 8 | 3 | 2 | 1 | 25.0% |
-| **Total** | **183** | **183** | **123** | **112** | **92** | **61.2%** |
+| **Total** | **183** | **183** | **134** | **112** | **92** | **61.2%** |
 
 <sub>Game-code denominator: `183` verified `.text` procedures (`37` static `zlib 1.1.4` functions and `24` Win32 import thunks excluded).</sub>
 <!-- PROGRESS:END -->
@@ -48,7 +48,7 @@ Forensic decompilation and modern C++20 / SDL2 source lift of the original *Litt
 ├── decompiled/
 │   ├── functions.csv           # Canonical 244-entry .text inventory (183 game, 37 zlib, 24 thunks)
 │   ├── RAW/                    # 185 immutable Ghidra .c exports across 7 subsystems
-│   ├── Compilable/             # 55 compilable C translation units + test_legacy.c + Makefile
+│   ├── Compilable/             # 63 compilable C translation units + test_legacy.c + Makefile
 │   ├── resources/              # Extracted PE icon, manifest, and 64 embedded UI bitmaps
 │   ├── verify_raw_entries.py   # Validates RAW filenames and functions.csv against VERIFIED_ENTRIES
 │   └── README.md               # Decompiled suite overview
