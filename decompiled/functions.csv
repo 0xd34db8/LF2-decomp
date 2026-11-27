@@ -28,12 +28,12 @@ address,size_bytes,ghidra_name,name,subsystem,category,priority,status,raw_file,
 0x004025d0,0,FUN_004025d0,bgm_select,audio,game,P1,verified,decompiled/RAW/audio/func_004025d0_bgm_select.c,decompiled/Compilable/audio/bgm_manager.c,lifted/src/audio/bgm.cpp,Stage / Boss / Random Track Selection
 0x00402810,0,FUN_00402810,volume_adjust,audio,game,P1,verified,decompiled/RAW/audio/func_00402810_volume_adjust.c,decompiled/Compilable/audio/sound_play.c,lifted/src/audio/audio.cpp,Master sound effects volume attenuator
 0x004028a0,0,FUN_004028a0,recording_notify,app,game,P1,lifted,decompiled/RAW/app/func_004028a0_recording_notify.c,decompiled/Compilable/app/replay_notify.c,lifted/src/app/app.cpp,Recording screen HUD notifications & volume
-0x00402a60,0,FUN_00402a60,sub_00402a60,net,game,P1,unmapped,,,,Unmapped networking helper
-0x00402ad0,0,FUN_00402ad0,net_select_local_ip,net,game,P1,compilable,,decompiled/Compilable/net/net_init.c,,Local IP address & adapter resolution helper
+0x00402a60,0,FUN_00402a60,net_is_public_ipv4,net,game,P1,raw,decompiled/RAW/net/func_00402a60_net_is_public_ipv4.c,,,"Filter private/loopback/link-local IPv4 prefixes (10., 192.168, 169.254, 127)"
+0x00402ad0,0,FUN_00402ad0,net_select_local_ip,net,game,P1,compilable,decompiled/RAW/net/func_00402ad0_net_select_local_ip.c,decompiled/Compilable/net/net_init.c,,Scan hostent address list for first public IPv4 adapter via net_is_public_ipv4
 0x00402b60,0,FUN_00402b60,net_init,net,game,P1,lifted,decompiled/RAW/net/func_00402b60_net_init.c,decompiled/Compilable/net/net_init.c,lifted/src/net/network.cpp,"WinSock initialization, socket binding & WSAAsyncSelect"
-0x00402d70,0,FUN_00402d70,net_lobby_dialog,net,game,P1,unmapped,,,,Network connection & lobby dialog handler
-0x00402ec0,0,FUN_00402ec0,net_async_socket_msg,net,game,P1,unmapped,,,,WSAAsyncSelect socket event handler
-0x004031d0,0,FUN_004031d0,net_lobby_key_msg,net,game,P1,unmapped,,,,Network lobby window keyboard message helper
+0x00402d70,0,FUN_00402d70,net_close_and_exit,net,game,P1,raw,decompiled/RAW/net/func_00402d70_net_close_and_exit.c,,,"Send ""Client want to EXIT."" disconnect packet, close socket & WSACleanup"
+0x00402ec0,0,FUN_00402ec0,net_async_socket_msg,net,game,P1,raw,decompiled/RAW/net/func_00402ec0_net_async_socket_msg.c,,,"WSAAsyncSelect handler for FD_ACCEPT handshake, PRNG sync, FD_READ/CONNECT/CLOSE"
+0x004031d0,0,FUN_004031d0,net_lobby_key_msg,net,game,P1,raw,decompiled/RAW/net/func_004031d0_net_lobby_key_msg.c,,,"Network IP/lobby text field keystroke handler (alphanumeric, dot, backspace, enter)"
 0x00403270,0,FUN_00403270,teleport,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_00403270_teleport.c,decompiled/Compilable/gameplay/teleport.c,lifted/src/gameplay/teleport.cpp,Rudolf team teleportation coordinate resolution
 0x004034e0,0,FUN_004034e0,abs,core,game,P0,compilable,decompiled/RAW/core/func_004034e0_abs.c,decompiled/Compilable/core/abs.c,,Fast integer absolute value computation
 0x004034f0,0,FUN_004034f0,ai_dodge,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_004034f0_ai_dodge.c,decompiled/Compilable/gameplay/ai_process.c,lifted/src/gameplay/ai.cpp,AI combat dodge / evasive roll maneuver & defense
