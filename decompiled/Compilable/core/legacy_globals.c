@@ -41,7 +41,12 @@ char  DAT_00455378[300] = {0};
 char  DAT_004553e8 = 0;
 char  DAT_004553e9 = 0;
 char  DAT_004553ea = 0;
-int   DAT_004554a4 = 0;
+// GLOBAL: LF2 0x004554a4
+#ifdef _WIN32
+CRITICAL_SECTION DAT_004554a4 = {0};
+#else
+uint8_t DAT_004554a4[64] = {0};
+#endif
 int   DAT_004554c0 = 0;
 int   DAT_00455608 = 0;
 int   DAT_00455634 = 0;
@@ -50,7 +55,14 @@ int   DAT_00457578 = 0;
 int   DAT_00457584 = 0;
 uintptr_t DAT_00458348 = 0;
 char  DAT_00458350[64] = {0};
-void *DAT_00458420 = NULL;
+// GLOBAL: LF2 0x00458420
+int   DAT_00458420 = 0;
+// GLOBAL: LF2 0x00458424
+int   DAT_00458424 = 0;
+// GLOBAL: LF2 0x0044d778
+int   DAT_0044d778 = 0;
+// GLOBAL: LF2 0x0044d77c
+int   DAT_0044d77c = 0;
 void *DAT_00458430 = NULL;
 int   DAT_00458438 = 0;
 int   DAT_00458440 = 0;
@@ -122,7 +134,8 @@ uint8_t DAT_0044d040[24] = {0};
 int   DAT_0044fb20[100] = {0};
 int   DAT_00450b4c[8] = {-1, -1, -1, -1, -1, -1, -1, -1};
 int   DAT_00450b80 = 0;
-char  DAT_00453ff0[128] = {0};
+// GLOBAL: LF2 0x00453fd0
+uint8_t DAT_00453fd0_raw[4 * sizeof(lf2_joy_slot_t)] = {0};
 int   DAT_00450b6c = 0;
 int   DAT_00450b70 = 0;
 int   DAT_00450b74 = 0;

@@ -1690,6 +1690,44 @@ int main() {
         printf("    [PASS] Camera & Stage Bounds (0x0041b5d0) verified!\n");
     }
 
+    // 26. Test Core Joystick Slot Layout & Ad-Thread State Linkage (0x0043bf10..0x0043c450)
+    printf("[+] Testing Core Joystick Layout & WinINet Ad-Thread State Guard (0x0043bf10..0x0043c450)...\n");
+    {
+        assert(sizeof(lf2_joy_slot_t) == 0x30);
+        assert((char *)&lf2_joy_slots[0].up == DAT_00453ff0);
+        assert((char *)&lf2_joy_slots[1].up == DAT_00453ff0 + 0x30);
+
+        /* Pre-seed slot calibration & button bytes, invoke FUN_0043bf10, verify reset semantics */
+        lf2_joy_slots[0].left = 'd';
+        lf2_joy_slots[0].buttons[2] = 'd';
+        lf2_joy_slots[2].left = 'u';
+        lf2_joy_slots[2].connected = 1;
+        lf2_joy_slots[2].xcenter = 32768;
+        lf2_joy_slots[2].ycenter = 32768;
+        lf2_joy_slots[2].buttons[0] = 'd';
+        lf2_joy_slots[2].buttons[5] = 'd';
+        FUN_0043bf10();
+        assert(lf2_joy_slots[2].connected == 0);
+        assert(lf2_joy_slots[2].xcenter == 0 && lf2_joy_slots[2].ycenter == 0);
+        assert(lf2_joy_slots[2].up == 'u' && lf2_joy_slots[2].down == 'u' &&
+               lf2_joy_slots[2].right == 'u' && lf2_joy_slots[2].left == 'u');
+        assert(lf2_joy_slots[2].buttons[0] == 0 && lf2_joy_slots[2].buttons[5] == 0);
+
+        /* Verify ad_thread_start respects non-zero DAT_00458424 without spawning a network thread */
+#ifdef _WIN32
+        InitializeCriticalSection((LPCRITICAL_SECTION)&DAT_004554a4);
+        int saved_ad_state = DAT_00458424;
+        DAT_00458424 = 2;
+        FUN_0043c450();
+        assert(DAT_00458424 == 2);
+        DAT_00458424 = saved_ad_state;
+        DeleteCriticalSection((LPCRITICAL_SECTION)&DAT_004554a4);
+#endif
+        /* Reference http_download symbol so linker pulls in 0x0043c0c0 cleanly without live HTTP */
+        assert(FUN_0043c0c0(NULL, NULL, NULL) == 0);
+        printf("    [PASS] Core joystick slots & HTTP ad-thread linkage verified!\n");
+    }
+
     printf("\n[SUCCESS] All Decompiled Compilable Suite Tests Passed with 100%% Parity!\n");
     return 0;
 }

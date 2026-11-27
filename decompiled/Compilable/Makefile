@@ -1,11 +1,11 @@
 # Makefile for Decompiled Compilable Legacy C Suite
-# Compiles all 56 authentic disassembled C translation units into a static library and test harness.
+# Compiles all 58 authentic disassembled C translation units into a static library and test harness.
 
 CC ?= gcc
 AR ?= ar
 CFLAGS ?= -std=c11 -O2 -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Wno-int-conversion -Wno-incompatible-pointer-types -Iinclude
 ifeq ($(OS),Windows_NT)
-LDFLAGS ?= -lz -lws2_32
+LDFLAGS ?= -lz -lws2_32 -lwinmm -lwininet
 else
 LDFLAGS ?= -lz
 endif

@@ -144,7 +144,14 @@ void FUN_00436900();
 long FUN_0043b3d0();
 undefined4 FUN_0043bdd0();
 undefined4 FUN_0043bec0();
-int  FUN_0043bf10();
+void FUN_0043bf10(void);
+int  FUN_0043c0c0(const char *primary_url, const char *fallback_url, const char *out_filepath);
+#ifdef _WIN32
+DWORD WINAPI FUN_0043c240(LPVOID lpParameter);
+#else
+unsigned long FUN_0043c240(void *lpParameter);
+#endif
+void FUN_0043c450(void);
 int  FUN_0043c4a0();
 int  FUN_0043c690();
 int  FUN_0043c780();

@@ -15,6 +15,7 @@
 #include <mmsystem.h>
 #include <winsock.h>
 #include <commdlg.h>
+#include <wininet.h>
 #endif
 
 #ifdef __cplusplus
@@ -655,6 +656,26 @@ typedef struct global {
     object_t*       objects[MAX_OBJECTS];         // 0x194 - 0x7D4 (400 object pointers)
     file_t*         files[MAX_FILES];             // 0x7D4 - 0x8D8 (65 file pointers)
 } global_t;
+
+// 11. Joystick Calibration & Button State Slot (0x00453FD0..0x0045408F, 4 slots x 48 bytes)
+// Size: 0x30 (48 bytes)
+typedef struct lf2_joy_slot {
+    int32_t         connected;                    // 0x00
+    int32_t         joy_id;                       // 0x04
+    int32_t         xmin;                         // 0x08
+    int32_t         ymin;                         // 0x0C
+    int32_t         xmax;                         // 0x10
+    int32_t         ymax;                         // 0x14
+    int32_t         xcenter;                      // 0x18
+    int32_t         ycenter;                      // 0x1C
+    uint8_t         up;                           // 0x20 (DAT_00453ff0 + slot*0x30 + 0)
+    uint8_t         down;                         // 0x21
+    uint8_t         right;                        // 0x22
+    uint8_t         left;                         // 0x23
+    uint8_t         buttons[12];                  // 0x24 - 0x2F
+} lf2_joy_slot_t;
+
+_Static_assert(sizeof(lf2_joy_slot_t) == 0x30, "lf2_joy_slot_t must be 48 bytes");
 
 #pragma pack(pop)
 

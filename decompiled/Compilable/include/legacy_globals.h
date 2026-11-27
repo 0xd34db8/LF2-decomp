@@ -57,7 +57,11 @@ extern char  DAT_004553ea;
 #define DAT_004553ee (DAT_00455378[0x76])
 #define DAT_004553ef (DAT_00455378[0x77])
 #define DAT_004553f0 (DAT_00455378[0x78])
-extern int   DAT_004554a4;
+#ifdef _WIN32
+extern CRITICAL_SECTION DAT_004554a4;
+#else
+extern uint8_t DAT_004554a4[64];
+#endif
 extern int   DAT_004554c0;
 extern int   DAT_00455608;
 extern int   DAT_00455634;
@@ -66,7 +70,10 @@ extern int   DAT_00457578;
 extern int   DAT_00457584;
 extern uintptr_t DAT_00458348;
 extern char  DAT_00458350[64];
-extern void *DAT_00458420;
+extern int   DAT_00458420;
+extern int   DAT_00458424;
+extern int   DAT_0044d778;
+extern int   DAT_0044d77c;
 extern void *DAT_00458430;
 extern int   DAT_00458438;
 extern int   DAT_00458440;
@@ -158,7 +165,9 @@ extern uint8_t DAT_0044d040[24];
 extern int   DAT_0044fb20[100];
 extern int   DAT_00450b4c[8];
 extern int   DAT_00450b80;
-extern char  DAT_00453ff0[128];
+extern uint8_t DAT_00453fd0_raw[4 * sizeof(lf2_joy_slot_t)];
+#define lf2_joy_slots ((lf2_joy_slot_t *)DAT_00453fd0_raw)
+#define DAT_00453ff0  ((char *)(DAT_00453fd0_raw + 0x20))
 extern int   DAT_00450b6c;
 extern int   DAT_00450b70;
 extern int   DAT_00450b74;
