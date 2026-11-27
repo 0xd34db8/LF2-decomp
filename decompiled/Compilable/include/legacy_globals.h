@@ -27,6 +27,9 @@ extern int   DAT_0044dce4;
 extern uint  DAT_0044eea4;
 extern int   DAT_0044eecc;
 extern int   DAT_0044f620;
+extern char  DAT_0044f628[500];
+extern int   DAT_0044f81c;
+extern int   DAT_0044f820;
 extern unsigned char DAT_0044ff90[3000];
 extern int   DAT_00450bcc;
 extern int   DAT_00450bd0;
@@ -51,6 +54,9 @@ extern char  DAT_00455378[300];
 extern char  DAT_004553e8;
 extern char  DAT_004553e9;
 extern char  DAT_004553ea;
+#define DAT_00455385 (DAT_00455378[0x0d])
+#define DAT_004553bc (DAT_00455378[0x44])
+#define DAT_004553bd (DAT_00455378[0x45])
 #define DAT_004553eb (DAT_00455378[0x73])
 #define DAT_004553ec (DAT_00455378[0x74])
 #define DAT_004553ed (DAT_00455378[0x75])
@@ -65,7 +71,7 @@ extern uint8_t DAT_004554a4[64];
 extern int   DAT_004554c0;
 extern int   DAT_00455608;
 extern int   DAT_00455634;
-extern int   DAT_00455638;
+extern char  DAT_00455638[8000];
 extern int   DAT_00457578;
 extern int   DAT_00457584;
 extern uintptr_t DAT_00458348;

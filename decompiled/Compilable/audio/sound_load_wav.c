@@ -32,3 +32,8 @@ int func_004014e0_sound_load_wav(const char* filepath, uint32_t sound_id)
     return 1;
 }
 
+int FUN_004014e0(const char* filepath)
+{
+    return func_004014e0_sound_load_wav(filepath, (uint32_t)DAT_00458438);
+}
+

@@ -3,17 +3,35 @@
 #include <string.h>
 #include <math.h>
 #include <assert.h>
+#ifdef _WIN32
+#include <direct.h>
+#endif
 #include "legacy_types.h"
 #include "legacy_globals.h"
 #include "legacy_signatures.h"
 
-/* Unported Win32/DirectDraw graphics stubs required when linking static library objects into test_legacy */
+/* Unported Win32/DirectDraw graphics & UI hooks required when linking static library objects into test_legacy */
 void FUN_00415160(int x, int y, int w, int h, int color) {
     (void)x; (void)y; (void)w; (void)h; (void)color;
 }
 int FUN_0043f010(int x, int y, int idx, int trans, int flag, void *dst) {
     (void)x; (void)y; (void)idx; (void)trans; (void)flag; (void)dst;
     return 0;
+}
+int FUN_0043ee50(int bpp, const char *path, int mirror) {
+    (void)bpp; (void)path; (void)mirror;
+    if (in_ECX != NULL) {
+        free(in_ECX);
+    }
+    return 1;
+}
+void FUN_004242e0(const char *path, int arg) {
+    (void)path; (void)arg;
+}
+void FUN_0043e940(uintptr_t handle) {
+    (void)handle;
+}
+void FUN_0043d230(void) {
 }
 
 int main() {
@@ -1726,6 +1744,284 @@ int main() {
         /* Reference http_download symbol so linker pulls in 0x0043c0c0 cleanly without live HTTP */
         assert(FUN_0043c0c0(NULL, NULL, NULL) == 0);
         printf("    [PASS] Core joystick slots & HTTP ad-thread linkage verified!\n");
+    }
+
+    // 27. Test Remaining Data Loaders & Cipher CLI (0x0040bd90, 0x00414450, 0x00414b70, 0x0040c160, 0x0040c910, 0x004122f0)
+    printf("[+] Testing Remaining Data Loaders & Cipher CLI (0x0040bd90..0x00414b70)...\n");
+    {
+        /* 27a. load_dat_sound_slot (0x0040bd90) deduplication */
+        int saved_sound_cnt = DAT_00458438;
+        int saved_eecc = DAT_0044eecc;
+        DAT_00458438 = 0;
+        DAT_0044eecc = 0;
+        memset(DAT_00455638, 0, sizeof(DAT_00455638));
+
+        int slot_a = -1, slot_b = -1, slot_a2 = -1;
+        FUN_0040bd90("data\\001.wav", &slot_a);
+        FUN_0040bd90("data\\002.wav", &slot_b);
+        FUN_0040bd90("data\\001.wav", &slot_a2);
+        assert(slot_a == 0 && slot_b == 1 && slot_a2 == 0);
+        assert(DAT_00458438 == 2);
+        assert(strcmp(&DAT_00455638[0], "data\\001.wav") == 0);
+        assert(strcmp(&DAT_00455638[20], "data\\002.wav") == 0);
+
+        DAT_00458438 = saved_sound_cnt;
+        DAT_0044eecc = saved_eecc;
+
+        /* 27b. cipher_cli_vk_to_char (0x00414450) */
+        char saved_shift = DAT_00455388;
+        DAT_00455388 = 'u';
+        assert(FUN_00414450(' ') == ' ');
+        assert(FUN_00414450(0x65) == '5');
+        assert(FUN_00414450(0x6b) == '+');
+        assert(FUN_00414450(0xbd) == '-');
+        assert(FUN_00414450('3') == '3');
+        DAT_00455388 = 'd';
+        assert(FUN_00414450('A') == 'A');
+        assert(FUN_00414450('2') == '@');
+        assert(FUN_00414450(0xbd) == '_');
+        assert(FUN_00414450(0xbc) == '<');
+        DAT_00455388 = saved_shift;
+
+        /* 27c. dat_cipher_cli (0x00414b70) state machine & encrypt/decrypt round-trip + bg/stage/data loaders */
+#ifdef _WIN32
+        _mkdir("data");
+#endif
+        int had_orig_stage = 0;
+        char *orig_stage_buf = NULL;
+        size_t orig_stage_len = 0;
+        {
+            FILE *existing_stage = fopen("data\\stage.dat", "rb");
+            if (existing_stage) {
+                had_orig_stage = 1;
+                fseek(existing_stage, 0, SEEK_END);
+                long sz = ftell(existing_stage);
+                fseek(existing_stage, 0, SEEK_SET);
+                if (sz > 0) {
+                    orig_stage_len = (size_t)sz;
+                    orig_stage_buf = (char *)malloc(orig_stage_len);
+                    assert(orig_stage_buf != NULL);
+                    size_t got = fread(orig_stage_buf, 1, orig_stage_len, existing_stage);
+                    assert(got == orig_stage_len);
+                }
+                fclose(existing_stage);
+            }
+        }
+
+        const char *cli_txt = "data\\_test_cli_in.txt";
+        const char *cli_dat = "data\\_test_cli_in.dat";
+        {
+            FILE *f = fopen(cli_txt, "w");
+            assert(f != NULL);
+            fprintf(f, "name: test_cli\n");
+            fclose(f);
+        }
+
+        int saved_f820 = DAT_0044f820;
+        int saved_f81c = DAT_0044f81c;
+        char saved_keys[300];
+        memcpy(saved_keys, DAT_00455378, sizeof(saved_keys));
+
+        memset(DAT_00455378, 'u', sizeof(DAT_00455378));
+        DAT_00455388 = 'u';
+        DAT_0044f820 = 0;
+        DAT_004553bd = 'd'; /* 'E' -> enter encrypt mode */
+        FUN_00414b70();
+        assert(DAT_0044f820 == 1);
+
+        /* Type cli_txt + dummy char + backspace via DAT_00455378, then VK_RETURN */
+        for (size_t i = 0; i < strlen(cli_txt); ++i) {
+            char c = cli_txt[i];
+            memset(DAT_00455378, 'u', sizeof(DAT_00455378));
+            if (c >= 'a' && c <= 'z') {
+                DAT_00455388 = 'u';
+                DAT_00455378[(unsigned char)(c - 'a' + 'A')] = 'd';
+            } else if (c == '\\') {
+                DAT_00455388 = 'u';
+                DAT_00455378[0xdc] = 'd';
+            } else if (c == '_') {
+                DAT_00455388 = 'd';
+                DAT_00455378[0xbd] = 'd';
+            } else if (c == '.') {
+                DAT_00455388 = 'u';
+                DAT_00455378[0xbe] = 'd';
+            }
+            FUN_00414b70();
+        }
+        /* Extra char + VK_BACK removes extra char */
+        DAT_00455388 = 'u';
+        DAT_00455378['X'] = 'd';
+        FUN_00414b70();
+        DAT_00455378[8] = 'd';
+        FUN_00414b70();
+        assert(strcmp(DAT_0044f628, cli_txt) == 0);
+
+        DAT_00455385 = 'd'; /* VK_RETURN -> encrypt */
+        FUN_00414b70();
+        assert(DAT_0044f820 == 0);
+
+        /* Decrypt via CLI mode 2 */
+        memset(DAT_00455378, 'u', sizeof(DAT_00455378));
+        DAT_004553bc = 'd'; /* 'D' -> enter decrypt mode */
+        FUN_00414b70();
+        assert(DAT_0044f820 == 2);
+        strcpy(DAT_0044f628, cli_dat);
+        DAT_0044f81c = (int)strlen(cli_dat);
+        DAT_00455385 = 'd';
+        FUN_00414b70();
+        assert(DAT_0044f820 == 0);
+        {
+            FILE *dec = fopen("data\\temporary.txt", "r");
+            assert(dec != NULL);
+            char buf[64] = {0};
+            fgets(buf, sizeof(buf), dec);
+            fclose(dec);
+            assert(strstr(buf, "name: test_cli") != NULL);
+        }
+
+        memcpy(DAT_00455378, saved_keys, sizeof(saved_keys));
+        DAT_00455388 = saved_shift;
+        DAT_0044f820 = saved_f820;
+        DAT_0044f81c = saved_f81c;
+        remove(cli_txt);
+        remove(cli_dat);
+
+        /* 27d. load_bg_dat (0x0040c160), stage_dat_loader (0x0040c910), load_data_txt (0x004122f0) */
+        const char *bg_test_path = "data\\_test_bg.txt";
+        const char *stage_test_txt = "data\\_test_stage.txt";
+        const char *manifest_test_path = "data\\_test_data.txt";
+        {
+            FILE *f = fopen(bg_test_path, "w");
+            assert(f != NULL);
+            fprintf(f,
+                "name: Lion_Forest\n"
+                "width: 1600\n"
+                "zboundary: 320 480\n"
+                "perspective: 10 20\n"
+                "layer:\n"
+                "bg\\test.bmp\n"
+                "transparency: 1\n"
+                "width: 800\n"
+                "x: 15\n"
+                "y: 25\n"
+                "height: 120\n"
+                "rect: 2016\n"
+                "loop: 200\n"
+                "cc: 10\n"
+                "c1: 2\n"
+                "c2: 8\n"
+                "layer_end\n");
+            fclose(f);
+        }
+        {
+            FILE *f = fopen(stage_test_txt, "w");
+            assert(f != NULL);
+            fprintf(f,
+                "<stage>\n"
+                "id: 0\n"
+                "<phase>\n"
+                "bound: 900\n"
+                "music: bgm\\stage1.wma\n"
+                "id: 30 hp: 350 x: 960 y: 0 times: 2 reserve: 1 join: 100 join_reserve: 1 act: 12 ratio: 0.5 <boss>\n"
+                "id: 31 <soldier>\n"
+                "when_clear_goto_phase: 2\n"
+                "<phase_end>\n"
+                "<stage_end>\n");
+            fclose(f);
+            FUN_004146b0(stage_test_txt);
+            remove("data\\stage.dat");
+            rename("data\\_test_stage.dat", "data\\stage.dat");
+        }
+        {
+            FILE *f = fopen(manifest_test_path, "w");
+            assert(f != NULL);
+            fprintf(f,
+                "<object>\n"
+                "<object_end>\n"
+                "<background>\n"
+                "id: 0 file: %s\n"
+                "<background_end>\n",
+                bg_test_path);
+            fclose(f);
+        }
+
+        uint8_t *mgr = (uint8_t *)calloc(1, 0x4d82500);
+        assert(mgr != NULL);
+        int saved_f620 = DAT_0044f620;
+        void *prev_ecx27 = in_ECX;
+        in_ECX = mgr;
+        DAT_0044f620 = 0;
+
+        FUN_004122f0(manifest_test_path, 0);
+
+        /* Verify default arena slot 99 */
+        assert(*(int32_t *)(mgr + 0x4d81060) == 2400);
+        assert(*(int32_t *)(mgr + 0x4d81064) == 350);
+        assert(*(int32_t *)(mgr + 0x4d81068) == 470);
+        assert(strcmp((char *)(mgr + 0x4d8142c), "Lee On Road") == 0);
+        assert(strcmp((char *)(mgr + 0x4d81dbc), "Random") == 0);
+        assert(*(int32_t *)(mgr + 0x4d82384) == 1); /* 1 background parsed */
+
+        /* Verify parsed background slot 0 */
+        assert(strcmp((char *)(mgr + 0x4d4617c), "Lion Forest") == 0);
+        assert(*(int32_t *)(mgr + 0x4d45db0) == 1600);
+        assert(*(int32_t *)(mgr + 0x4d45db4) == 320);
+        assert(*(int32_t *)(mgr + 0x4d45db8) == 480);
+        assert(*(int32_t *)(mgr + 0x4d45dbc) == 10);
+        assert(*(int32_t *)(mgr + 0x4d45dc0) == 20);
+        assert(*(int32_t *)(mgr + 0x4d45dcc) == 1);
+        assert(*(int32_t *)(mgr + 0x4d4619c) == 1); /* transparency */
+        assert(*(int32_t *)(mgr + 0x4d46214) == 800); /* layer width */
+        assert(*(int32_t *)(mgr + 0x4d4628c) == 15); /* x */
+        assert(*(int32_t *)(mgr + 0x4d46304) == 25); /* y */
+        assert(*(int32_t *)(mgr + 0x4d4637c) == 120); /* height */
+        assert(*(int32_t *)(mgr + 0x4d463f4) == 200); /* loop */
+        assert(*(int32_t *)(mgr + 0x4d4655c) == 10); /* cc */
+        assert(*(int32_t *)(mgr + 0x4d4646c) == 2); /* c1 */
+        assert(*(int32_t *)(mgr + 0x4d464e4) == 8); /* c2 */
+        /* rect: 2016 (0x07e0, G6=63) -> (63 * 0x400) + 0x070707 = 0x00080307 */
+        assert(*(uint32_t *)(mgr + 0x4d4664c) == 0x00080307U);
+        assert(DAT_0044f620 != 0);
+
+        /* Verify parsed stage 0 phase 0 */
+        assert(*(int32_t *)(mgr + 0x7d0) == 1); /* 1 phase */
+        assert(*(int32_t *)(mgr + 0x7d8) == 900); /* bound */
+        assert(strcmp((char *)(mgr + 0x7dc), "bgm\\stage1.wma") == 0);
+        assert(*(int32_t *)(mgr + 0x3c90) == 2); /* when_clear_goto_phase */
+        assert(*(int32_t *)(mgr + 0x8bc) == 30); /* spawn 0 id */
+        assert(*(int32_t *)(mgr + 0x8c0) == 960); /* spawn 0 x */
+        assert(*(int32_t *)(mgr + 0x8c4) == 350); /* spawn 0 hp */
+        assert(*(int32_t *)(mgr + 0x8c8) == 2);   /* spawn 0 times */
+        assert(*(int32_t *)(mgr + 0x8cc) == 1);   /* spawn 0 reserve */
+        assert(*(int32_t *)(mgr + 0x8d0) == 100); /* spawn 0 join */
+        assert(*(int32_t *)(mgr + 0x8d4) == 1);   /* spawn 0 join_reserve */
+        assert(*(int32_t *)(mgr + 0x8d8) == 12);  /* spawn 0 act */
+        assert(*(int32_t *)(mgr + 0x8e8) == 2);   /* spawn 0 boss role */
+        assert(fabs(*(double *)(mgr + 0x8e0) - 0.5) < 1e-9);
+        assert(*(int32_t *)(mgr + 0x8bc + 0xe0) == 31);  /* spawn 1 id */
+        assert(*(int32_t *)(mgr + 0x8c0 + 0xe0) == 980); /* bound + 80 default x */
+        assert(*(int32_t *)(mgr + 0x8c8 + 0xe0) == 50);  /* soldier times=50 */
+        assert(*(int32_t *)(mgr + 0x8e8 + 0xe0) == 1);   /* soldier role=1 */
+
+        free(mgr);
+        in_ECX = prev_ecx27;
+        DAT_0044f620 = saved_f620;
+
+        remove(bg_test_path);
+        remove(stage_test_txt);
+        remove(manifest_test_path);
+        remove("data\\temporary.txt");
+        if (had_orig_stage) {
+            FILE *restore = fopen("data\\stage.dat", "wb");
+            if (restore && orig_stage_buf) {
+                fwrite(orig_stage_buf, 1, orig_stage_len, restore);
+                fclose(restore);
+            }
+            free(orig_stage_buf);
+        } else {
+            remove("data\\stage.dat");
+        }
+        printf("    [PASS] Sound slot cache, BG/Stage/Data loaders & Cipher CLI verified!\n");
     }
 
     printf("\n[SUCCESS] All Decompiled Compilable Suite Tests Passed with 100%% Parity!\n");

@@ -20,6 +20,12 @@ int   DAT_0044dce4 = 0;
 uint  DAT_0044eea4 = 0x12345678;
 int   DAT_0044eecc = 0;
 int   DAT_0044f620 = 0;
+// GLOBAL: LF2 0x0044f628
+char  DAT_0044f628[500] = {0};
+// GLOBAL: LF2 0x0044f81c
+int   DAT_0044f81c = 0;
+// GLOBAL: LF2 0x0044f820
+int   DAT_0044f820 = 0;
 unsigned char DAT_0044ff90[3000] = {0};
 int   DAT_00450bcc = 0;
 int   DAT_00450bd0 = 0;
@@ -50,7 +56,8 @@ uint8_t DAT_004554a4[64] = {0};
 int   DAT_004554c0 = 0;
 int   DAT_00455608 = 0;
 int   DAT_00455634 = 0;
-int   DAT_00455638 = 0;
+// GLOBAL: LF2 0x00455638
+char  DAT_00455638[8000] = {0};
 int   DAT_00457578 = 0;
 int   DAT_00457584 = 0;
 uintptr_t DAT_00458348 = 0;
