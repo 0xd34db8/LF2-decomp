@@ -6,8 +6,8 @@
 
 ## 1. Game-Code Denominator & Exclusions
 
-The verified `.text` entry inventory contains **242** addresses:
-- **181 `game` functions** (`0x00401000`–`0x0043f310`, across 7 subsystems: `app`, `audio`, `core`, `data`, `gameplay`, `graphics`, `net`). Only `category=game` rows count toward completion percentages.
+The verified `.text` entry inventory contains **244** addresses:
+- **183 `game` functions** (`0x00401000`–`0x0043f310`, across 7 subsystems: `app`, `audio`, `core`, `data`, `gameplay`, `graphics`, `net`). Only `category=game` rows count toward completion percentages.
 - **37 `vendor_zlib` functions** (`0x0043f400`–`0x00444d00`): statically linked `zlib 1.1.4` routines replaced by system `-lz` (`status=excluded`).
 - **24 `import_thunk` entries** (`0x0043f37e`–`0x0043f3f6` and `0x004450a0`–`0x004450ac`): MSVC Win32 import jump thunks (`status=excluded`).
 
@@ -26,10 +26,10 @@ For each `category=game` entry, [`tools/progress.py`](../tools/progress.py) deri
 7. `unmapped`: in inventory without a RAW export or source annotation yet
 
 ### Headline Metrics
-- **Decompiled (RAW):** count of `game` functions with a verified `decompiled/RAW/` export divided by `181`.
+- **Decompiled (RAW):** count of `game` functions with a verified `decompiled/RAW/` export divided by `183`.
 - **Compilable:** count of `game` functions with a `// FUNCTION: LF2 0x004xxxxx` translation in `decompiled/Compilable/`.
-- **Lifted:** count of `game` functions with status `lifted` or `verified` divided by `181`.
-- **Verified:** count of `game` functions with status `verified` divided by `181`.
+- **Lifted:** count of `game` functions with status `lifted` or `verified` divided by `183`.
+- **Verified:** count of `game` functions with status `verified` divided by `183`.
 - When `size_bytes` values are populated (> 0) in `decompiled/functions.csv`, `progress.json` also computes byte-weighted totals (`total_bytes`, `lifted_bytes`, `decompiled_bytes`).
 
 ---
