@@ -115,7 +115,7 @@ address,size_bytes,ghidra_name,name,subsystem,category,priority,status,raw_file,
 0x0041a5a0,0,FUN_0041a5a0,render_scene,graphics,game,P0,lifted,decompiled/RAW/graphics/func_0041a5a0_render_scene.c,decompiled/Compilable/graphics/draw_object.c,lifted/src/app/app.cpp,Master scene rendering dispatcher & Z-sorting pass
 0x0041ae60,0,FUN_0041ae60,render_hud_bars,graphics,game,P1,lifted,decompiled/RAW/graphics/func_0041ae60_render_hud_bars.c,,lifted/src/graphics/renderer.cpp,In-game HUD HP/MP gauge bar renderer
 0x0041b130,0,FUN_0041b130,render_hud_status,graphics,game,P1,raw,decompiled/RAW/graphics/func_0041b130_render_hud_status.c,,,In-game HUD player status & score renderer
-0x0041b390,0,FUN_0041b390,battle_summary_table,app,game,P1,unmapped,,,,Post-match battle summary table renderer
+0x0041b390,0,FUN_0041b390,render_replay_hud,app,game,P1,raw,decompiled/RAW/app/func_0041b390_render_replay_hud.c,,,"Replay playback HUD overlay renderer (author, info & elapsed/total timer)"
 0x0041b5d0,0,FUN_0041b5d0,camera_stage_bounds,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_0041b5d0_camera_stage_bounds.c,,lifted/src/app/stage.cpp,"Stage camera bounds, phase scroll lock & enemy wave spawner"
 0x0041bc90,0,FUN_0041bc90,battle_main_loop,net,game,P0,verified,decompiled/RAW/net/func_0041bc90_battle_main_loop.c,decompiled/Compilable/net/net_lockstep.c,lifted/src/app/app.cpp,"Master battle main loop, lockstep frame pacing & input sampling"
 0x00422ac0,0,FUN_00422ac0,prng_seed,core,game,P0,compilable,decompiled/RAW/core/func_00422ac0_prng_seed.c,decompiled/Compilable/core/random.c,,PRNG lookup table re-seed & linear congruential init
@@ -129,8 +129,8 @@ address,size_bytes,ghidra_name,name,subsystem,category,priority,status,raw_file,
 0x00423910,0,FUN_00423910,menu_bg_free,app,game,P2,raw,decompiled/RAW/app/func_00423910_menu_bg_free.c,,,Menu background surface deallocation & release
 0x00423940,0,FUN_00423940,text_box,graphics,game,P1,lifted,decompiled/RAW/graphics/func_00423940_text_box.c,decompiled/Compilable/graphics/text_box.c,lifted/src/graphics/renderer.cpp,In-game text box string rendering with shadow
 0x00423a70,0,FUN_00423a70,text_shadow,graphics,game,P1,lifted,decompiled/RAW/graphics/func_00423a70_text_shadow.c,decompiled/Compilable/graphics/text_box.c,lifted/src/graphics/renderer.cpp,Drop-shadowed text blit helper
-0x00423b00,0,FUN_00423b00,ui_button_prompt,app,game,P1,unmapped,,,,Menu UI button/dialog prompt helper
-0x004242e0,0,FUN_004242e0,loading_progress_tick,app,game,P2,unmapped,,,,Asset loading progress screen tick
+0x00423b00,0,FUN_00423b00,ad_banner_render,app,game,P1,raw,decompiled/RAW/app/func_00423b00_ad_banner_render.c,,,"Menu ad banner rotator, hover highlight & click URL launcher (ShellExecuteA)"
+0x004242e0,0,FUN_004242e0,loading_progress_tick,app,game,P2,raw,decompiled/RAW/app/func_004242e0_loading_progress_tick.c,,,"30 FPS asset loading progress bar tick, ad click handler & message pump"
 0x004246b0,0,FUN_004246b0,options_screen,app,game,P1,verified,decompiled/RAW/app/func_004246b0_options_screen.c,decompiled/Compilable/app/options_screen.c,lifted/src/app/options.cpp,Options & control configuration screen state machine
 0x00429730,0,FUN_00429730,charmenu_flow,app,game,P1,partial,decompiled/RAW/app/func_00429730_charmenu_flow.c,decompiled/Compilable/app/replay_filename.c,lifted/src/app/app.cpp,"Character select menu flow, replay filename formatting & mode transitions"
 0x0042e100,0,FUN_0042e100,attack_process,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_0042e100_attack_process.c,decompiled/Compilable/gameplay/attack_process.c,lifted/src/gameplay/attack.cpp,"Master 4,000-line combat attack effect dispatcher"
@@ -146,23 +146,23 @@ address,size_bytes,ghidra_name,name,subsystem,category,priority,status,raw_file,
 0x004389a0,0,FUN_004389a0,draw_select_rect,app,game,P1,compilable,decompiled/RAW/app/func_004389a0_draw_select_rect.c,decompiled/Compilable/app/draw_select_rect.c,,Selection cursor animated border renderer
 0x00438ad0,0,FUN_00438ad0,draw_border_rect,app,game,P1,compilable,decompiled/RAW/app/func_00438ad0_draw_border_rect.c,decompiled/Compilable/app/draw_border_rect.c,,Outlined rectangle border renderer
 0x00438b40,0,FUN_00438b40,battle_mode,app,game,P1,verified,decompiled/RAW/app/func_00438b40_battle_mode.c,decompiled/Compilable/app/battle_mode.c,lifted/src/app/battle.cpp,Master Battle Mode army & skirmish squad manager
-0x0043a860,0,FUN_0043a860,post_match_summary_screen,app,game,P1,unmapped,,,,Match completion summary screen handler
+0x0043a860,0,FUN_0043a860,battle_mode_hud,app,game,P1,raw,decompiled/RAW/app/func_0043a860_battle_mode_hud.c,,,Battle Mode army HUD (Man/HP/Reserve/Die/Defense) & reserve troop spawner
 0x0043b3d0,0,FUN_0043b3d0,wndproc,app,game,P2,verified,decompiled/RAW/app/func_0043b3d0_wndproc.c,decompiled/Compilable/app/wndproc.c,lifted/src/app/app.cpp,"Win32 WindowProc, key table & cheat code recognizers"
 0x0043bdd0,0,FUN_0043bdd0,create_window,app,game,P2,compilable,decompiled/RAW/app/func_0043bdd0_create_window.c,decompiled/Compilable/app/create_window.c,,Win32 CreateWindowEx setup
 0x0043bec0,0,FUN_0043bec0,init_display,graphics,game,P2,compilable,decompiled/RAW/graphics/func_0043bec0_init_display.c,decompiled/Compilable/graphics/init_display.c,,DirectDraw 6 display mode initialization
 0x0043bf10,0,FUN_0043bf10,joystick_init,core,game,P2,raw,decompiled/RAW/core/func_0043bf10_joystick_init.c,,,DirectInput joystick controller initialization
 0x0043c0c0,0,FUN_0043c0c0,http_download,core,game,P3,raw,decompiled/RAW/core/func_0043c0c0_http_download.c,,,WinINet HTTP background update downloader
 0x0043c450,0,FUN_0043c450,ad_thread_start,core,game,P3,raw,decompiled/RAW/core/func_0043c450_ad_thread_start.c,,,Advertising banner worker thread starter
-0x0043c4a0,0,FUN_0043c4a0,ad_banner_init,app,game,P3,unmapped,,,,Advertising banner & WinINet launcher init
-0x0043c690,0,FUN_0043c690,cleanup_subsystems,app,game,P2,unmapped,,,,Application shutdown & subsystem cleanup
-0x0043c710,0,FUN_0043c710,cleanup_window_gdi,app,game,P2,unmapped,,,,Window/GDI resource cleanup helper
+0x0043c4a0,0,FUN_0043c4a0,ad_banner_init,app,game,P3,raw,decompiled/RAW/app/func_0043c4a0_ad_banner_init.c,,,Parse data\adinfo.txt schedule timestamp and select active ad banner slot
+0x0043c690,0,FUN_0043c690,ad_info_reset,app,game,P2,raw,decompiled/RAW/app/func_0043c690_ad_info_reset.c,,,"Reset data\adinfo.txt to default (""now 0 4 <end>"") and init ad0 paths"
+0x0043c710,0,FUN_0043c710,ad_info_save,app,game,P2,raw,decompiled/RAW/app/func_0043c710_ad_info_save.c,,,Save current ad schedule state and active ad slot to data\adinfo.txt
 0x0043c780,0,FUN_0043c780,load_ui_surfaces,graphics,game,P2,raw,decompiled/RAW/graphics/func_0043c780_load_ui_surfaces.c,,,Embedded UI bitmap surface loader
 0x0043cc60,0,FUN_0043cc60,load_ui_2_surface,graphics,game,P2,raw,decompiled/RAW/graphics/func_0043cc60_load_ui_2_surface.c,,,Embedded UI secondary surface cache loader
 0x0043cf40,0,FUN_0043cf40,winmain,app,game,P1,verified,decompiled/RAW/app/func_0043cf40_winmain.c,decompiled/Compilable/app/winmain.c,lifted/src/app/app.cpp,WinMain entry point & 30.3 FPS game loop
-0x0043d230,0,FUN_0043d230,alloc_load_context,app,game,P2,unmapped,,,,Loader context/file buffer setup helper
+0x0043d230,0,FUN_0043d230,win32_message_pump,app,game,P2,raw,decompiled/RAW/app/func_0043d230_win32_message_pump.c,,,Non-blocking Win32 PeekMessageA / TranslateMessage / DispatchMessageA pump
 0x0043d280,0,FUN_0043d280,replay_buffer_slot_free,data,game,P1,compilable,decompiled/RAW/data/func_0043d280_replay_buffer_slot_free.c,decompiled/Compilable/data/replay_cipher.c,,Free and null out single heap replay buffer pointer slot
 0x0043d2a0,0,FUN_0043d2a0,replay_buffers_free,data,game,P0,lifted,decompiled/RAW/data/func_0043d2a0_replay_buffers_free.c,decompiled/Compilable/data/replay_cipher.c,lifted/src/core/replay.cpp,Replay recording & playback buffer deallocator
-0x0043d2c0,0,FUN_0043d2c0,replay_pack_initial_state,app,game,P1,unmapped,,,,"Pack initial match state, PRNG table & slots into replay buffer"
+0x0043d2c0,0,FUN_0043d2c0,replay_pack_initial_state,app,game,P1,raw,decompiled/RAW/app/func_0043d2c0_replay_pack_initial_state.c,,,"Allocate 6.49 MB replay buffer and pack initial match state, names & PRNG table"
 0x0043db40,0,FUN_0043db40,replay_write_frame,data,game,P0,verified,decompiled/RAW/data/func_0043db40_replay_write_frame.c,decompiled/Compilable/data/replay_cipher.c,lifted/src/core/replay.cpp,Per-frame 10-byte replay input recorder
 0x0043dc50,0,FUN_0043dc50,replay_read_frame,data,game,P0,verified,decompiled/RAW/data/func_0043dc50_replay_read_frame.c,decompiled/Compilable/data/replay_cipher.c,lifted/src/core/replay.cpp,Per-frame 10-byte replay input reader
 0x0043dd60,0,FUN_0043dd60,replay_save,data,game,P0,verified,decompiled/RAW/data/func_0043dd60_replay_save.c,decompiled/Compilable/data/replay_cipher.c,lifted/src/core/replay.cpp,"Replay file save, zlib compression & secondary cipher"
@@ -171,8 +171,8 @@ address,size_bytes,ghidra_name,name,subsystem,category,priority,status,raw_file,
 0x0043e620,0,FUN_0043e620,replay_load,data,game,P0,verified,decompiled/RAW/data/func_0043e620_replay_load.c,decompiled/Compilable/data/replay_cipher.c,lifted/src/core/replay.cpp,"Replay file load, secondary cipher de-obfuscation & inflation"
 0x0043e860,0,FUN_0043e860,ddraw_check_surfaces,graphics,game,P2,raw,decompiled/RAW/graphics/func_0043e860_ddraw_check_surfaces.c,,,DirectDraw primary/backbuffer IsLost surface check
 0x0043e890,0,FUN_0043e890,ddraw_restore,graphics,game,P2,raw,decompiled/RAW/graphics/func_0043e890_ddraw_restore.c,,,DirectDraw surface restoration handler
-0x0043e8e0,0,FUN_0043e8e0,init_resource_slots,app,game,P2,unmapped,,,,Initialize embedded UI resource slot table
-0x0043e940,0,FUN_0043e940,present_backbuffer,app,game,P2,unmapped,,,,DirectDraw primary/backbuffer flip & present
+0x0043e8e0,0,FUN_0043e8e0,load_game_art_clear,app,game,P2,raw,decompiled/RAW/app/func_0043e8e0_load_game_art_clear.c,,,Query primary surface pixel format and clear backbuffer (LoadGameArt)
+0x0043e940,0,FUN_0043e940,present_backbuffer,app,game,P2,raw,decompiled/RAW/app/func_0043e940_present_backbuffer.c,,,Present frame via DirectDraw Flip (fullscreen modes 1/2) or Blt (windowed mode 3)
 0x0043e9a0,0,FUN_0043e9a0,game_mode_mgr,app,game,P1,verified,decompiled/RAW/app/func_0043e9a0_game_mode_mgr.c,decompiled/Compilable/app/game_mode_mgr.c,lifted/src/app/app.cpp,Game mode setup & developer cheat switches
 0x0043ed10,0,FUN_0043ed10,ddraw_load_bitmap,graphics,game,P2,raw,decompiled/RAW/graphics/func_0043ed10_ddraw_load_bitmap.c,,,Load BMP resource or file into new DirectDraw surface (DDLoadBitmap)
 0x0043ee50,0,FUN_0043ee50,load_bmp_surface,graphics,game,P2,raw,decompiled/RAW/graphics/func_0043ee50_load_bmp_surface.c,,,Load BMP art surface wrapper and apply black source color key
