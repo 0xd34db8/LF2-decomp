@@ -46,14 +46,14 @@ address,size_bytes,ghidra_name,name,subsystem,category,priority,status,raw_file,
 0x00408cb0,0,FUN_00408cb0,ai_weapon_decision,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_00408cb0_ai_weapon_decision.c,decompiled/Compilable/gameplay/weapon_sync.c,lifted/src/gameplay/ai.cpp,"AI weapon pickup, throw & drink decision helper"
 0x004094b0,0,FUN_004094b0,ai_controller,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_004094b0_ai_controller.c,decompiled/Compilable/gameplay/ai_process.c,lifted/src/gameplay/ai.cpp,"Primary AI controller, target acquisition & state machine"
 0x0040bbf0,0,FUN_0040bbf0,frame_ctor,data,game,P0,verified,decompiled/RAW/data/func_0040bbf0_frame_ctor.c,decompiled/Compilable/data/frame_ctor.c,lifted/src/data/dat_loader.cpp,Frame structure constructor & zeroing
-0x0040bd90,0,FUN_0040bd90,load_sprite_bmp_sheet,data,game,P1,unmapped,,,,Sprite sheet BMP surface loader called by load_dat
+0x0040bd90,0,FUN_0040bd90,load_dat_sound_slot,data,game,P1,raw,decompiled/RAW/data/func_0040bd90_load_dat_sound_slot.c,,,Deduplicated .dat WAV sound slot loader & cache lookup
 0x0040be70,0,FUN_0040be70,calc_frame_coords,data,game,P0,verified,decompiled/RAW/data/func_0040be70_calc_frame_coords.c,decompiled/Compilable/data/calc_frame_coords.c,lifted/src/graphics/renderer.cpp,Sprite sheet UV cell coordinate calculator
 0x0040bf30,0,FUN_0040bf30,file_get_frame_width,graphics,game,P0,compilable,decompiled/RAW/graphics/func_0040bf30_file_get_frame_width.c,decompiled/Compilable/graphics/draw_object.c,,Frame sprite cell width lookup from file_t sheet table
 0x0040bfb0,0,FUN_0040bfb0,file_get_frame_height,graphics,game,P2,raw,decompiled/RAW/graphics/func_0040bfb0_file_get_frame_height.c,,,Frame sprite cell height lookup from file_t sheet table
 0x0040c030,0,FUN_0040c030,load_bg_surfaces,graphics,game,P1,raw,decompiled/RAW/graphics/func_0040c030_load_bg_surfaces.c,,,Allocate and load DirectDraw BMP surfaces for a background slot
 0x0040c0e0,0,FUN_0040c0e0,free_bg_surfaces,graphics,game,P1,raw,decompiled/RAW/graphics/func_0040c0e0_free_bg_surfaces.c,,,Release DirectDraw surfaces and free wrappers for a background slot
-0x0040c160,0,FUN_0040c160,sub_0040c160,data,game,P2,unmapped,,,,Unmapped data/background parser helper
-0x0040c910,0,FUN_0040c910,sub_0040c910,data,game,P2,unmapped,,,,Unmapped data/background parser helper
+0x0040c160,0,FUN_0040c160,load_bg_dat,data,game,P2,raw,decompiled/RAW/data/func_0040c160_load_bg_dat.c,,,Decrypt and parse background bg.dat layer & parallax script
+0x0040c910,0,FUN_0040c910,stage_dat_loader,data,game,P2,raw,decompiled/RAW/data/func_0040c910_stage_dat_loader.c,,,"Decrypt and parse data\stage.dat stage, phase, wave & boss script"
 0x0040d0a0,0,FUN_0040d0a0,save_dat,data,game,P0,verified,decompiled/RAW/data/func_0040d0a0_save_dat.c,decompiled/Compilable/data/save_dat.c,lifted/src/data/dat_loader.cpp,Character `.dat` file serializer
 0x0040d940,0,FUN_0040d940,frame_present,data,game,P0,compilable,decompiled/RAW/data/func_0040d940_frame_present.c,decompiled/Compilable/data/frame_ctor.c,,Frame presence validation check on `.dat` slot
 0x0040d960,0,FUN_0040d960,object_frame_advance,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_0040d960_object_frame_advance.c,decompiled/Compilable/gameplay/entity_tick.c,lifted/src/gameplay/entity.cpp,"Per-object frame timer, sound trigger & `frame.next` advancement"
@@ -63,7 +63,7 @@ address,size_bytes,ghidra_name,name,subsystem,category,priority,status,raw_file,
 0x0040e450,0,FUN_0040e450,input_history_push,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_0040e450_input_history_push.c,decompiled/Compilable/gameplay/entity_tick.c,lifted/src/gameplay/entity.cpp,5-entry object input history shift register (`+0x408..+0x418`)
 0x0040e490,0,FUN_0040e490,object_physics_tick,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_0040e490_object_physics_tick.c,decompiled/Compilable/gameplay/entity_tick.c,lifted/src/gameplay/entity.cpp,"Per-object physics, velocity integration, gravity, landing & opoint tick"
 0x0040ef70,0,FUN_0040ef70,load_dat,data,game,P0,verified,decompiled/RAW/data/func_0040ef70_load_dat.c,decompiled/Compilable/data/load_dat.c,lifted/src/data/dat_loader.cpp,Master `.dat` script lexer & block parser
-0x004122f0,0,FUN_004122f0,stage_data_helper,data,game,P1,unmapped,,,,Stage/battle frame helper called from battle_main_loop
+0x004122f0,0,FUN_004122f0,load_data_txt,data,game,P1,raw,decompiled/RAW/data/func_004122f0_load_data_txt.c,,,Master data\data.txt manifest parser (<object> & <background> loader)
 0x00412800,0,FUN_00412800,combo_dra,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_00412800_combo_dra.c,decompiled/Compilable/gameplay/entity_tick.c,lifted/src/gameplay/entity.cpp,Special-move combo recognizer (`D > R > A` -> `hit_Fa`)
 0x004128f0,0,FUN_004128f0,combo_dla,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_004128f0_combo_dla.c,decompiled/Compilable/gameplay/entity_tick.c,lifted/src/gameplay/entity.cpp,Special-move combo recognizer (`D > L > A` -> `hit_Fa`)
 0x004129e0,0,FUN_004129e0,combo_dua,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_004129e0_combo_dua.c,decompiled/Compilable/gameplay/entity_tick.c,lifted/src/gameplay/entity.cpp,Special-move combo recognizer (`D > U > A` -> `hit_Ua` + Louis armor break)
@@ -75,11 +75,11 @@ address,size_bytes,ghidra_name,name,subsystem,category,priority,status,raw_file,
 0x00412f40,0,FUN_00412f40,combo_dja,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_00412f40_combo_dja.c,decompiled/Compilable/gameplay/entity_tick.c,lifted/src/gameplay/entity.cpp,Special-move combo recognizer (`D > J > A` -> `hit_ja`)
 0x00413080,0,FUN_00413080,object_input_tick,gameplay,game,P0,verified,decompiled/RAW/gameplay/func_00413080_object_input_tick.c,decompiled/Compilable/gameplay/entity_tick.c,lifted/src/gameplay/entity.cpp,Master per-object input/state tick & combo recognizer dispatcher
 0x004143d0,0,FUN_004143d0,file_ctor,data,game,P0,verified,decompiled/RAW/data/func_004143d0_file_ctor.c,decompiled/Compilable/data/file_ctor.c,lifted/src/data/dat_loader.cpp,Character file data structure constructor
-0x00414450,0,FUN_00414450,dat_char_helper,data,game,P2,unmapped,,,,Character data helper called from stage_dat_loader
+0x00414450,0,FUN_00414450,cipher_cli_vk_to_char,data,game,P2,raw,decompiled/RAW/data/func_00414450_cipher_cli_vk_to_char.c,,,Virtual-key to ASCII character translator for dat_cipher_cli
 0x004146b0,0,FUN_004146b0,encrypt_dat,data,game,P0,verified,decompiled/RAW/data/func_004146b0_encrypt_dat.c,decompiled/Compilable/data/decrypt_dat.c,lifted/src/data/cipher.cpp,Character `.dat` encryption cipher serializer
 0x004148a0,0,FUN_004148a0,decrypt_dat,data,game,P0,verified,decompiled/RAW/data/func_004148a0_decrypt_dat.c,decompiled/Compilable/data/decrypt_dat.c,lifted/src/data/cipher.cpp,123-byte header skip & Vigenère cipher decrypter
 0x00414a30,0,FUN_00414a30,decrypt_dat_to_file,data,game,P0,verified,decompiled/RAW/data/func_00414a30_decrypt_dat_to_file.c,decompiled/Compilable/data/decrypt_dat.c,lifted/src/data/cipher.cpp,Decrypted `.dat` file exporter
-0x00414b70,0,FUN_00414b70,stage_dat_loader,data,game,P3,raw,decompiled/RAW/data/func_00414b70_stage_dat_loader.c,,,"Interactive `.dat` encrypt/decrypt CLI tool (""Doing what ('E'=encrp, 'D'=decrp)?"", `helpme`)"
+0x00414b70,0,FUN_00414b70,dat_cipher_cli,data,game,P3,raw,decompiled/RAW/data/func_00414b70_dat_cipher_cli.c,,,"Interactive .dat encrypt/decrypt CLI tool (""Doing what ('E'=encrp, 'D'=decrp)?"", helpme)"
 0x00415140,0,FUN_00415140,consume_key_press,graphics,game,P3,raw,decompiled/RAW/graphics/func_00415140_consume_key_press.c,,,Single-shot virtual key press consumer ('d' -> 'u' in DAT_00455378)
 0x00415160,0,FUN_00415160,fill_color_rect,graphics,game,P1,raw,decompiled/RAW/graphics/func_00415160_fill_color_rect.c,,,Backbuffer solid-color rectangle fill via DirectDraw Blt(DDBLT_COLORFILL)
 0x004151d0,0,FUN_004151d0,frame_debugger,graphics,game,P3,raw,decompiled/RAW/graphics/func_004151d0_frame_debugger.c,,,"Frame debugger HUD, sprite rendering dispatch & box overlay"
@@ -160,7 +160,7 @@ address,size_bytes,ghidra_name,name,subsystem,category,priority,status,raw_file,
 0x0043cc60,0,FUN_0043cc60,load_ui_2_surface,graphics,game,P2,raw,decompiled/RAW/graphics/func_0043cc60_load_ui_2_surface.c,,,Embedded UI secondary surface cache loader
 0x0043cf40,0,FUN_0043cf40,winmain,app,game,P1,verified,decompiled/RAW/app/func_0043cf40_winmain.c,decompiled/Compilable/app/winmain.c,lifted/src/app/app.cpp,WinMain entry point & 30.3 FPS game loop
 0x0043d230,0,FUN_0043d230,alloc_load_context,app,game,P2,unmapped,,,,Loader context/file buffer setup helper
-0x0043d280,0,FUN_0043d280,replay_buffer_slot_free,data,game,P1,compilable,,decompiled/Compilable/data/replay_cipher.c,,Free single heap replay buffer pointer slot
+0x0043d280,0,FUN_0043d280,replay_buffer_slot_free,data,game,P1,compilable,decompiled/RAW/data/func_0043d280_replay_buffer_slot_free.c,decompiled/Compilable/data/replay_cipher.c,,Free and null out single heap replay buffer pointer slot
 0x0043d2a0,0,FUN_0043d2a0,replay_buffers_free,data,game,P0,lifted,decompiled/RAW/data/func_0043d2a0_replay_buffers_free.c,decompiled/Compilable/data/replay_cipher.c,lifted/src/core/replay.cpp,Replay recording & playback buffer deallocator
 0x0043d2c0,0,FUN_0043d2c0,replay_pack_initial_state,app,game,P1,unmapped,,,,"Pack initial match state, PRNG table & slots into replay buffer"
 0x0043db40,0,FUN_0043db40,replay_write_frame,data,game,P0,verified,decompiled/RAW/data/func_0043db40_replay_write_frame.c,decompiled/Compilable/data/replay_cipher.c,lifted/src/core/replay.cpp,Per-frame 10-byte replay input recorder
