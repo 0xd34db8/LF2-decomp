@@ -1,12 +1,12 @@
 address,size_bytes,ghidra_name,name,subsystem,category,priority,status,raw_file,compilable_file,lifted_file,notes
-0x00401000,0,FUN_00401000,ddraw_create_init,graphics,game,P2,unmapped,,,,DirectDraw 6 object creation & cooperative level init
-0x00401090,0,FUN_00401090,sub_00401090,graphics,game,P2,unmapped,,,,Unmapped DirectDraw helper
-0x00401110,0,FUN_00401110,sub_00401110,graphics,game,P2,unmapped,,,,Unmapped DirectDraw helper
-0x004011d0,0,FUN_004011d0,ddraw_create_surfaces,graphics,game,P2,unmapped,,,,DirectDraw primary & backbuffer surface creation
-0x00401250,0,FUN_00401250,ddraw_set_surface_state,graphics,game,P2,unmapped,,,,DirectDraw surface/GDI state helper
-0x00401290,0,FUN_00401290,gdi_draw_text,graphics,game,P2,stub,,decompiled/Compilable/core/legacy_globals.c,,GDI text draw helper (stubbed in Compilable/core/legacy_globals.c)
-0x00401300,0,FUN_00401300,ddraw_attach_clipper,graphics,game,P2,unmapped,,,,DirectDraw clipper attachment helper
-0x004013d0,0,FUN_004013d0,sub_004013d0,graphics,game,P2,unmapped,,,,Unmapped DirectDraw/GDI helper
+0x00401000,0,FUN_00401000,ddraw_create_init,graphics,game,P2,raw,decompiled/RAW/graphics/func_00401000_ddraw_create_init.c,,,"DirectDraw startup, cooperative level & display mode setup (DDStartup)"
+0x00401090,0,FUN_00401090,ddraw_create_flip_surfaces,graphics,game,P2,raw,decompiled/RAW/graphics/func_00401090_ddraw_create_flip_surfaces.c,,,DirectDraw complex flipping primary & attached backbuffer surface creator
+0x00401110,0,FUN_00401110,ddraw_create_fake_flipper,graphics,game,P2,raw,decompiled/RAW/graphics/func_00401110_ddraw_create_fake_flipper.c,,,DirectDraw windowed primary & offscreen backbuffer creator (DDCreateFakeFlipper)
+0x004011d0,0,FUN_004011d0,ddraw_init_windowed_clipper,graphics,game,P2,raw,decompiled/RAW/graphics/func_004011d0_ddraw_init_windowed_clipper.c,,,"Windowed fake-flipper creation, DirectDraw clipper attachment & ShowWindow"
+0x00401250,0,FUN_00401250,ddraw_fill_surface,graphics,game,P2,raw,decompiled/RAW/graphics/func_00401250_ddraw_fill_surface.c,,,DirectDraw full-surface solid color fill via Blt(DDBLT_COLORFILL)
+0x00401290,0,FUN_00401290,gdi_draw_text,graphics,game,P2,raw,decompiled/RAW/graphics/func_00401290_gdi_draw_text.c,decompiled/Compilable/core/legacy_globals.c,,DirectDraw surface GetDC + GDI TextOutA string renderer (stubbed in Compilable)
+0x00401300,0,FUN_00401300,ddraw_full_configure,graphics,game,P2,raw,decompiled/RAW/graphics/func_00401300_ddraw_full_configure.c,,,Fullscreen DirectDraw double/single/fake-flipper fallback configuration (DDFullConfigure)
+0x004013d0,0,FUN_004013d0,ddraw_copy_bitmap,graphics,game,P2,raw,decompiled/RAW/graphics/func_004013d0_ddraw_copy_bitmap.c,,,Copy GDI HBITMAP onto DirectDraw surface via StretchBlt (DDCopyBitmap)
 0x004014e0,0,FUN_004014e0,sound_load_wav,audio,game,P1,verified,decompiled/RAW/audio/func_004014e0_sound_load_wav.c,decompiled/Compilable/audio/sound_load_wav.c,lifted/src/audio/audio.cpp,RIFF WAVE audio parser & secondary buffer allocation
 0x00401970,0,FUN_00401970,sound_init,audio,game,P1,verified,decompiled/RAW/audio/func_00401970_sound_init.c,decompiled/Compilable/audio/sound_init.c,lifted/src/audio/audio.cpp,DirectSound subsystem initialization
 0x004019b0,0,FUN_004019b0,sound_cleanup,audio,game,P1,verified,decompiled/RAW/audio/func_004019b0_sound_cleanup.c,decompiled/Compilable/audio/sound_init.c,lifted/src/audio/audio.cpp,DirectSound device release & buffer destruction
@@ -48,10 +48,10 @@ address,size_bytes,ghidra_name,name,subsystem,category,priority,status,raw_file,
 0x0040bbf0,0,FUN_0040bbf0,frame_ctor,data,game,P0,verified,decompiled/RAW/data/func_0040bbf0_frame_ctor.c,decompiled/Compilable/data/frame_ctor.c,lifted/src/data/dat_loader.cpp,Frame structure constructor & zeroing
 0x0040bd90,0,FUN_0040bd90,load_sprite_bmp_sheet,data,game,P1,unmapped,,,,Sprite sheet BMP surface loader called by load_dat
 0x0040be70,0,FUN_0040be70,calc_frame_coords,data,game,P0,verified,decompiled/RAW/data/func_0040be70_calc_frame_coords.c,decompiled/Compilable/data/calc_frame_coords.c,lifted/src/graphics/renderer.cpp,Sprite sheet UV cell coordinate calculator
-0x0040bf30,0,FUN_0040bf30,file_get_frame_wait,graphics,game,P0,compilable,,decompiled/Compilable/graphics/draw_object.c,,Frame wait/lookup helper called by draw_entity
-0x0040bfb0,0,FUN_0040bfb0,file_get_frame_next,graphics,game,P2,unmapped,,,,Frame next index helper called by frame_debugger
-0x0040c030,0,FUN_0040c030,load_bg_surfaces,graphics,game,P1,unmapped,,,,Stage background surface loader
-0x0040c0e0,0,FUN_0040c0e0,free_bg_surfaces,graphics,game,P1,unmapped,,,,Stage background surface releaser
+0x0040bf30,0,FUN_0040bf30,file_get_frame_width,graphics,game,P0,compilable,decompiled/RAW/graphics/func_0040bf30_file_get_frame_width.c,decompiled/Compilable/graphics/draw_object.c,,Frame sprite cell width lookup from file_t sheet table
+0x0040bfb0,0,FUN_0040bfb0,file_get_frame_height,graphics,game,P2,raw,decompiled/RAW/graphics/func_0040bfb0_file_get_frame_height.c,,,Frame sprite cell height lookup from file_t sheet table
+0x0040c030,0,FUN_0040c030,load_bg_surfaces,graphics,game,P1,raw,decompiled/RAW/graphics/func_0040c030_load_bg_surfaces.c,,,Allocate and load DirectDraw BMP surfaces for a background slot
+0x0040c0e0,0,FUN_0040c0e0,free_bg_surfaces,graphics,game,P1,raw,decompiled/RAW/graphics/func_0040c0e0_free_bg_surfaces.c,,,Release DirectDraw surfaces and free wrappers for a background slot
 0x0040c160,0,FUN_0040c160,sub_0040c160,data,game,P2,unmapped,,,,Unmapped data/background parser helper
 0x0040c910,0,FUN_0040c910,sub_0040c910,data,game,P2,unmapped,,,,Unmapped data/background parser helper
 0x0040d0a0,0,FUN_0040d0a0,save_dat,data,game,P0,verified,decompiled/RAW/data/func_0040d0a0_save_dat.c,decompiled/Compilable/data/save_dat.c,lifted/src/data/dat_loader.cpp,Character `.dat` file serializer
@@ -80,8 +80,8 @@ address,size_bytes,ghidra_name,name,subsystem,category,priority,status,raw_file,
 0x004148a0,0,FUN_004148a0,decrypt_dat,data,game,P0,verified,decompiled/RAW/data/func_004148a0_decrypt_dat.c,decompiled/Compilable/data/decrypt_dat.c,lifted/src/data/cipher.cpp,123-byte header skip & Vigenère cipher decrypter
 0x00414a30,0,FUN_00414a30,decrypt_dat_to_file,data,game,P0,verified,decompiled/RAW/data/func_00414a30_decrypt_dat_to_file.c,decompiled/Compilable/data/decrypt_dat.c,lifted/src/data/cipher.cpp,Decrypted `.dat` file exporter
 0x00414b70,0,FUN_00414b70,stage_dat_loader,data,game,P3,raw,decompiled/RAW/data/func_00414b70_stage_dat_loader.c,,,"Interactive `.dat` encrypt/decrypt CLI tool (""Doing what ('E'=encrp, 'D'=decrp)?"", `helpme`)"
-0x00415140,0,FUN_00415140,debug_text_helper,graphics,game,P3,unmapped,,,,Frame debugger text/color helper
-0x00415160,0,FUN_00415160,fill_color_rect,graphics,game,P1,unmapped,,,,DirectDraw solid color rectangle fill helper
+0x00415140,0,FUN_00415140,consume_key_press,graphics,game,P3,raw,decompiled/RAW/graphics/func_00415140_consume_key_press.c,,,Single-shot virtual key press consumer ('d' -> 'u' in DAT_00455378)
+0x00415160,0,FUN_00415160,fill_color_rect,graphics,game,P1,raw,decompiled/RAW/graphics/func_00415160_fill_color_rect.c,,,Backbuffer solid-color rectangle fill via DirectDraw Blt(DDBLT_COLORFILL)
 0x004151d0,0,FUN_004151d0,frame_debugger,graphics,game,P3,raw,decompiled/RAW/graphics/func_004151d0_frame_debugger.c,,,"Frame debugger HUD, sprite rendering dispatch & box overlay"
 0x00416c70,0,FUN_00416c70,unlock_chars_toggle,app,game,P1,verified,decompiled/RAW/app/func_00416c70_unlock_chars_toggle.c,decompiled/Compilable/net/net_lockstep.c,lifted/src/app/app.cpp,Secret character unlock toggle (`lf2.net`) & replay unlock flag
 0x00416ca0,0,FUN_00416ca0,unlock_fkeys_toggle,app,game,P1,verified,decompiled/RAW/app/func_00416ca0_unlock_fkeys_toggle.c,decompiled/Compilable/net/net_lockstep.c,lifted/src/app/app.cpp,Secret F-key unlock toggle (`herofighter.com`) & replay unlock flag
@@ -110,7 +110,7 @@ address,size_bytes,ghidra_name,name,subsystem,category,priority,status,raw_file,
 0x00419a60,0,FUN_00419a60,input_ai_dispatch,gameplay,game,P0,lifted,decompiled/RAW/gameplay/func_00419a60_input_ai_dispatch.c,decompiled/Compilable/gameplay/slot_input.c,lifted/src/app/app.cpp,Master per-slot controller / AI input dispatch & loop
 0x00419e40,0,FUN_00419e40,global_ctor,gameplay,game,P0,compilable,decompiled/RAW/gameplay/func_00419e40_global_ctor.c,decompiled/Compilable/gameplay/object_init.c,,Global game manager state constructor / existence reset
 0x00419e60,0,FUN_00419e60,sound_flush,audio,game,P1,verified,decompiled/RAW/audio/func_00419e60_sound_flush.c,decompiled/Compilable/audio/sound_play.c,lifted/src/audio/audio.cpp,Spatialized sound queue flush & DirectSound pan/volume dispatch
-0x0041a050,0,FUN_0041a050,bg_layer_blit_helper,graphics,game,P1,unmapped,,,,Background layer blit helper called by background_update
+0x0041a050,0,FUN_0041a050,render_default_arena_bg,graphics,game,P1,raw,decompiled/RAW/graphics/func_0041a050_render_default_arena_bg.c,,,Built-in fallback arena background & perspective grid renderer
 0x0041a250,0,FUN_0041a250,background_update,graphics,game,P0,verified,decompiled/RAW/graphics/func_0041a250_background_update.c,decompiled/Compilable/graphics/parallax_calc.c,lifted/src/graphics/background.cpp,"Background update, parallax scrolling layer calculation & camera bounds"
 0x0041a5a0,0,FUN_0041a5a0,render_scene,graphics,game,P0,lifted,decompiled/RAW/graphics/func_0041a5a0_render_scene.c,decompiled/Compilable/graphics/draw_object.c,lifted/src/app/app.cpp,Master scene rendering dispatcher & Z-sorting pass
 0x0041ae60,0,FUN_0041ae60,render_hud_bars,graphics,game,P1,lifted,decompiled/RAW/graphics/func_0041ae60_render_hud_bars.c,,lifted/src/graphics/renderer.cpp,In-game HUD HP/MP gauge bar renderer
@@ -169,17 +169,17 @@ address,size_bytes,ghidra_name,name,subsystem,category,priority,status,raw_file,
 0x0043df00,0,FUN_0043df00,replay_restore_cfg,data,game,P0,verified,decompiled/RAW/data/func_0043df00_replay_restore_cfg.c,decompiled/Compilable/data/replay_cipher.c,lifted/src/core/replay.cpp,"Replay difficulty, player name & profile string restorer"
 0x0043dfa0,0,FUN_0043dfa0,replay_unpack,data,game,P0,verified,decompiled/RAW/data/func_0043dfa0_replay_unpack.c,decompiled/Compilable/data/replay_cipher.c,lifted/src/core/replay.cpp,Replay memory buffer state unpacking & entity restoration
 0x0043e620,0,FUN_0043e620,replay_load,data,game,P0,verified,decompiled/RAW/data/func_0043e620_replay_load.c,decompiled/Compilable/data/replay_cipher.c,lifted/src/core/replay.cpp,"Replay file load, secondary cipher de-obfuscation & inflation"
-0x0043e860,0,FUN_0043e860,ddraw_check_surfaces,graphics,game,P2,unmapped,,,,DirectDraw surface lost check helper
+0x0043e860,0,FUN_0043e860,ddraw_check_surfaces,graphics,game,P2,raw,decompiled/RAW/graphics/func_0043e860_ddraw_check_surfaces.c,,,DirectDraw primary/backbuffer IsLost surface check
 0x0043e890,0,FUN_0043e890,ddraw_restore,graphics,game,P2,raw,decompiled/RAW/graphics/func_0043e890_ddraw_restore.c,,,DirectDraw surface restoration handler
 0x0043e8e0,0,FUN_0043e8e0,init_resource_slots,app,game,P2,unmapped,,,,Initialize embedded UI resource slot table
 0x0043e940,0,FUN_0043e940,present_backbuffer,app,game,P2,unmapped,,,,DirectDraw primary/backbuffer flip & present
 0x0043e9a0,0,FUN_0043e9a0,game_mode_mgr,app,game,P1,verified,decompiled/RAW/app/func_0043e9a0_game_mode_mgr.c,decompiled/Compilable/app/game_mode_mgr.c,lifted/src/app/app.cpp,Game mode setup & developer cheat switches
-0x0043ed10,0,FUN_0043ed10,sub_0043ed10,graphics,game,P2,unmapped,,,,Unmapped DirectDraw surface helper
-0x0043ee50,0,FUN_0043ee50,load_bmp_surface,graphics,game,P2,unmapped,,,,Load BMP resource/file into DirectDraw surface
-0x0043ef50,0,FUN_0043ef50,release_surface,graphics,game,P2,unmapped,,,,Release DirectDraw surface wrapper
+0x0043ed10,0,FUN_0043ed10,ddraw_load_bitmap,graphics,game,P2,raw,decompiled/RAW/graphics/func_0043ed10_ddraw_load_bitmap.c,,,Load BMP resource or file into new DirectDraw surface (DDLoadBitmap)
+0x0043ee50,0,FUN_0043ee50,load_bmp_surface,graphics,game,P2,raw,decompiled/RAW/graphics/func_0043ee50_load_bmp_surface.c,,,Load BMP art surface wrapper and apply black source color key
+0x0043ef50,0,FUN_0043ef50,release_surface,graphics,game,P2,raw,decompiled/RAW/graphics/func_0043ef50_release_surface.c,,,Release DirectDraw surface COM pointer in sprite wrapper
 0x0043ef70,0,FUN_0043ef70,clip_rect,graphics,game,P0,verified,decompiled/RAW/graphics/func_0043ef70_clip_rect.c,decompiled/Compilable/graphics/clip_rect.c,lifted/src/graphics/renderer.cpp,2D software clipping against screen boundaries
 0x0043f010,0,FUN_0043f010,surface_blit,graphics,game,P2,lifted,decompiled/RAW/graphics/func_0043f010_surface_blit.c,decompiled/Compilable/graphics/surface_blit.c,lifted/src/graphics/renderer.cpp,DirectDraw surface blit wrapper
-0x0043f310,0,FUN_0043f310,draw_bar_filled_rect,graphics,game,P1,unmapped,,,,DirectDraw color-filled rect used for HP/MP bars
+0x0043f310,0,FUN_0043f310,surface_subrect_blit,graphics,game,P1,raw,decompiled/RAW/graphics/func_0043f310_surface_subrect_blit.c,,,Opaque sub-rectangle DirectDraw Blt(DDBLT_WAIT) from sprite wrapper surface
 0x0043f37e,0,FUN_0043f37e,thunk_0043f37e,crt,import_thunk,-,excluded,,,,MSVC import jump thunk
 0x0043f384,0,FUN_0043f384,thunk_0043f384,crt,import_thunk,-,excluded,,,,MSVC import jump thunk
 0x0043f38a,0,FUN_0043f38a,thunk_0043f38a,crt,import_thunk,-,excluded,,,,MSVC import jump thunk
