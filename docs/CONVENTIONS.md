@@ -47,7 +47,7 @@ Formatting rules:
 
 ## 3. Single Source of Truth (`decompiled/functions.csv`)
 
-[`decompiled/functions.csv`](../decompiled/functions.csv) is the canonical inventory for all 242 verified `.text` entry points in `lf2.exe`:
+[`decompiled/functions.csv`](../decompiled/functions.csv) is the canonical inventory for all 244 verified `.text` entry points in `lf2.exe`:
 - **Static metadata** (`address`, `size_bytes`, `ghidra_name`, `name`, `subsystem`, `category`, `priority`, `notes`) is authored in `decompiled/functions.csv`.
 - **Live pipeline state** (`status`) and file paths (`raw_file`, `compilable_file`, `lifted_file`) are derived deterministically from disk (`decompiled/RAW/` + `// <MARKER>: LF2 0x004xxxxx` comments).
 - `decompiled/RAW/` is immutable forensic evidence: never edit `.c` files inside `decompiled/RAW/`.
