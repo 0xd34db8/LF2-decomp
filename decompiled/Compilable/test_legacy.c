@@ -7,6 +7,15 @@
 #include "legacy_globals.h"
 #include "legacy_signatures.h"
 
+/* Unported Win32/DirectDraw graphics stubs required when linking static library objects into test_legacy */
+void FUN_00415160(int x, int y, int w, int h, int color) {
+    (void)x; (void)y; (void)w; (void)h; (void)color;
+}
+int FUN_0043f010(int x, int y, int idx, int trans, int flag, void *dst) {
+    (void)x; (void)y; (void)idx; (void)trans; (void)flag; (void)dst;
+    return 0;
+}
+
 int main() {
     printf("======================================================================\n");
     printf(" Little Fighter 2 - Decompiled Compilable Legacy Suite Verification\n");
@@ -1567,6 +1576,118 @@ int main() {
         DAT_0044f1af = saved_f1af; DAT_0044d05c = saved_d05c;
         in_ECX = prev_ecx17;
         printf("    [PASS] Master Battle Frame Loop, F-keys, Sound Flush & Replay Helpers verified!\n");
+    }
+
+    // 25. Test Camera & Stage Bounds (0x0041b5d0 / FUN_0041b5d0)
+    printf("[+] Testing Camera & Stage Bounds (0x0041b5d0 / lf2_camera_stage_bounds)...\n");
+    {
+        int saved_d024 = DAT_0044d024;
+        int saved_b4c[8];
+        for (int i = 0; i < 8; ++i) saved_b4c[i] = DAT_00450b4c[i];
+        int saved_bb0 = DAT_00450bb0, saved_bb4 = DAT_00450bb4;
+        int saved_bc4 = DAT_00450bc4, saved_bc8 = DAT_00450bc8;
+        int saved_b74 = DAT_00450b74, saved_b7c = DAT_00450b7c, saved_b84 = DAT_00450b84;
+        int saved_b94 = DAT_00450b94;
+        void *prev_ecx25 = in_ECX;
+
+        global_t *g25 = (global_t *)calloc(1, sizeof(global_t));
+        uint8_t *bg_mgr = (uint8_t *)calloc(1, 0x4d46800);
+        file_t *f_char = (file_t *)calloc(1, sizeof(file_t));
+        file_t *f_atk  = (file_t *)calloc(1, sizeof(file_t));
+        file_t *f_milk = (file_t *)calloc(1, sizeof(file_t));
+        file_t *f_stk  = (file_t *)calloc(1, sizeof(file_t));
+        object_t *p0 = (object_t *)calloc(1, sizeof(object_t));
+        object_t *e5 = (object_t *)calloc(1, sizeof(object_t));
+        object_t *c25 = (object_t *)calloc(1, sizeof(object_t));
+        object_t *proj = (object_t *)calloc(1, sizeof(object_t));
+        object_t *milk = (object_t *)calloc(1, sizeof(object_t));
+        object_t *stick_oob = (object_t *)calloc(1, sizeof(object_t));
+        assert(g25 && bg_mgr && f_char && f_atk && f_milk && f_stk && p0 && e5 && c25 && proj && milk && stick_oob);
+
+        f_char->type = TYPE_CHARACTER;
+        f_char->frames[0].state = STATE_STANDING;
+        f_atk->type = TYPE_ATTACK;
+        f_milk->type = TYPE_DRINK; f_milk->id = ID_MILK_DAT;
+        f_stk->type = TYPE_LIGHT_WEAPON; f_stk->id = ID_STICK_DAT;
+
+        DAT_0044d024 = 0;
+        *(int32_t *)(bg_mgr + 0x4d45db0) = 2400; /* bg_width */
+        *(int32_t *)(bg_mgr + 0x4d45db4) = 300;  /* bg_zmin */
+        *(int32_t *)(bg_mgr + 0x4d45db8) = 450;  /* bg_zmax */
+        *(int32_t *)(bg_mgr + 0x4d45dcc) = 0;    /* layer_count = 0 (skip draw blits) */
+        g25->files[0] = (file_t *)(uintptr_t)bg_mgr;
+
+        /* Slot 0: team 1 player below X=0 and Z<zmin, facing right */
+        lf2_object_init(p0); p0->file = f_char; p0->hp = 500; p0->team = 1;
+        p0->facing = FACING_RIGHT; p0->x_position = -20.0; p0->z_position = 250.0;
+        g25->is_object_exists[0] = 1; g25->objects[0] = p0;
+
+        /* Slot 1: team 5 enemy allowed down to -300 */
+        lf2_object_init(e5); e5->file = f_char; e5->hp = 500; e5->team = 5;
+        e5->x_position = -250.0; e5->z_position = 500.0;
+        g25->is_object_exists[1] = 1; g25->objects[1] = e5;
+
+        /* Slot 25: character >= 20 clamped by DAT_00450bb4 when not blinking */
+        lf2_object_init(c25); c25->file = f_char; c25->hp = 500; c25->team = 1; c25->blink_time = 0;
+        c25->x_position = 1100.0; c25->z_position = 350.0;
+        g25->is_object_exists[25] = 1; g25->objects[25] = c25;
+
+        /* Slot 50: projectile beyond bg_width + 300 despawns */
+        lf2_object_init(proj); proj->file = f_atk;
+        proj->x_position = 2701.0; proj->z_position = 290.0;
+        g25->is_object_exists[50] = 1; g25->objects[50] = proj;
+
+        /* Slot 51: Milk in survival stage (50..59) clamped to [10, width - 10] and Z extended +-1 */
+        lf2_object_init(milk); milk->file = f_milk; milk->player_index = 0;
+        milk->x_position = 2.0; milk->z_position = 295.0;
+        g25->is_object_exists[51] = 1; g25->objects[51] = milk;
+
+        /* Slot 52: Dropped stick out of bounds at y==0 despawns */
+        lf2_object_init(stick_oob); stick_oob->file = f_stk; stick_oob->y = 0;
+        stick_oob->x_position = -5.0; stick_oob->z_position = 460.0;
+        g25->is_object_exists[52] = 1; g25->objects[52] = stick_oob;
+
+        DAT_00450b4c[0] = 1;
+        for (int i = 1; i < 8; ++i) DAT_00450b4c[i] = -1;
+        DAT_00450bb4 = 900;
+        DAT_00450bb0 = 0;
+        DAT_00450bc4 = 0;
+        DAT_00450bc8 = 0;
+        DAT_00450b74 = 0; DAT_00450b84 = 0;
+        DAT_00450b94 = 50; /* Survival stage 5-1 */
+
+        in_ECX = g25;
+        FUN_0041b5d0(NULL, 1);
+
+        assert(p0->z == 300 && p0->x == 0);
+        assert(e5->z == 450 && e5->x == -250);
+        assert(c25->x == 900);
+        assert(g25->is_object_exists[50] == 0);
+        assert(milk->z == 299 && milk->x == 10);
+        assert(g25->is_object_exists[52] == 0);
+
+        /* Verify camera target with lying player + DAT_00450bb0 phase camera lock */
+        p0->x_position = 1500.0; p0->x = 1500;
+        f_char->frames[0].state = STATE_LYING;
+        DAT_00450bb4 = 0;
+        DAT_00450bb0 = 700;
+        DAT_00450bc4 = 0; DAT_00450bc8 = 0;
+        lf2_camera_stage_bounds(g25, NULL, 0);
+        assert(DAT_00450bc8 == 7); /* ((700 - 0) / 14 + 0) / 7 = 50 / 7 = 7 */
+        assert(DAT_00450bc4 == 7);
+
+        free(p0); free(e5); free(c25); free(proj); free(milk); free(stick_oob);
+        free(f_char); free(f_atk); free(f_milk); free(f_stk);
+        free(bg_mgr); free(g25);
+
+        DAT_0044d024 = saved_d024;
+        for (int i = 0; i < 8; ++i) DAT_00450b4c[i] = saved_b4c[i];
+        DAT_00450bb0 = saved_bb0; DAT_00450bb4 = saved_bb4;
+        DAT_00450bc4 = saved_bc4; DAT_00450bc8 = saved_bc8;
+        DAT_00450b74 = saved_b74; DAT_00450b7c = saved_b7c; DAT_00450b84 = saved_b84;
+        DAT_00450b94 = saved_b94;
+        in_ECX = prev_ecx25;
+        printf("    [PASS] Camera & Stage Bounds (0x0041b5d0) verified!\n");
     }
 
     printf("\n[SUCCESS] All Decompiled Compilable Suite Tests Passed with 100%% Parity!\n");

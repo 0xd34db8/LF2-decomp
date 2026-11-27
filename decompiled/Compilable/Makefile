@@ -1,5 +1,5 @@
 # Makefile for Decompiled Compilable Legacy C Suite
-# Compiles all 55 authentic disassembled C translation units into a static library and test harness.
+# Compiles all 56 authentic disassembled C translation units into a static library and test harness.
 
 CC ?= gcc
 AR ?= ar

@@ -33,6 +33,7 @@ int  lf2_frame_transition(object_t *obj, int target_frame);
 void lf2_input_history_push(object_t *obj, uint32_t key_code);
 void lf2_object_physics_tick(object_t *obj);
 void lf2_object_input_tick(object_t *obj);
+void lf2_camera_stage_bounds(global_t *global, void *dest_surface, int game_mode);
 
 // Comprehensive inventory of all decompiled function signatures
 int  FUN_00401000();
@@ -128,6 +129,7 @@ void FUN_00419a60(int param_1, int param_2, uint8_t *param_3);
 int  FUN_0041a250();
 int  FUN_0041a2dd();
 void FUN_0041a5a0(void *param_1, int param_2);
+void FUN_0041b5d0(void *param_1, int param_2);
 int  FUN_0041bc90(void);
 int  lf2_battle_frame_tick(global_t *global, int *game_mode);
 int  FUN_0041c5f0();
